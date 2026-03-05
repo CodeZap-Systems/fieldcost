@@ -1,0 +1,28 @@
+{
+  "11111111-1111-1111-1111-111111111111": {
+    "profiles": [
+      {
+        "id": "1",
+        "user_id": "11111111-1111-1111-1111-111111111111",
+        "name": "Test Company",
+        "email": null,
+        "phone": null,
+        "address_line1": null,
+        "address_line2": null,
+        "city": null,
+        "province": null,
+        "postal_code": null,
+        "country": "South Africa",
+        "logo_url": null,
+        "logo_external_url": null,
+        "invoice_template": "standard",
+        "default_currency": "ZAR",
+        "erp_targets": [
+          "sage-bca-sa"
+        ],
+        "updated_at": "2026-03-05T10:49:47.989+00:00"
+      }
+    ],
+    "activeCompanyId": "1"
+  }
+}

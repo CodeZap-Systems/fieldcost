@@ -1,0 +1,17 @@
+{
+  "dingani590@gmail.com": {
+    "email": "dingani590@gmail.com",
+    "companyName": "Test company",
+    "role": "admin",
+    "status": "pending",
+    "registeredAt": "2026-03-05T03:55:22.375Z"
+  },
+  "dingani@codezap.co.za": {
+    "email": "dingani@codezap.co.za",
+    "companyName": "Test Company Co",
+    "role": "admin",
+    "status": "confirmed",
+    "registeredAt": "2026-03-05T06:45:50.372Z",
+    "confirmedAt": "2026-03-05T11:41:22.331Z"
+  }
+}

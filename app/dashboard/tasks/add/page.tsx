@@ -1,0 +1,89 @@
+"use client";
+
+import React, { useEffect, useState } from "react";
+import TaskForm from "../TaskForm";
+import TaskTimer from "../TaskTimer";
+import { ensureClientUserId } from "../../../../lib/clientUser";
+
+type CrewMember = { id: number; name: string; hourly_rate: number };
+
+export default function AddTaskPage() {
+  const [tab, setTab] = useState("Details");
+  const tabs = ["Details", "Time", "Checklist", "Notes"];
+  const [crew, setCrew] = useState<CrewMember[]>([]);
+  const [crewError, setCrewError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    async function loadCrew() {
+      try {
+        const userId = await ensureClientUserId();
+        const res = await fetch(`/api/crew?user_id=${userId}`);
+        if (!res.ok) throw new Error("Failed to load crew");
+        const data = await res.json();
+        if (active) setCrew(Array.isArray(data) ? data : []);
+      } catch {
+        if (active) setCrewError("Unable to load crew list.");
+      }
+    }
+    loadCrew();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  return (
+    <main className="p-6 max-w-3xl mx-auto">
+      <h1 className="text-2xl font-bold mb-4">Add Task</h1>
+      <div className="mb-4 flex gap-2 border-b">
+        {tabs.map(t => (
+          <button
+            key={t}
+            className={`px-4 py-2 font-semibold border-b-2 ${tab === t ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600'}`}
+            onClick={() => setTab(t)}
+          >
+            {t}
+          </button>
+        ))}
+      </div>
+      {tab === "Details" && (
+        <TaskForm
+          crew={crew}
+          onAdd={async task => {
+            try {
+              const userId = await ensureClientUserId();
+              const res = await fetch("/api/tasks", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ...task, user_id: userId }),
+              });
+              return res.ok;
+            } catch {
+              return false;
+            }
+          }}
+        />
+      )}
+      {crewError && <div className="text-red-600 text-sm mt-4">{crewError}</div>}
+      {tab === "Time" && (
+        <TaskTimer
+          onSave={async ({ name, seconds }) => {
+            try {
+              const userId = await ensureClientUserId();
+              const res = await fetch("/api/tasks", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, seconds, user_id: userId }),
+              });
+              return res.ok;
+            } catch {
+              return false;
+            }
+          }}
+        />
+      )}
+      {tab === "Checklist" && <div className="p-4 text-gray-500">Checklist here.</div>}
+      {tab === "Notes" && <div className="p-4 text-gray-500">Task notes here.</div>}
+    </main>
+  );
+}
