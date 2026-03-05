@@ -101,7 +101,7 @@ export default function WIPPushWidget({ data }: { data: WIPData }) {
         <div>
           <p className="text-sm text-gray-600">Contract Value</p>
           <p className="text-xl font-bold text-gray-900" suppressHydrationWarning>
-            R{formatCurrency(data.contractValue)}
+            R{formatCurrency(data.contractValue, 2)}
           </p>
         </div>
         <div>
@@ -111,7 +111,7 @@ export default function WIPPushWidget({ data }: { data: WIPData }) {
         <div>
           <p className="text-sm text-gray-600">Billed to Date</p>
           <p className="text-lg font-semibold text-gray-900" suppressHydrationWarning>
-            R{formatCurrency(data.billedAmount)}
+            R{formatCurrency(data.billedAmount, 2)}
           </p>
         </div>
         <div>
