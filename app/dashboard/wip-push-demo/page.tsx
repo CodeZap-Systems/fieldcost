@@ -58,7 +58,7 @@ export default function WIPPushDemoPage() {
               </li>
               <li className="flex gap-2">
                 <span className="font-bold text-blue-600">3.</span>
-                <span>Click "Push WIP Invoice"</span>
+                <span>Click &quot;Push WIP Invoice&quot;</span>
               </li>
               <li className="flex gap-2">
                 <span className="font-bold text-blue-600">4.</span>
@@ -66,7 +66,7 @@ export default function WIPPushDemoPage() {
               </li>
               <li className="flex gap-2">
                 <span className="font-bold text-blue-600">5.</span>
-                <span>See success message with invoice ID</span>
+                <span>See success message with &quot;invoice ID&quot;</span>
               </li>
             </ol>
           </div>
