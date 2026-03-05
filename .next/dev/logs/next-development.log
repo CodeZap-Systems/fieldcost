@@ -1,0 +1,3 @@
+[00:00:01.571] Server  LOG     ✓ Ready in 1165ms
+[00:00:02.716] Server  WARN    /api/company supabase auth lookup warning "Auth session missing!"
+[00:00:03.452] Server  WARN    /api/company supabase auth lookup warning "Auth session missing!"

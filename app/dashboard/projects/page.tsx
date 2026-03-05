@@ -137,7 +137,7 @@ export default function ProjectsPage() {
   async function handleUpdate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!userId) return;
-    if (projects.find(p => p.id === id)?.demo) {
+    if (projects.find(p => p.id === editing)?.demo) {
       setError("Demo projects are read-only.");
       return;
     }
@@ -163,7 +163,7 @@ export default function ProjectsPage() {
 
   async function handleDelete(id: number) {
     if (!userId) return;
-    const target = projects.find(p => p.id === projectId);
+    const target = projects.find(p => p.id === id);
     if (target?.demo) {
       setError("Demo projects are read-only.");
       return;

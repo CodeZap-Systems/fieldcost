@@ -136,7 +136,7 @@ export async function POST() {
     await ensureDemoUsers();
     await purgeDemoData();
 
-    const customers = await insertReturning('customers', customerSeed);
+    const customers = await insertReturning('customers', customerSeed) as Array<typeof customerSeed[0] & { id: number }>;
     const customerMap = new Map<string, number>();
     customers.forEach(customer => {
       if (customer?.id) customerMap.set(keyFor(customer.user_id, customer.name), customer.id);
@@ -148,7 +148,7 @@ export async function POST() {
       description,
       photo_url,
     }));
-    const projects = await insertReturning('projects', projectInsertPayload);
+    const projects = await insertReturning('projects', projectInsertPayload) as Array<typeof projectInsertPayload[0] & { id: number }>;
     const projectMap = new Map<string, number>();
     projects.forEach(project => {
       if (project?.id) projectMap.set(keyFor(project.user_id, project.name), project.id);

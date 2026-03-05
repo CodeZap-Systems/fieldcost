@@ -119,7 +119,7 @@ export default function ItemsPage() {
   async function handleUpdate(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (editing === null || !userId) return;
-    const target = items.find(i => i.id === id);
+    const target = items.find(i => i.id === editing);
     if (target?.demo) {
       setError('Demo items are read-only.');
       return;

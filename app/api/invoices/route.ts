@@ -68,6 +68,9 @@ async function attachInvoiceLines<T extends InvoiceRow>(rows: T[], userId?: stri
     }
     return rows;
   }
+  if (!Array.isArray(data)) {
+    return rows;
+  }
   const grouped = data.reduce<Record<number, typeof data>>((acc, line) => {
     const invoiceId = typeof line.invoice_id === 'number' ? line.invoice_id : null;
     if (invoiceId === null) return acc;
@@ -283,7 +286,7 @@ export async function POST(req: Request) {
     const { error: lineError } = await supabaseServer.from('invoice_line_items').insert(linePayload);
     if (lineError) {
       if (isSchemaCacheError(lineError)) {
-        await supabaseServer.from('invoices').delete().eq('id', invoice.id).catch(() => undefined);
+        await supabaseServer.from('invoices').delete().eq('id', invoice.id);
         const offlineResponse = await persistOfflineInvoice({
           userId,
           customerId,

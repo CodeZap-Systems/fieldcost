@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useMemo } from "react";
 import InvoiceForm from "../../dashboard/invoices/InvoiceForm";
-import { useUserRole } from "../useUserRole";
-import { ensureClientUserId } from "../../../lib/clientUser";
-import { getDemoInvoices, getDemoTasks } from "../../../lib/demoMockData";
-import { canUseDemoFixtures } from "../../../lib/userIdentity";
+import { useUserRole } from "@/app/useUserRole";
+import { ensureClientUserId } from "@/lib/clientUser";
+import { getDemoInvoices, getDemoTasks } from "@/lib/demoMockData";
+import { canUseDemoFixtures } from "@/lib/userIdentity";
 
 type InvoiceRecord = {
   id: number;
