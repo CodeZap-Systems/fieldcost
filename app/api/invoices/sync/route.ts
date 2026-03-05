@@ -79,7 +79,7 @@ export async function POST(req: Request) {
         const message = lineError.message;
         failures.push({ id: record.id, error: message });
         await recordInvoiceSyncFailure(userId, record.id, message);
-        await supabaseServer.from("invoices").delete().eq("id", persistedInvoice.id).catch(() => undefined);
+        await supabaseServer.from("invoices").delete().eq("id", persistedInvoice.id);
         if (isSchemaCacheError(lineError)) {
           break;
         }

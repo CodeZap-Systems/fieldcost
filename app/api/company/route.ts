@@ -139,7 +139,7 @@ export async function PUT(req: Request) {
   let body: Record<string, unknown> | null = null;
   try {
     body = await req.json();
-    const { userId } = await resolveUserContext(req, body?.user_id);
+    const { userId } = await resolveUserContext(req, typeof body?.user_id === 'string' ? body.user_id : null);
     try {
       await ensureAuthUser(userId);
     } catch (error) {
@@ -266,7 +266,7 @@ export async function PUT(req: Request) {
   } catch (err) {
     console.error("PUT /api/company exception", err);
     if (isMissingTableError(err) && body) {
-      const { userId } = await resolveUserContext(req, body?.user_id);
+      const { userId } = await resolveUserContext(req, typeof body?.user_id === 'string' ? body.user_id : null);
       const fallbackPayload = normalizeProfile(body as ProfileInput, userId);
       await saveStoredCompanyProfile(fallbackPayload, { setActive: true });
       const fallback = await getStoredCompanyProfiles(userId);

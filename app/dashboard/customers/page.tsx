@@ -115,7 +115,7 @@ export default function CustomersPage() {
   async function handleUpdate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!userId) return;
-    if (customers.find(c => c.id === id)?.demo) {
+    if (customers.find(c => c.id === editing)?.demo) {
       setError("Demo customers are read-only.");
       return;
     }

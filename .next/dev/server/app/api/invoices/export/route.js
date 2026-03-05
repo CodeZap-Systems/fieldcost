@@ -1,0 +1,13 @@
+var R=require("../../../../chunks/[turbopack]_runtime.js")("server/app/api/invoices/export/route.js")
+R.c("server/chunks/node_modules_next_834eeb3d._.js")
+R.c("server/chunks/node_modules_pdf-lib_es_core_1c65b47f._.js")
+R.c("server/chunks/node_modules_pdf-lib_es_api_9cdcbbc9._.js")
+R.c("server/chunks/node_modules_pdf-lib_es_634d7e73._.js")
+R.c("server/chunks/node_modules_bb6b9e27._.js")
+R.c("server/chunks/node_modules_@pdf-lib_standard-fonts_es_0e490e76._.js")
+R.c("server/chunks/node_modules_@supabase_auth-js_dist_module_02e1b12e._.js")
+R.c("server/chunks/node_modules_e88d5743._.js")
+R.c("server/chunks/[root-of-the-server]__55be4824._.js")
+R.c("server/chunks/_next-internal_server_app_api_invoices_export_route_actions_d34276dc.js")
+R.m("[project]/node_modules/next/dist/esm/build/templates/app-route.js { INNER_APP_ROUTE => \"[project]/app/api/invoices/export/route.ts [app-route] (ecmascript)\" } [app-route] (ecmascript)")
+module.exports=R.m("[project]/node_modules/next/dist/esm/build/templates/app-route.js { INNER_APP_ROUTE => \"[project]/app/api/invoices/export/route.ts [app-route] (ecmascript)\" } [app-route] (ecmascript)").exports

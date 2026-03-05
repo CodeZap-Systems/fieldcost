@@ -1,0 +1,20 @@
+{
+  "/api/budgets/route": "app/api/budgets/route.js",
+  "/api/company/route": "app/api/company/route.js",
+  "/api/crew/route": "app/api/crew/route.js",
+  "/api/customers/route": "app/api/customers/route.js",
+  "/api/invoices/export/route": "app/api/invoices/export/route.js",
+  "/api/invoices/route": "app/api/invoices/route.js",
+  "/api/items/route": "app/api/items/route.js",
+  "/api/projects/route": "app/api/projects/route.js",
+  "/api/registrations/route": "app/api/registrations/route.js",
+  "/api/task-photos/route": "app/api/task-photos/route.js",
+  "/api/tasks/route": "app/api/tasks/route.js",
+  "/auth/demo-login/page": "app/auth/demo-login/page.js",
+  "/auth/login/page": "app/auth/login/page.js",
+  "/dashboard/invoices/page": "app/dashboard/invoices/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/dashboard/projects/page": "app/dashboard/projects/page.js",
+  "/dashboard/tasks/page": "app/dashboard/tasks/page.js",
+  "/page": "app/page.js"
+}
