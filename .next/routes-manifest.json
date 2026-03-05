@@ -41,6 +41,18 @@
       "namedRegex": "^/_not\\-found(?:/)?$"
     },
     {
+      "page": "/api/billing/checkout",
+      "regex": "^/api/billing/checkout(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/billing/checkout(?:/)?$"
+    },
+    {
+      "page": "/api/billing/notify",
+      "regex": "^/api/billing/notify(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/billing/notify(?:/)?$"
+    },
+    {
       "page": "/api/budgets",
       "regex": "^/api/budgets(?:/)?$",
       "routeKeys": {},
@@ -177,6 +189,24 @@
       "regex": "^/auth/reset\\-password(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/auth/reset\\-password(?:/)?$"
+    },
+    {
+      "page": "/billing",
+      "regex": "^/billing(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/billing(?:/)?$"
+    },
+    {
+      "page": "/billing/cancelled",
+      "regex": "^/billing/cancelled(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/billing/cancelled(?:/)?$"
+    },
+    {
+      "page": "/billing/success",
+      "regex": "^/billing/success(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/billing/success(?:/)?$"
     },
     {
       "page": "/dashboard",

@@ -1,0 +1,3 @@
+{
+  "/(dashboard)/billing/cancelled/page": "app/(dashboard)/billing/cancelled/page.js"
+}

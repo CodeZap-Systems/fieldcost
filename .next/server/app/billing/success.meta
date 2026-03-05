@@ -1,0 +1,17 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/(dashboard)/layout,_N_T_/(dashboard)/billing/layout,_N_T_/(dashboard)/billing/success/layout,_N_T_/(dashboard)/billing/success/page,_N_T_/billing/success"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/!KGRhc2hib2FyZCk/billing/success/__PAGE__",
+    "/!KGRhc2hib2FyZCk/billing/success",
+    "/!KGRhc2hib2FyZCk/billing",
+    "/!KGRhc2hib2FyZCk",
+    "/_index",
+    "/_head"
+  ]
+}

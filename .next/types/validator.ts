@@ -47,6 +47,33 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
 }
 
 
+// Validate ../../app/(dashboard)/billing/cancelled/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/billing/cancelled">> = Specific
+  const handler = {} as typeof import("../../app/(dashboard)/billing/cancelled/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../app/(dashboard)/billing/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/billing">> = Specific
+  const handler = {} as typeof import("../../app/(dashboard)/billing/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../app/(dashboard)/billing/success/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/billing/success">> = Specific
+  const handler = {} as typeof import("../../app/(dashboard)/billing/success/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../app/(dashboard)/invoices/page.tsx
 {
   type __IsExpected<Specific extends AppPageConfig<"/invoices">> = Specific
@@ -276,6 +303,24 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
 {
   type __IsExpected<Specific extends AppPageConfig<"/">> = Specific
   const handler = {} as typeof import("../../app/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../app/api/billing/checkout/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/billing/checkout">> = Specific
+  const handler = {} as typeof import("../../app/api/billing/checkout/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../app/api/billing/notify/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/billing/notify">> = Specific
+  const handler = {} as typeof import("../../app/api/billing/notify/route.js")
   type __Check = __IsExpected<typeof handler>
   // @ts-ignore
   type __Unused = __Check

@@ -1,7 +1,12 @@
 {
+  "/(dashboard)/billing/cancelled/page": "app/(dashboard)/billing/cancelled/page.js",
+  "/(dashboard)/billing/page": "app/(dashboard)/billing/page.js",
+  "/(dashboard)/billing/success/page": "app/(dashboard)/billing/success/page.js",
   "/(dashboard)/invoices/page": "app/(dashboard)/invoices/page.js",
   "/_global-error/page": "app/_global-error/page.js",
   "/_not-found/page": "app/_not-found/page.js",
+  "/api/billing/checkout/route": "app/api/billing/checkout/route.js",
+  "/api/billing/notify/route": "app/api/billing/notify/route.js",
   "/api/budgets/route": "app/api/budgets/route.js",
   "/api/company/logo/route": "app/api/company/logo/route.js",
   "/api/company/route": "app/api/company/route.js",

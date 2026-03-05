@@ -80,9 +80,10 @@ const DEMO_SWITCHES = [
   { id: DEMO_SUBCONTRACTOR_USER_ID, label: "Demo crew view", helper: "Field" },
 ];
 
-export default function AppNav() {
+export default function AppNav({ initialTier = 'starter' }: { initialTier?: 'starter' | 'growth' }) {
   const pathname = usePathname();
   const [role, setRole] = React.useState<string | null>(null);
+  const [subscriptionTier] = React.useState<'starter' | 'growth'>(initialTier);
   const [demoUserId, setDemoUserId] = React.useState<string | null>(null);
   const [companies, setCompanies] = React.useState<Array<{ id: string; name: string }>>([]);
   const [activeCompanyId, setActiveCompanyId] = React.useState<string | null>(null);
@@ -238,6 +239,18 @@ export default function AppNav() {
           <div className="workspace-nav-section">
             <span>Account</span>
             <div className="workspace-nav-links">
+              <Link href="/billing" aria-current={pathname === "/billing" ? "page" : undefined}>
+                💳 Billing
+                <span
+                  className={`ml-2 inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                    subscriptionTier === 'growth'
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-orange-100 text-orange-700'
+                  }`}
+                >
+                  {subscriptionTier === 'growth' ? 'Growth' : 'Upgrade'}
+                </span>
+              </Link>
               {AUTH_LINKS.map(link => (
                 <Link key={link.href} href={link.href} aria-current={pathname === link.href ? "page" : undefined}>
                   {link.label}
