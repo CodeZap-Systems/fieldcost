@@ -26,9 +26,19 @@ export async function ensureAuthUser(userId?: string | null): Promise<User | und
   const normalized = userId?.trim();
   if (!normalized) return undefined;
 
+  // For demo users, skip auth verification if service role key is missing
+  // Demo users are for testing only and don't require strict auth validation
+  const isDemoUser = normalized === "demo" || normalized.startsWith("demo-");
+  
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    if (isDemoUser) {
+      // For demo users, allow operation to proceed without auth verification
+      console.warn(`Demo user "${normalized}" proceeding without auth verification (service role key missing)`);
+      return undefined;
+    }
+    // For real users, authentication is required
     throw new EnsureAuthUserError(
-      "Supabase service role key (SUPABASE_SERVICE_ROLE_KEY) is required to seed demo accounts. Add it to your .env.local file."
+      "Supabase service role key (SUPABASE_SERVICE_ROLE_KEY) is required. Add it to your environment variables."
     );
   }
 
