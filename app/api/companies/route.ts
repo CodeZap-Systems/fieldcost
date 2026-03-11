@@ -8,6 +8,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
 import { resolveServerUserId } from "@/lib/serverUser";
 
+/**
+ * Mark company as demo based on certain criteria
+ */
+function markDemoCompany(company: any) {
+  return {
+    ...company,
+    is_demo_company: 
+      company.name?.toLowerCase().includes('demo') ||
+      company.name?.toLowerCase().includes('test') ||
+      company.id === 1, // Mark first company as demo for seeding purposes
+  };
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -28,9 +41,12 @@ export async function GET(request: NextRequest) {
         });
       }
 
+      // Mark demo companies and add is_demo_company flag
+      const companiesWithDemo = (companies || []).map(markDemoCompany);
+
       // If looking for specific company
       if (companyId) {
-        const company = (companies || []).find(c => c.id === companyId);
+        const company = companiesWithDemo.find(c => c.id === parseInt(companyId, 10));
         if (company) {
           return NextResponse.json({ company });
         }
@@ -41,8 +57,8 @@ export async function GET(request: NextRequest) {
       }
 
       return NextResponse.json({
-        companies: companies || [],
-        total: companies?.length || 0,
+        companies: companiesWithDemo,
+        total: companiesWithDemo.length,
       });
     } catch (dbError) {
       console.error("Database error fetching companies:", dbError);
