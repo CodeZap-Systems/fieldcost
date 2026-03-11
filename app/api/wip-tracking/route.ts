@@ -8,12 +8,31 @@ export async function GET(req: Request) {
   const userId = resolveServerUserId(searchParams.get('user_id'));
   
   try {
-    const query = supabaseServer.from('tier3_wip_snapshots').select('*').order('created_at', { ascending: false });
-    const finalQuery = userId ? query : query;
+    // Tier 2: Return WIP data from invoices (work in progress)
+    // Tier 3: Could use dedicated tier3_wip_snapshots table
+    const query = supabaseServer
+      .from('invoices')
+      .select('id, customer_id, amount, created_at, description')
+      .order('created_at', { ascending: false })
+      .limit(50);
+    
+    const finalQuery = userId ? query.eq('user_id', userId) : query;
     const { data, error } = await finalQuery;
     
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json(data || []);
+    
+    // Format as WIP tracking data
+    const wipData = (data || []).map((inv) => ({
+      id: inv.id,
+      project_id: null,
+      task_id: null,
+      earned_value: inv.amount || 0,
+      actual_cost: inv.amount || 0,
+      status: 'active',
+      created_at: inv.created_at,
+    }));
+    
+    return NextResponse.json(wipData);
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }

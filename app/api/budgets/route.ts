@@ -14,14 +14,11 @@ export async function GET(req: Request) {
   if (!userId) return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
 
   try {
-    const { companyId: validCompanyId } = await getCompanyContext(userId, companyId);
-    
     const query = supabaseServer
       .from('budgets')
       .select('*')
       .eq('project_id', projectId)
-      .eq('user_id', userId)
-      .eq('company_id', validCompanyId);
+      .eq('user_id', userId);
     const { data, error } = await query.maybeSingle();
     
     if (error) {
@@ -29,7 +26,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
     if (!data) {
-      return NextResponse.json({ project_id: Number(projectId), planned_amount: 0, actual_amount: 0, user_id: userId, company_id: validCompanyId });
+      return NextResponse.json({ project_id: Number(projectId), planned_amount: 0, actual_amount: 0, user_id: userId });
     }
     return NextResponse.json(data);
   } catch (err) {

@@ -14,13 +14,10 @@ export async function GET(req: Request) {
   }
 
   try {
-    const { companyId: validCompanyId } = await getCompanyContext(userId, companyId);
-    
     const { data, error } = await supabaseServer
       .from('customers')
       .select('*')
       .eq('user_id', userId)
-      .eq('company_id', validCompanyId)
       .order('id', { ascending: false });
     
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
