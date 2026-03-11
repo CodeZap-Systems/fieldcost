@@ -414,68 +414,136 @@ function InvoicesPageContent() {
         </button>
       </div>
       <InvoiceForm onAdd={handleAdd} preset={preset} />
-      {loading && <div className="text-blue-600">Loading...</div>}
-      {error && <div className="text-red-600">{error}</div>}
-      <ul className="mt-4">
-        {invoices.map((inv, i) => {
-          const customerLabel = inv.customer?.name || inv.customer_name || (inv.customer_id ? `Customer #${inv.customer_id}` : "Customer");
-          return (
-            <li key={inv.id ?? i} className="border-b py-2 flex items-center gap-2">
-              {editing === inv.id ? (
-                <form onSubmit={handleUpdate} className="flex gap-2 flex-1 items-center">
-                  <span className="font-semibold flex-1">{customerLabel}</span>
-                  <input
-                    className="border p-1 rounded w-32"
-                    type="number"
-                    min="0"
-                    value={editData.amount}
-                    onChange={e => setEditData(ed => ({ ...ed, amount: Number(e.target.value) }))}
-                    required
-                  />
-                  <input
-                    className="border p-1 rounded flex-1"
-                    value={editData.description}
-                    onChange={e => setEditData(ed => ({ ...ed, description: e.target.value }))}
-                    placeholder="Description"
-                  />
-                  <button className="bg-green-600 text-white px-2 py-1 rounded" type="submit">Save</button>
-                  <button className="bg-gray-400 text-white px-2 py-1 rounded" type="button" onClick={() => setEditing(null)}>Cancel</button>
-                </form>
-              ) : (
-                <>
-                  {!inv.demo && (
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.includes(inv.id)}
-                      onChange={() => toggleSelection(inv.id)}
-                      className="h-4 w-4"
-                      aria-label={`Select invoice ${inv.id} for export`}
-                    />
-                  )}
-                  <span className="font-semibold">{customerLabel}</span> — R{inv.amount?.toFixed(2)}
-                  {inv.description && <span className="ml-2 text-gray-600">({inv.description})</span>}
-                  {inv.offline && (
-                    <span className="ml-2 rounded-full border border-slate-300 bg-white px-2 py-0.5 text-xs uppercase tracking-wide text-slate-700">
-                      Offline
-                    </span>
-                  )}
-                  {inv.last_sync_error && (
-                    <span className="ml-2 text-xs text-rose-600">{inv.last_sync_error}</span>
-                  )}
-                  {!inv.demo ? (
-                    <>
-                      <button className="bg-yellow-500 text-white px-2 py-1 rounded ml-2" onClick={() => handleEdit(inv)}>Edit</button>
-                      <button className="bg-red-600 text-white px-2 py-1 rounded ml-2" onClick={() => handleDelete(inv.id)}>Delete</button>
-                    </>
+      {loading && <div className="text-center py-8 text-blue-600 font-semibold">Loading invoices…</div>}
+      {error && <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-900">{error}</div>}
+      {invoices.length === 0 && !loading ? (
+        <div className="rounded-lg border border-slate-200 bg-slate-50 px-6 py-12 text-center">
+          <p className="text-slate-600 font-semibold">No invoices yet</p>
+          <p className="text-slate-500 text-sm mt-1">Create your first invoice above to get started.</p>
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2">
+          {invoices.map((inv, i) => {
+            const customerLabel = inv.customer?.name || inv.customer_name || (inv.customer_id ? `Customer #${inv.customer_id}` : "Customer");
+            return (
+              <div
+                key={inv.id ?? i}
+                className="rounded-lg border border-slate-200 bg-white shadow-sm hover:shadow-md transition-shadow overflow-hidden"
+              >
+                <div className="p-5">
+                  {/* Header */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-slate-900">{customerLabel}</h3>
+                      {inv.description && <p className="text-sm text-slate-600 mt-1">{inv.description}</p>}
+                    </div>
+                    {!inv.demo && (
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(inv.id)}
+                        onChange={() => toggleSelection(inv.id)}
+                        className="h-5 w-5 rounded border-slate-300 text-blue-600"
+                        aria-label={`Select invoice for export`}
+                      />
+                    )}
+                  </div>
+
+                  {/* Amount and Status */}
+                  <div className="flex items-baseline justify-between mb-4 pb-4 border-b border-slate-100">
+                    <div>
+                      <p className="text-xs tracking-wide text-slate-500 uppercase font-semibold mb-1">Amount</p>
+                      <p className="text-3xl font-bold text-slate-900">
+                        R<span>{inv.amount?.toFixed(2)}</span>
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2 justify-end">
+                      {inv.offline && (
+                        <span className="inline-flex items-center rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
+                          📡 Offline
+                        </span>
+                      )}
+                      {inv.demo && (
+                        <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-600">
+                          ✨ Demo
+                        </span>
+                      )}
+                      {inv.last_sync_error && (
+                        <span className="inline-flex items-center rounded-full border border-red-300 bg-red-50 px-3 py-1 text-xs font-semibold text-red-700">
+                          ⚠️ Sync error
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Invoice Meta */}
+                  <div className="grid grid-cols-2 gap-3 mb-4 text-sm">
+                    <div>
+                      <p className="text-xs text-slate-500 uppercase tracking-wide font-semibold mb-0.5">Invoice ID</p>
+                      <p className="font-mono text-slate-700">#{inv.id}</p>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  {editing === inv.id ? (
+                    <form onSubmit={handleUpdate} className="space-y-3">
+                      <input
+                        className="w-full rounded border border-slate-300 px-3 py-2 text-sm"
+                        type="number"
+                        min="0"
+                        value={editData.amount}
+                        onChange={e => setEditData(ed => ({ ...ed, amount: Number(e.target.value) }))}
+                        placeholder="Amount"
+                        required
+                      />
+                      <textarea
+                        className="w-full rounded border border-slate-300 px-3 py-2 text-sm"
+                        value={editData.description}
+                        onChange={e => setEditData(ed => ({ ...ed, description: e.target.value }))}
+                        placeholder="Description"
+                        rows={2}
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          className="flex-1 rounded border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-100"
+                          type="submit"
+                        >
+                          Save
+                        </button>
+                        <button
+                          className="flex-1 rounded border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                          type="button"
+                          onClick={() => setEditing(null)}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
                   ) : (
-                    <span className="ml-2 rounded-full border border-amber-200 px-2 py-0.5 text-xs uppercase tracking-wide text-amber-600">Demo</span>
+                    <div className="flex gap-2">
+                      {!inv.demo && (
+                        <>
+                          <button
+                            className="flex-1 rounded border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-700 hover:bg-amber-100 transition-colors"
+                            onClick={() => handleEdit(inv)}
+                          >
+                            ✎ Edit
+                          </button>
+                          <button
+                            className="flex-1 rounded border border-red-300 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-100 transition-colors"
+                            onClick={() => handleDelete(inv.id)}
+                          >
+                            🗑 Delete
+                          </button>
+                        </>
+                      )}
+                    </div>
                   )}
-                </>
-              )}
-            </li>
-          );
-        })}
-      </ul>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </main>
   );
 }
