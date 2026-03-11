@@ -1,0 +1,67 @@
+{
+  "timestamp": "2026-03-11T13:32:42.291Z",
+  "baseUrl": "https://fieldcost.vercel.app",
+  "totalTests": 10,
+  "passed": 8,
+  "failed": 2,
+  "passRate": "80.0%",
+  "journey": [
+    "Dashboard Access",
+    "View Projects",
+    "Create Project",
+    "Create Tasks",
+    "Time Tracking",
+    "Inventory Management",
+    "Customer Management",
+    "Invoice Creation",
+    "View Reports",
+    "Data Consistency"
+  ],
+  "results": [
+    {
+      "test": "Dashboard Access",
+      "status": "PASS"
+    },
+    {
+      "test": "View Projects",
+      "status": "PASS",
+      "count": 6
+    },
+    {
+      "test": "Create Project",
+      "status": "FAIL"
+    },
+    {
+      "test": "Create Tasks",
+      "status": "PASS",
+      "count": 3
+    },
+    {
+      "test": "Time Tracking",
+      "status": "PASS"
+    },
+    {
+      "test": "Create Inventory",
+      "status": "PASS",
+      "itemId": 31
+    },
+    {
+      "test": "Create Customer",
+      "status": "PASS",
+      "customerId": 43
+    },
+    {
+      "test": "Create Invoice",
+      "status": "PASS",
+      "invoiceId": 29
+    },
+    {
+      "test": "View Reports",
+      "status": "FAIL"
+    },
+    {
+      "test": "Data Consistency",
+      "status": "PASS"
+    }
+  ]
+}

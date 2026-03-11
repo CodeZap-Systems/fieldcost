@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-03-11T13:20:29.866Z",
+  "results": [
+    {
+      "test": "Dashboard Access",
+      "status": "FAIL"
+    },
+    {
+      "test": "View Projects",
+      "status": "FAIL"
+    },
+    {
+      "test": "Create Project",
+      "status": "FAIL"
+    },
+    {
+      "test": "Reports Endpoint",
+      "status": "FAIL",
+      "reason": "HTML response"
+    }
+  ],
+  "passRate": "0.0"
+}

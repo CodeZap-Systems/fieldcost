@@ -1,0 +1,43 @@
+{
+  "timestamp": "2026-03-11T08:18:53.824Z",
+  "baseUrl": "https://fieldcost.vercel.app",
+  "totalTests": 8,
+  "passed": 8,
+  "failed": 0,
+  "passRate": "100.0%",
+  "results": [
+    {
+      "test": "GET /api/tasks",
+      "status": "PASS"
+    },
+    {
+      "test": "POST /api/tasks - Create",
+      "status": "PASS",
+      "taskId": 24
+    },
+    {
+      "test": "GET /api/tasks - Verify new task",
+      "status": "PASS"
+    },
+    {
+      "test": "PATCH /api/tasks - Move to in-progress",
+      "status": "PASS"
+    },
+    {
+      "test": "GET /api/tasks - Verify status persisted",
+      "status": "PASS"
+    },
+    {
+      "test": "PATCH /api/tasks - Move to done",
+      "status": "PASS"
+    },
+    {
+      "test": "GET /api/tasks - Verify final status",
+      "status": "PASS"
+    },
+    {
+      "test": "PATCH /api/tasks - Move back to todo",
+      "status": "PASS"
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^Test-Path app/components/WIPPushWidget\\.tsx; Test-Path app/dashboard/wip-push-demo/page\\.tsx; Test-Path app/api/invoices/push-to-erp/route\\.ts$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

@@ -6,6 +6,8 @@ import {
   readActiveCompanyId,
 } from "@/lib/companySwitcher";
 import { isDemoCompany, DEMO_COMPANY_ID } from "@/lib/demoConstants";
+import { isDemoUserId } from "@/lib/userIdentity";
+import { supabase } from "@/lib/supabaseClient";
 
 export interface Company {
   id: string;
@@ -45,6 +47,11 @@ export function useCompanySwitcher(options?: UseCompanySwitcherOptions) {
         setIsLoading(true);
         setError(null);
 
+        // Get current user ID to check if demo or real user
+        const { data } = await supabase.auth.getUser();
+        const currentUserId = data?.user?.id;
+        const isDemo = isDemoUserId(currentUserId);
+
         const params = new URLSearchParams();
         const targetId = activeCompanyId || readActiveCompanyId();
         if (targetId) params.set("company_id", targetId);
@@ -65,7 +72,12 @@ export function useCompanySwitcher(options?: UseCompanySwitcherOptions) {
             ? [payload.company]
             : [];
 
-        const normalized = companyList
+        // For real users, filter out demo company
+        const filtered = isDemo
+          ? companyList
+          : companyList.filter((c: any) => c?.id !== DEMO_COMPANY_ID);
+
+        const normalized = filtered
           .map((entry: any) => ({
             id: entry?.id ? String(entry.id) : "",
             name: entry?.name || "Untitled company",
@@ -74,9 +86,12 @@ export function useCompanySwitcher(options?: UseCompanySwitcherOptions) {
 
         setCompanies(normalized);
 
-        const resolvedId = payload?.company?.id
-          ? String(payload.company.id)
-          : normalized[0]?.id || null;
+        // For real users, don't allow demo company as active
+        const payloadCompany = payload?.company;
+        const payloadCompanyId = payloadCompany?.id ? String(payloadCompany.id) : null;
+        const resolvedId = isDemo
+          ? (payloadCompanyId || normalized[0]?.id || null)
+          : (payloadCompanyId === DEMO_COMPANY_ID ? null : payloadCompanyId) || normalized[0]?.id || null;
 
         if (resolvedId && resolvedId !== activeCompanyId) {
           setActiveCompanyId(resolvedId);
@@ -103,6 +118,19 @@ export function useCompanySwitcher(options?: UseCompanySwitcherOptions) {
       try {
         setIsLoading(true);
         setError(null);
+
+        // Check if current user is a demo user
+        const { data } = await supabase.auth.getUser();
+        const currentUserId = data?.user?.id;
+        const isDemo = isDemoUserId(currentUserId);
+
+        // For real users, prevent switching to demo company
+        if (!isDemo && isDemoCompany(companyId)) {
+          const error = new Error("Cannot switch to demo workspace from real account");
+          setError(error);
+          options?.onSwitchError?.(error);
+          return;
+        }
 
         // For demo company, just update localStorage
         if (isDemoCompany(companyId)) {
