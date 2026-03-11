@@ -32,6 +32,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Email and password are required." }, { status: 400 });
     }
 
+    if (!companyName) {
+      return NextResponse.json({ error: "Company name is required." }, { status: 400 });
+    }
+
     const client = createAnonClient();
     const registrationEntry = {
       email,
@@ -40,6 +44,8 @@ export async function POST(req: Request) {
       status: "pending" as const,
       registeredAt: new Date().toISOString(),
     };
+
+    console.log("Attempting to sign up user:", { email, companyName, role });
 
     const { error } = await client.auth.signUp({
       email,
@@ -51,6 +57,7 @@ export async function POST(req: Request) {
     });
 
     if (error) {
+      console.error("Supabase auth error:", error);
       const message = error.message?.toLowerCase() ?? "";
       if (message.includes("rate limit")) {
         await recordRegistration(registrationEntry);
@@ -62,15 +69,20 @@ export async function POST(req: Request) {
           { status: 200 },
         );
       }
-      return NextResponse.json({ error: error.message }, { status: 400 });
+      if (message.includes("already registered")) {
+        return NextResponse.json({ error: "This email is already registered. Please log in instead." }, { status: 400 });
+      }
+      return NextResponse.json({ error: error.message || "Registration failed." }, { status: 400 });
     }
 
+    console.log("Supabase sign up successful for:", email);
     await recordRegistration(registrationEntry);
 
     return NextResponse.json({ success: true, message: "Registration email sent. Please confirm to continue." });
   } catch (error) {
-    console.error("POST /api/registrations", error);
-    return NextResponse.json({ error: "Unable to process registration." }, { status: 500 });
+    console.error("POST /api/registrations error:", error);
+    const errorMsg = error instanceof Error ? error.message : "Unknown error";
+    return NextResponse.json({ error: `Unable to process registration: ${errorMsg}` }, { status: 500 });
   }
 }
 
