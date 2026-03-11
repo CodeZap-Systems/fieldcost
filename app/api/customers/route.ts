@@ -6,8 +6,39 @@ import { getCompanyContext } from '../../../lib/companyContext';
 
 export async function GET(req: Request) {
   try {
+    const userId = resolveServerUserId(undefined);
+    
+    // Get demo customers from database if available
+    if (userId === 'demo-user') {
+      const { data, error } = await supabaseServer
+        .from('customers')
+        .select('*');
+      
+      if (!error && Array.isArray(data)) {
+        return NextResponse.json(data.map(c => ({
+          ...c,
+          company_id: c.company_id || 1
+        })));
+      }
+    }
+    
+    // For authenticated users, try to get from Sage API
+    // For now, return from database with company filtering
+    if (userId && userId !== 'demo-user') {
+      const { data, error } = await supabaseServer
+        .from('customers')
+        .select('*')
+        .eq('user_id', userId);
+      
+      if (!error && data) {
+        return NextResponse.json(data);
+      }
+    }
+    
+    // Graceful degradation: return empty array
     return NextResponse.json([]);
   } catch (e) {
+    // Handle all errors gracefully
     return NextResponse.json([]);
   }
 }

@@ -1,32 +1,48 @@
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const { data: invoices, error } = await supabaseServer
+    // Get query params for filtering
+    const { searchParams } = new URL(req.url);
+    const limit = parseInt(searchParams.get('limit') || '100', 10);
+    const syncStatus = searchParams.get('syncStatus');
+    
+    let query = supabaseServer
       .from("billing_invoices")
       .select("*")
-      .limit(50)
+      .limit(limit)
       .order("created_at", { ascending: false });
 
-    if (error) {
-      return NextResponse.json({
-        invoices: [],
-        total: 0,
-        syncStatus: "operational",
-      });
+    // Optional filter by sync status
+    if (syncStatus) {
+      query = query.eq("sage_sync_status", syncStatus);
     }
 
-    return NextResponse.json({
-      invoices: invoices || [],
-      total: invoices?.length || 0,
-      syncStatus: "operational",
-    });
+    const { data: invoices, error } = await query;
+
+    if (error) {
+      console.warn("Error fetching invoices:", error);
+      return NextResponse.json([]);
+    }
+
+    // Map invoices to include Sage API format fields
+    const formatted = (invoices || []).map(inv => ({
+      ID: inv.id || inv.sage_id,
+      Reference: inv.reference,
+      CustomerName: inv.customer_name,
+      InvoiceNumber: inv.invoice_number,
+      InvoiceDate: inv.invoice_date,
+      Status: inv.sage_sync_status === 'synced' ? 2 : 1,
+      Total: inv.total,
+      Notes: inv.notes,
+      ...inv
+    }));
+
+    return NextResponse.json(formatted);
   } catch (e) {
-    return NextResponse.json({
-      invoices: [],
-      total: 0,
-      syncStatus: "operational",
-    });
+    console.error("Sage invoices GET error:", e);
+    return NextResponse.json([]);
   }
 }
+

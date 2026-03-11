@@ -8,6 +8,24 @@ const PROJECT_LIMIT = 6;
 
 export async function GET(req: Request) {
   try {
+    // Try to get user context, but gracefully handle missing auth
+    const userId = resolveServerUserId(undefined);
+    
+    // Get all projects - for now return from database, not Sage
+    // (Sage doesn't have a "projects" endpoint; projects are in Time Tracking)
+    if (userId && userId !== 'demo-user') {
+      const { data, error } = await supabaseServer
+        .from('projects')
+        .select('*')
+        .eq('user_id', userId)
+        .limit(PROJECT_LIMIT);
+      
+      if (!error && data) {
+        return NextResponse.json(data);
+      }
+    }
+    
+    // Return empty array for demo users or on error (graceful degradation)
     return NextResponse.json([]);
   } catch (e) {
     return NextResponse.json([]);
