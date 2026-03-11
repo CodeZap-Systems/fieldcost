@@ -152,13 +152,12 @@ export async function POST(request: NextRequest) {
       }
 
       const payload: XeroInvoicePayload = {
-        contactId: customerId,
+        customerId,
         description,
         lineAmount: parseFloat(wipAmount.toFixed(2)),
         retentionAmount: parseFloat(retentionAmount.toFixed(2)),
         netAmount: parseFloat(netClaimable.toFixed(2)),
         projectName,
-        invoiceType: "ACCREC",
       };
 
       const result = await createXeroInvoice(payload, body.xeroAccessToken, body.xeroTenantId);
