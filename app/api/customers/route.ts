@@ -29,31 +29,36 @@ export async function GET(req: Request) {
       }
     }
 
-    const { data, error } = await supabaseServer
-      .from('customers')
-      .select('*')
-      .eq('user_id', userId);
-    
-    if (error) {
-      console.error('Customers query error:', error);
-      // Return empty array instead of 500 error
+    try {
+      const { data, error } = await supabaseServer
+        .from('customers')
+        .select('*')
+        .eq('user_id', userId);
+      
+      if (error) {
+        console.error('Customers query error:', error);
+        // Return empty array instead of 500 error
+        return NextResponse.json([]);
+      }
+      
+      // Filter by company_id if available
+      const filtered = validCompanyId 
+        ? (data || []).filter(c => c.company_id === validCompanyId)
+        : (data || []);
+      
+      const withCompanyId = filtered.map(item => ({ 
+        ...item, 
+        company_id: validCompanyId || item.company_id 
+      }));
+      
+      return NextResponse.json(withCompanyId);
+    } catch (dbError) {
+      console.error('DB access error in customers:', dbError);
       return NextResponse.json([]);
     }
-    
-    // Filter by company_id if available
-    const filtered = validCompanyId 
-      ? (data || []).filter(c => c.company_id === validCompanyId)
-      : (data || []);
-    
-    const withCompanyId = filtered.map(item => ({ 
-      ...item, 
-      company_id: validCompanyId || item.company_id 
-    }));
-    
-    return NextResponse.json(withCompanyId);
   } catch (err) {
     console.error('GET /api/customers exception:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json([]);
   }
 }
 
