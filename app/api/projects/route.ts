@@ -16,14 +16,19 @@ export async function GET(req: Request) {
   }
 
   try {
+    const { companyId: validCompanyId } = await getCompanyContext(userId, companyId);
+    
     const { data, error } = await supabaseServer
       .from('projects')
       .select('*')
       .eq('user_id', userId)
+      .eq('company_id', validCompanyId)
       .order('id', { ascending: false });
     
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json(data);
+    // Ensure company_id is in response
+    const dataWithCompanyId = (data || []).map(item => ({ ...item, company_id: validCompanyId }));
+    return NextResponse.json(dataWithCompanyId);
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 400 });
   }

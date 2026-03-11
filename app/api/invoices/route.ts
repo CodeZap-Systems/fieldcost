@@ -116,9 +116,14 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const userId = resolveServerUserId(searchParams.get('user_id'));
+    const companyId = searchParams.get('company_id');
     const stored = userId ? await getStoredInvoices(userId) : [];
     const query = supabaseServer.from('invoices').select(INVOICE_SELECT).order('id', { ascending: false });
-    const finalQuery = userId ? query.eq('user_id', userId) : query;
+    let finalQuery = userId ? query.eq('user_id', userId) : query;
+    // Add company filter if available
+    if (companyId) {
+      finalQuery = finalQuery.eq('company_id', companyId);
+    }
     const { data, error } = await finalQuery;
     if (error) {
       if (isSchemaCacheError(error)) {
@@ -128,8 +133,13 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
     const hydrated = await attachInvoiceLines(data ?? [], userId);
+    // Ensure company_id is in response
+    const withCompanyId = (hydrated || []).map(inv => ({ 
+      ...inv, 
+      company_id: inv.company_id || companyId 
+    }));
     const offline = stored.map(storedInvoiceToApi);
-    return NextResponse.json([...hydrated, ...offline]);
+    return NextResponse.json([...withCompanyId, ...offline]);
   } catch (err) {
     console.error('GET /api/invoices exception:', err);
     return NextResponse.json({ error: 'Unexpected error' }, { status: 500 });
