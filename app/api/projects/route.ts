@@ -8,11 +8,9 @@ const PROJECT_LIMIT = 6;
 
 export async function GET(req: Request) {
   try {
-    // Try to get user context, but gracefully handle missing auth
     const userId = resolveServerUserId(undefined);
     
-    // Get all projects - for now return from database, not Sage
-    // (Sage doesn't have a "projects" endpoint; projects are in Time Tracking)
+    // Get projects from database
     if (userId && userId !== 'demo-user') {
       const { data, error } = await supabaseServer
         .from('projects')
@@ -21,11 +19,28 @@ export async function GET(req: Request) {
         .limit(PROJECT_LIMIT);
       
       if (!error && data) {
-        return NextResponse.json(data);
+        // Ensure company_id is in response
+        return NextResponse.json(data.map(p => ({
+          ...p,
+          company_id: p.company_id || 1  // Default to 1 if not set
+        })));
+      }
+    } else {
+      // Demo user or unspecified - get demo projects
+      const { data, error } = await supabaseServer
+        .from('projects')
+        .select('*')
+        .limit(PROJECT_LIMIT);
+      
+      if (!error && data) {
+        return NextResponse.json(data.map(p => ({
+          ...p,
+          company_id: p.company_id || 1
+        })));
       }
     }
     
-    // Return empty array for demo users or on error (graceful degradation)
+    // Graceful degradation: return empty array
     return NextResponse.json([]);
   } catch (e) {
     return NextResponse.json([]);

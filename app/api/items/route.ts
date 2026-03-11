@@ -8,8 +8,21 @@ export async function GET(req: Request) {
   try {
     const userId = resolveServerUserId(undefined);
     
-    // Get demo items from database if available
-    if (userId === 'demo-user') {
+    // Get items from database with company_id
+    if (userId && userId !== 'demo-user') {
+      const { data, error } = await supabaseServer
+        .from('items')
+        .select('*')
+        .eq('user_id', userId);
+      
+      if (!error && Array.isArray(data)) {
+        return NextResponse.json(data.map(item => ({
+          ...item,
+          company_id: item.company_id || 1
+        })));
+      }
+    } else {
+      // Demo user - get demo items
       const { data, error } = await supabaseServer
         .from('items')
         .select('*');
@@ -19,19 +32,6 @@ export async function GET(req: Request) {
           ...item,
           company_id: item.company_id || 1
         })));
-      }
-    }
-    
-    // For authenticated users, try to get from Sage API
-    // For now, return from database with company filtering
-    if (userId && userId !== 'demo-user') {
-      const { data, error } = await supabaseServer
-        .from('items')
-        .select('*')
-        .eq('user_id', userId);
-      
-      if (!error && data) {
-        return NextResponse.json(data);
       }
     }
     
