@@ -36,6 +36,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Company name is required." }, { status: 400 });
     }
 
+    // Validate password minimum length (Supabase requires at least 6 characters)
+    if (password.length < 6) {
+      return NextResponse.json({ error: "Password must be at least 6 characters long." }, { status: 400 });
+    }
+
+    // Validate email format
+    if (!email.includes("@")) {
+      return NextResponse.json({ error: "Please enter a valid email address." }, { status: 400 });
+    }
+
     const client = createAnonClient();
     const registrationEntry = {
       email,
@@ -69,7 +79,7 @@ export async function POST(req: Request) {
           { status: 200 },
         );
       }
-      if (message.includes("already registered")) {
+      if (message.includes("already registered") || message.includes("user already exists")) {
         return NextResponse.json({ error: "This email is already registered. Please log in instead." }, { status: 400 });
       }
       return NextResponse.json({ error: error.message || "Registration failed." }, { status: 400 });
@@ -82,6 +92,7 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error("POST /api/registrations error:", error);
     const errorMsg = error instanceof Error ? error.message : "Unknown error";
+    console.error("Full error details:", { error });
     return NextResponse.json({ error: `Unable to process registration: ${errorMsg}` }, { status: 500 });
   }
 }
