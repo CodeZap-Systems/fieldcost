@@ -37,6 +37,7 @@ interface WipInvoicePushRequest {
   sageCookie?: string;
   sage_username?: string;
   sage_password?: string;
+  sage_api_key?: string;
   customerName?: string;
   customerEmail?: string;
   xeroAccessToken?: string;
@@ -86,12 +87,14 @@ export async function POST(request: NextRequest) {
       // Get credentials from request or environment
       const username = process.env.SAGE_API_USERNAME || body.sage_username;
       const password = process.env.SAGE_API_PASSWORD || body.sage_password;
+      const apiKey = process.env.SAGE_API_KEY || body.sage_api_key;
+      const apiUrl = process.env.SAGE_API_URL || 'https://resellers.accounting.sageone.co.za/api/2.0.0';
       
-      if (!username || !password) {
+      if (!apiKey && (!username || !password)) {
         return NextResponse.json(
           {
             error: "Sage One BCA credentials required",
-            solution: "Provide SAGE_API_USERNAME and SAGE_API_PASSWORD in environment variables, or pass sage_username/sage_password in request body",
+            solution: "Provide SAGE_API_KEY in environment variables, or SAGE_API_USERNAME/SAGE_API_PASSWORD. Alternatively, pass sage_api_key or sage_username/sage_password in request body",
             demo_mode: "Use sageToken='demo-mode' to test without credentials"
           },
           { status: 400 }
@@ -99,8 +102,8 @@ export async function POST(request: NextRequest) {
       }
 
       try {
-        // Initialize Sage API client
-        sageClient = new SageOneApiClient(username, password);
+        // Initialize Sage API client with credentials and API Key
+        sageClient = new SageOneApiClient(username || '', password || '', apiKey, apiUrl);
         const authSuccess = await sageClient.authenticate();
         
         if (!authSuccess) {
@@ -109,7 +112,7 @@ export async function POST(request: NextRequest) {
               success: false,
               erp: "sage",
               error: "Failed to authenticate with Sage One BCA",
-              hint: "Check credentials: SAGE_API_USERNAME and SAGE_API_PASSWORD"
+              hint: apiKey ? "Check SAGE_API_KEY" : "Check SAGE_API_USERNAME and SAGE_API_PASSWORD"
             },
             { status: 401 }
           );

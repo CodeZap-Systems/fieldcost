@@ -1,7 +1,7 @@
 /**
  * Sage Business Cloud Accounting API Client
  * Real implementation for Sage One BCA API integration
- * API Documentation: https://accounting.sageone.co.za/landing/default.aspx
+ * API Documentation: https://resellers.accounting.sageone.co.za
  */
 
 import https from 'https';
@@ -46,24 +46,47 @@ export interface SageApiResponse<T> {
 
 /**
  * Sage One API Client
+ * Supports both v1.4.2 and v2.0.0 API endpoints
  */
 export class SageOneApiClient {
   private readonly username: string;
   private readonly password: string;
-  private readonly baseUrl = 'https://accounting.sageone.co.za/api/1.4.2';
+  private readonly apiKey?: string;
+  private readonly baseUrl: string;
   private accessToken: string | null = null;
   private tokenExpiry: Date | null = null;
 
-  constructor(username: string, password: string) {
+  constructor(username: string, password: string, apiKey?: string, baseUrl?: string) {
     this.username = username;
     this.password = password;
+    this.apiKey = apiKey;
+    this.baseUrl = baseUrl || 'https://resellers.accounting.sageone.co.za/api/2.0.0';
   }
 
   /**
    * Authenticate and get access token
+   * Tries API Key method first if provided, then falls back to Basic Auth
    */
   async authenticate(): Promise<boolean> {
     try {
+      // If API Key is provided, try that method first
+      if (this.apiKey) {
+        const response = await this.makeRequest<any>(
+          'GET',
+          '/Company/Current',
+          {
+            'Authorization': `Bearer ${this.apiKey}`,
+            'Accept': 'application/json',
+          }
+        );
+        
+        if (response.success) {
+          this.accessToken = this.apiKey;
+          return true;
+        }
+      }
+
+      // Fall back to Basic Auth with username/password
       const credentials = Buffer.from(`${this.username}:${this.password}`).toString('base64');
       
       const response = await this.makeRequest<{ AccessToken: string; ExpiresIn: number }>(
@@ -71,6 +94,7 @@ export class SageOneApiClient {
         '/User',
         {
           'Authorization': `Basic ${credentials}`,
+          'Accept': 'application/json',
         }
       );
 
@@ -277,11 +301,13 @@ export class SageOneApiClient {
   }
 
   /**
-   * Get auth headers with bearer token
+   * Get auth headers with bearer token or API Key
    */
   private getAuthHeaders(): Record<string, string> {
     return {
-      'Authorization': `Bearer ${this.accessToken}`,
+      'Authorization': `Bearer ${this.accessToken || this.apiKey}`,
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
     };
   }
 }
