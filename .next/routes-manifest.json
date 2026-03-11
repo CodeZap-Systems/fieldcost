@@ -215,6 +215,12 @@
       "namedRegex": "^/api/budgets(?:/)?$"
     },
     {
+      "page": "/api/companies",
+      "regex": "^/api/companies(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/companies(?:/)?$"
+    },
+    {
       "page": "/api/company",
       "regex": "^/api/company(?:/)?$",
       "routeKeys": {},
@@ -243,6 +249,12 @@
       "regex": "^/api/customers(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/api/customers(?:/)?$"
+    },
+    {
+      "page": "/api/debug/health",
+      "regex": "^/api/debug/health(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/debug/health(?:/)?$"
     },
     {
       "page": "/api/demo",
@@ -333,6 +345,30 @@
       "regex": "^/api/reports(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/api/reports(?:/)?$"
+    },
+    {
+      "page": "/api/sage/customers",
+      "regex": "^/api/sage/customers(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/sage/customers(?:/)?$"
+    },
+    {
+      "page": "/api/sage/invoices",
+      "regex": "^/api/sage/invoices(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/sage/invoices(?:/)?$"
+    },
+    {
+      "page": "/api/sage/invoices/sync",
+      "regex": "^/api/sage/invoices/sync(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/sage/invoices/sync(?:/)?$"
+    },
+    {
+      "page": "/api/sage/status",
+      "regex": "^/api/sage/status(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/sage/status(?:/)?$"
     },
     {
       "page": "/api/task-photos",

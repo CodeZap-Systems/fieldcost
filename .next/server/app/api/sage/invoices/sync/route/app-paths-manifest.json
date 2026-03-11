@@ -1,0 +1,3 @@
+{
+  "/api/sage/invoices/sync/route": "app/api/sage/invoices/sync/route.js"
+}

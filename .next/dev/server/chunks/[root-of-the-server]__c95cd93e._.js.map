@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 46, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/HOME/Downloads/fieldcost/app/api/health/route.ts"],"sourcesContent":["import { NextResponse } from 'next/server';\r\n\r\nexport async function GET() {\r\n  return NextResponse.json({\r\n    status: 'ok',\r\n    service: 'fieldcost-api',\r\n    timestamp: new Date().toISOString(),\r\n    version: '1.0.0'\r\n  });\r\n}\r\n"],"names":[],"mappings":";;;;AAAA;;AAEO,eAAe;IACpB,OAAO,gJAAY,CAAC,IAAI,CAAC;QACvB,QAAQ;QACR,SAAS;QACT,WAAW,IAAI,OAAO,WAAW;QACjC,SAAS;IACX;AACF"}}]
-}
