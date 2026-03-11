@@ -94,7 +94,7 @@ export async function GET(request: NextRequest) {
 // POST handlers
 export async function POST(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
+    const { searchParams, pathname } = new URL(request.url);
     const userId = resolveServerUserId(searchParams.get('user_id'));
     const body = await request.json();
 
