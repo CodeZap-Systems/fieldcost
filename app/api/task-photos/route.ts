@@ -1,6 +1,7 @@
 import { Buffer } from "node:buffer";
 import { NextResponse } from "next/server";
 import { supabaseServer } from "../../../lib/supabaseServer";
+import { resolveServerUserId } from "../../../lib/serverUser";
 
 const BUCKET_ID = "photos";
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 MB cap for quick evidence snaps
@@ -30,6 +31,49 @@ async function ensureBucketExists() {
 function sanitizeFileName(name: string) {
   const withoutUnsafe = name.replace(/[^a-zA-Z0-9._-]/g, "-");
   return withoutUnsafe || "evidence.jpg";
+}
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const taskId = searchParams.get('taskId');
+  const userId = resolveServerUserId(searchParams.get('user_id'));
+
+  try {
+    // If taskId provided, list photos for that task
+    if (taskId) {
+      const { data, error } = await supabaseServer
+        .from('photo_evidence')
+        .select('*')
+        .eq('task_id', parseInt(taskId))
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+
+      return NextResponse.json({ photos: data || [], count: data?.length || 0 });
+    }
+
+    // Otherwise list all photos for current user
+    if (userId) {
+      const { data, error } = await supabaseServer
+        .from('photo_evidence')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+
+      return NextResponse.json({ photos: data || [], count: data?.length || 0 });
+    }
+
+    return NextResponse.json({ photos: [], count: 0 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unable to fetch photos';
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {

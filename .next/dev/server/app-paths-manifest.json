@@ -1,8 +1,17 @@
 {
   "/api/budgets/route": "app/api/budgets/route.js",
+  "/api/crew/route": "app/api/crew/route.js",
+  "/api/customers/route": "app/api/customers/route.js",
   "/api/health/route": "app/api/health/route.js",
+  "/api/invoices/export/route": "app/api/invoices/export/route.js",
   "/api/invoices/route": "app/api/invoices/route.js",
+  "/api/items/route": "app/api/items/route.js",
+  "/api/location-tracking/route": "app/api/location-tracking/route.js",
+  "/api/offline-sync-status/route": "app/api/offline-sync-status/route.js",
   "/api/projects/route": "app/api/projects/route.js",
+  "/api/reports/route": "app/api/reports/route.js",
+  "/api/task-photos/route": "app/api/task-photos/route.js",
   "/api/tasks/route": "app/api/tasks/route.js",
-  "/api/wip-tracking/route": "app/api/wip-tracking/route.js"
+  "/api/wip-tracking/route": "app/api/wip-tracking/route.js",
+  "/api/workflows/route": "app/api/workflows/route.js"
 }
