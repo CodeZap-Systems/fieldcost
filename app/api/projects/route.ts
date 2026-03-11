@@ -29,7 +29,7 @@ export async function POST(req: Request) {
   }
   
   // Skip project limit for demo users
-  const isDemoUser = userId?.startsWith('demo-user');
+  const isDemoUser = userId === 'demo' || userId?.startsWith('demo-');
   
   if (!isDemoUser) {
     const { count, error: countError } = await supabaseServer
