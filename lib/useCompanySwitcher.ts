@@ -6,6 +6,7 @@ import {
   readActiveCompanyId,
 } from "@/lib/companySwitcher";
 import { isDemoCompany, DEMO_COMPANY_ID } from "@/lib/demoConstants";
+import { isDemoUserId } from "@/lib/userIdentity";
 import { supabase } from "@/lib/supabaseClient";
 
 export interface Company {

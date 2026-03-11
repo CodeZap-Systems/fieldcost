@@ -2,20 +2,43 @@ import { NextResponse } from 'next/server';
 import { supabaseServer } from '../../../lib/supabaseServer';
 import { resolveServerUserId } from '../../../lib/serverUser';
 import { ensureAuthUser, EnsureAuthUserError } from '../../../lib/demoAuth';
+import { getCompanyContext } from '../../../lib/companyContext';
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const userId = resolveServerUserId(searchParams.get('user_id'));
-  const query = supabaseServer.from('items').select('*').order('id', { ascending: false });
-  const finalQuery = userId ? query.eq('user_id', userId) : query;
-  const { data, error } = await finalQuery;
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data);
+  const companyId = searchParams.get('company_id');
+  
+  if (!userId) {
+    return NextResponse.json({ error: 'User ID required' }, { status: 400 });
+  }
+
+  try {
+    const { companyId: validCompanyId } = await getCompanyContext(userId, companyId);
+    
+    const { data, error } = await supabaseServer
+      .from('items')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('company_id', validCompanyId)
+      .order('id', { ascending: false });
+    
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(data);
+  } catch (err) {
+    return NextResponse.json({ error: String(err) }, { status: 400 });
+  }
 }
 
 export async function POST(req: Request) {
   const body = await req.json();
   const userId = resolveServerUserId(body.user_id);
+  const companyId = body.company_id;
+  
+  if (!userId) {
+    return NextResponse.json({ error: 'User ID required' }, { status: 400 });
+  }
+
   try {
     await ensureAuthUser(userId);
   } catch (error) {
@@ -25,33 +48,70 @@ export async function POST(req: Request) {
     console.error('POST /api/items ensureAuthUser error:', error);
     return NextResponse.json({ error: 'Unable to prepare user context' }, { status: 500 });
   }
-  const payload = { ...body, user_id: userId };
-  const { data, error } = await supabaseServer.from('items').insert([payload]).select();
-  if (error) {
-    console.error('POST /api/items error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+
+  try {
+    const { companyId: validCompanyId } = await getCompanyContext(userId, companyId);
+    
+    const payload = { ...body, user_id: userId, company_id: validCompanyId };
+    const { data, error } = await supabaseServer.from('items').insert([payload]).select();
+    if (error) {
+      console.error('POST /api/items error:', error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    return NextResponse.json(data[0], { status: 201 });
+  } catch (err) {
+    return NextResponse.json({ error: String(err) }, { status: 400 });
   }
-  return NextResponse.json(data[0], { status: 201 });
 }
 
 export async function PATCH(req: Request) {
   const body = await req.json();
-  const { id, user_id: incomingUserId, ...fields } = body;
+  const { id, user_id: incomingUserId, company_id: incomingCompanyId, ...fields } = body;
   const userId = resolveServerUserId(incomingUserId);
-  const { data, error } = await supabaseServer
-    .from('items')
-    .update(fields)
-    .eq('id', id)
-    .eq('user_id', userId)
-    .select();
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data[0]);
+  const companyId = incomingCompanyId;
+  
+  if (!userId || !id) {
+    return NextResponse.json({ error: 'User ID and item ID required' }, { status: 400 });
+  }
+
+  try {
+    const { companyId: validCompanyId } = await getCompanyContext(userId, companyId);
+    
+    const { data, error } = await supabaseServer
+      .from('items')
+      .update(fields)
+      .eq('id', id)
+      .eq('user_id', userId)
+      .eq('company_id', validCompanyId)
+      .select();
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(data[0]);
+  } catch (err) {
+    return NextResponse.json({ error: String(err) }, { status: 400 });
+  }
 }
 
 export async function DELETE(req: Request) {
-  const { id, user_id: incomingUserId } = await req.json();
+  const { id, user_id: incomingUserId, company_id: incomingCompanyId } = await req.json();
   const userId = resolveServerUserId(incomingUserId);
-  const { error } = await supabaseServer.from('items').delete().eq('id', id).eq('user_id', userId);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ success: true });
+  const companyId = incomingCompanyId;
+  
+  if (!userId || !id) {
+    return NextResponse.json({ error: 'User ID and item ID required' }, { status: 400 });
+  }
+
+  try {
+    const { companyId: validCompanyId } = await getCompanyContext(userId, companyId);
+    
+    const { error } = await supabaseServer
+      .from('items')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', userId)
+      .eq('company_id', validCompanyId);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    return NextResponse.json({ error: String(err) }, { status: 400 });
+  }
 }

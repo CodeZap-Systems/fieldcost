@@ -1,0 +1,17 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/dashboard/layout,_N_T_/dashboard/customers/layout,_N_T_/dashboard/customers/reports/layout,_N_T_/dashboard/customers/reports/page,_N_T_/dashboard/customers/reports"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/dashboard/customers/reports/__PAGE__",
+    "/dashboard/customers/reports",
+    "/dashboard/customers",
+    "/dashboard",
+    "/_index",
+    "/_head"
+  ]
+}

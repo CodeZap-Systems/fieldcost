@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
         invoiceType: "Sales",
       };
 
-      const result = await createSageInvoice(payload);
+      const result = await createSageInvoice(payload, body.sageToken, body.sageCookie);
 
       if (result.success) {
         return NextResponse.json({

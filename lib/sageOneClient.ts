@@ -24,9 +24,13 @@ export interface SageInvoiceResponse {
  * Create an invoice in Sage One
  * In demo mode, returns mock success; in production, calls real API
  */
-export async function createSageInvoice(payload: SageInvoicePayload): Promise<SageInvoiceResponse> {
+export async function createSageInvoice(
+  payload: SageInvoicePayload,
+  token?: string,
+  cookie?: string
+): Promise<SageInvoiceResponse> {
   try {
-    // In production, this would call the actual Sage One API
+    // In production, this would call the actual Sage One API with token and cookie
     // For now, we return a structured response
     const invoiceId = `SAGE-${Date.now().toString().slice(-8)}`;
 

@@ -1,1 +1,4 @@
-[00:00:01.584] Server  LOG     ✓ Ready in 1110ms
+[00:00:04.242] Server  LOG     ✓ Ready in 3s
+[00:00:04.544] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:04.696] Browser ERROR   uncaughtError: ChunkLoadError: Failed to load chunk /_next/static/chunks/_7c488eca._.js from module [project]/node_modules/next/dist/compiled/react-server-dom-turbopack/cjs/react-server-dom-turbopack-client.browser.development.js [app-client] (ecmascript)
+[00:00:09.370] Server  LOG     ○ Compiling /_not-found/page ...

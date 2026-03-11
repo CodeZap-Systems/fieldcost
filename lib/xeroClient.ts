@@ -23,9 +23,13 @@ export interface XeroInvoiceResponse {
  * Create an invoice in Xero
  * In demo mode, returns mock success; in production, calls real API
  */
-export async function createXeroInvoice(payload: XeroInvoicePayload): Promise<XeroInvoiceResponse> {
+export async function createXeroInvoice(
+  payload: XeroInvoicePayload,
+  accessToken?: string,
+  tenantId?: string
+): Promise<XeroInvoiceResponse> {
   try {
-    // In production, this would call the actual Xero API
+    // In production, this would call the actual Xero API with accessToken and tenantId
     // For now, we return a structured response
     const invoiceId = `XERO-${Date.now().toString().slice(-8)}`;
 
