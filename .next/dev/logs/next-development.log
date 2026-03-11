@@ -2,3 +2,9 @@
 [00:00:04.544] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
 [00:00:04.696] Browser ERROR   uncaughtError: ChunkLoadError: Failed to load chunk /_next/static/chunks/_7c488eca._.js from module [project]/node_modules/next/dist/compiled/react-server-dom-turbopack/cjs/react-server-dom-turbopack-client.browser.development.js [app-client] (ecmascript)
 [00:00:09.370] Server  LOG     ○ Compiling /_not-found/page ...
+[00:33:57.126] Server  ERROR   ⨯ Error: ENOENT: no such file or directory, open 'C:\Users\HOME\Downloads\fieldcost\.next\dev\server\app\page\build-manifest.json'
+[00:34:00.489] Server  LOG     ○ Compiling /_error ...
+[00:35:04.727] Server  ERROR   ⨯ TurbopackInternalError: failed to write to C:\Users\HOME\Downloads\fieldcost\.next\dev\static\chunks\app_layout_tsx_1cf6b850._.js
+
+Caused by:
+- The requested operation cannot be performed on a file with a user-mapped section open. (os error 1224)

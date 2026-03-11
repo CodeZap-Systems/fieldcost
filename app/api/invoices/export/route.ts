@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { supabaseServer } from "../../../../lib/supabaseServer";
 import { supabase } from "../../../../lib/supabaseClient";
 import { resolveServerUserId } from "../../../../lib/serverUser";
+import { generateInvoicesPdf, InvoiceData, CompanyProfile } from "../../../../lib/invoicePdfGenerator";
 
 const INVOICE_SELECT = "*, customer:customers(id, name, email, user_id), line_items:invoice_line_items(*)";
-const TEMPLATE_OPTIONS = new Set(["standard", "detailed"]);
 
 type InvoiceLineRow = {
   id?: number;
@@ -41,8 +40,6 @@ type CompanyProfileRow = {
   address_line2?: string | null;
   default_currency?: string | null;
 };
-
-const numberFormatter = (currency = "ZAR") => new Intl.NumberFormat("en-ZA", { style: "currency", currency });
 
 const formatDate = (value?: string | null) => {
   if (!value) return "";
@@ -111,69 +108,44 @@ function buildLineRows(invoices: InvoiceRow[]) {
   return [header, ...rows];
 }
 
-async function buildPdf(invoices: InvoiceRow[], company: CompanyProfileRow | null, template: "standard" | "detailed") {
-  const pdf = await PDFDocument.create();
-  const fontRegular = await pdf.embedFont(StandardFonts.Helvetica);
-  const fontBold = await pdf.embedFont(StandardFonts.HelveticaBold);
-  const formatter = numberFormatter(company?.default_currency || "ZAR");
+async function buildPdf(invoices: InvoiceRow[], company: CompanyProfileRow | null) {
+  // Convert database rows to InvoiceData format for professional PDF generation
+  const invoiceData: InvoiceData[] = invoices.map(inv => ({
+    id: inv.id,
+    invoiceNumber: inv.invoice_number || `#${inv.id}`,
+    issuedOn: formatDate(inv.issued_on || inv.created_at),
+    dueOn: formatDate(inv.due_on),
+    reference: inv.reference || undefined,
+    description: inv.description || undefined,
+    amount: inv.amount || 0,
+    currency: company?.default_currency || "ZAR",
+    customer: inv.customer ? {
+      id: inv.customer.id,
+      name: inv.customer.name,
+      email: inv.customer.email || undefined,
+    } : undefined,
+    lineItems: (inv.line_items || []).map(line => ({
+      id: line.id,
+      name: line.name || "Line Item",
+      quantity: line.quantity || 0,
+      rate: line.rate || 0,
+      total: line.total || (line.rate || 0) * (line.quantity || 0),
+      project: line.project || undefined,
+      note: line.note || undefined,
+    })),
+  }));
 
-  for (const inv of invoices) {
-    const page = pdf.addPage([595, 842]);
-    let y = 790;
+  // Convert company profile to CompanyProfile format
+  const companyProfile: CompanyProfile = {
+    name: company?.name || "FieldCost",
+    email: company?.email || undefined,
+    phone: company?.phone || undefined,
+    address1: company?.address_line1 || undefined,
+    address2: company?.address_line2 || undefined,
+    currency: company?.default_currency || "ZAR",
+  };
 
-    const drawLine = (text: string, options?: { size?: number; bold?: boolean; color?: [number, number, number] }) => {
-      const size = options?.size ?? 10;
-      const color = options?.color ?? [0, 0, 0];
-      page.drawText(text, {
-        x: 50,
-        y,
-        size,
-        font: options?.bold ? fontBold : fontRegular,
-        color: rgb(color[0], color[1], color[2]),
-      });
-      y -= size + 6;
-    };
-
-    drawLine(company?.name || "FieldCost", { size: 18, bold: true });
-    if (company?.email) drawLine(company.email, { color: [0.35, 0.35, 0.35] });
-    if (company?.phone) drawLine(company.phone, { color: [0.35, 0.35, 0.35] });
-    if (company?.address_line1) drawLine(company.address_line1, { color: [0.35, 0.35, 0.35] });
-    if (company?.address_line2) drawLine(company.address_line2, { color: [0.35, 0.35, 0.35] });
-
-    y -= 8;
-    drawLine(`Invoice #: ${inv.invoice_number || `#${inv.id}`}`, { size: 12, bold: true });
-    drawLine(`Issued: ${formatDate(inv.issued_on)}`);
-    drawLine(`Due: ${formatDate(inv.due_on)}`);
-    drawLine(`Reference: ${inv.reference || ""}`);
-
-    y -= 8;
-    drawLine("Bill To:", { size: 11, bold: true });
-    drawLine(inv.customer?.name || "");
-    if (inv.customer?.email) drawLine(inv.customer.email);
-
-    y -= 8;
-    drawLine("Line items:", { size: 11, bold: true });
-
-    for (const line of inv.line_items || []) {
-      const rate = line.rate ?? 0;
-      const quantity = line.quantity ?? 0;
-      const total = line.total ?? rate * quantity;
-      drawLine(`${line.name ?? "Line item"} - ${quantity} x ${formatter.format(rate)} = ${formatter.format(total)}`);
-      if (line.project) drawLine(`Project: ${line.project}`, { size: 9, color: [0.35, 0.35, 0.35] });
-      if (line.note && template === "detailed") drawLine(`Note: ${line.note}`, { size: 9, color: [0.35, 0.35, 0.35] });
-      y -= 2;
-      if (y < 80) break;
-    }
-
-    y -= 8;
-    drawLine(`Total: ${formatter.format(inv.amount ?? 0)}`, { size: 14, bold: true });
-    if (template === "detailed" && inv.description) {
-      drawLine(inv.description, { size: 10 });
-    }
-  }
-
-  const bytes = await pdf.save();
-  return Buffer.from(bytes);
+  return generateInvoicesPdf(invoiceData, companyProfile);
 }
 
 export async function GET(req: Request) {
@@ -182,9 +154,6 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const format = (searchParams.get("format") || "ledger").toLowerCase();
     const idsParam = searchParams.get("ids");
-    const template = TEMPLATE_OPTIONS.has((searchParams.get("template") || "standard").toLowerCase())
-      ? (searchParams.get("template") as "standard" | "detailed")
-      : "standard";
 
     const ids = idsParam
       ? idsParam
@@ -231,11 +200,11 @@ export async function GET(req: Request) {
       });
     }
 
-    const pdfBuffer = await buildPdf(invoiceRows, companyRow, template);
-    return new NextResponse(pdfBuffer, {
+    const pdfBuffer = await buildPdf(invoiceRows, companyRow);
+    return new NextResponse(new Uint8Array(pdfBuffer), {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="invoices-${template}.pdf"`,
+        "Content-Disposition": `attachment; filename="invoices-professional.pdf"`,
       },
     });
   } catch (err) {
