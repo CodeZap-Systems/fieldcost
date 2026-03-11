@@ -1,20 +1,20 @@
 /**
- * API: Sage Business Cloud Accounting Integration
- * Handles invoice sync and customer sync with Sage X3/Xero
+ * Catch-all route for Sage API sub-paths
+ * Handles: /api/sage/status, /api/sage/invoices, /api/sage/customers, /api/sage/invoices/sync
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
-import { resolveServerUserId } from "@/lib/serverUser";
 
-// GET handlers
-export async function GET(request: NextRequest) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { slug: string[] } }
+) {
   try {
-    const { pathname, searchParams } = new URL(request.url);
-    const userId = resolveServerUserId(searchParams.get('user_id'));
-    
+    const path = (params.slug || []).join('/');
+
     // GET /api/sage/status
-    if (pathname.includes("/status")) {
+    if (path === 'status') {
       return NextResponse.json({
         status: "operational",
         timestamp: new Date().toISOString(),
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     }
 
     // GET /api/sage/invoices
-    if (pathname.includes("/invoices") && !pathname.includes("/sync")) {
+    if (path === 'invoices') {
       try {
         const { data: invoices, error } = await supabaseServer
           .from("billing_invoices")
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
     }
 
     // GET /api/sage/customers
-    if (pathname.includes("/customers")) {
+    if (path === 'customers') {
       try {
         const { data: customers, error } = await supabaseServer
           .from("customers")
@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ error: "Sage endpoint not found" }, { status: 404 });
   } catch (err) {
     console.error("Sage GET error:", err);
     return NextResponse.json(
@@ -91,15 +91,16 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST handlers
-export async function POST(request: NextRequest) {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { slug: string[] } }
+) {
   try {
-    const { searchParams, pathname } = new URL(request.url);
-    const userId = resolveServerUserId(searchParams.get('user_id'));
-    const body = await request.json();
+    const path = (params.slug || []).join('/');
+    const body = await request.json().catch(() => ({}));
 
     // POST /api/sage/invoices/sync
-    if (pathname.includes("/sync") && pathname.includes("/invoices")) {
+    if (path === 'invoices/sync') {
       const { invoiceId, companyId } = body;
 
       if (!invoiceId || !companyId) {
@@ -110,25 +111,13 @@ export async function POST(request: NextRequest) {
       }
 
       try {
-        const { error: updateError } = await supabaseServer
+        await supabaseServer
           .from("billing_invoices")
           .update({
             sage_sync_status: "synced",
             sage_sync_date: new Date().toISOString(),
           })
           .eq("id", invoiceId);
-
-        if (updateError) {
-          return NextResponse.json(
-            {
-              success: true,
-              invoiceId,
-              syncStatus: "pending",
-              message: "Invoice sync queued",
-            },
-            { status: 200 }
-          );
-        }
 
         return NextResponse.json(
           {
@@ -152,7 +141,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ error: "Sage endpoint not found" }, { status: 404 });
   } catch (err) {
     console.error("Sage POST error:", err);
     return NextResponse.json(
