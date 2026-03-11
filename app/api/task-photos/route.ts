@@ -48,6 +48,10 @@ export async function GET(request: Request) {
         .order('created_at', { ascending: false });
 
       if (error) {
+        // Gracefully handle missing table (happens before schema patch)
+        if (error.message.includes('not found')) {
+          return NextResponse.json({ photos: [], count: 0, note: 'photo_evidence table pending' });
+        }
         return NextResponse.json({ error: error.message }, { status: 500 });
       }
 
@@ -63,6 +67,10 @@ export async function GET(request: Request) {
         .order('created_at', { ascending: false });
 
       if (error) {
+        // Gracefully handle missing table (happens before schema patch)
+        if (error.message.includes('not found')) {
+          return NextResponse.json({ photos: [], count: 0, note: 'photo_evidence table pending' });
+        }
         return NextResponse.json({ error: error.message }, { status: 500 });
       }
 
@@ -72,6 +80,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ photos: [], count: 0 });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unable to fetch photos';
+    // Return empty array instead of error if table doesn't exist yet
+    if (message.includes('not found')) {
+      return NextResponse.json({ photos: [], count: 0, note: 'photo_evidence table pending' });
+    }
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
