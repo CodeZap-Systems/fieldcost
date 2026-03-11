@@ -1,8 +1,8 @@
 {
   "env": {
-    "NEXT_PUBLIC_SUPABASE_URL": "@supabase_url",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@supabase_anon_key",
-    "SUPABASE_SERVICE_ROLE_KEY": "@supabase_service_role_key"
+    "NEXT_PUBLIC_SUPABASE_URL": "https://mukaeylwmzztycajibhy.supabase.co",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_PKH2WI43arqcP7xSahLYgQ_7ms-zZwg",
+    "SUPABASE_SERVICE_ROLE_KEY": "sb_secret_K3tnv11vpqVXSd3aW93BZg_dodeN0dI"
   },
   "build": {
     "env": {
@@ -10,5 +10,8 @@
       "NEXT_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_PKH2WI43arqcP7xSahLYgQ_7ms-zZwg",
       "SUPABASE_SERVICE_ROLE_KEY": "sb_secret_K3tnv11vpqVXSd3aW93BZg_dodeN0dI"
     }
-  }
+  },
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev"
 }
+
