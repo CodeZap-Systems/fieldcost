@@ -33,6 +33,22 @@ export default function KanbanBoard({ tasks, onStatusChange }: { tasks: Task[]; 
     if (!destination) return;
     const fromCol = source.droppableId;
     const toCol = destination.droppableId;
+    
+    // Always update local state for immediate UI feedback
+    setColumns(prev => {
+      const fromTasks = [...prev[fromCol]];
+      const toTasks = [...prev[toCol]];
+      const [movedTask] = fromTasks.splice(source.index, 1);
+      toTasks.splice(destination.index, 0, movedTask);
+      
+      return {
+        ...prev,
+        [fromCol]: fromTasks,
+        [toCol]: toTasks,
+      };
+    });
+    
+    // Then persist the change to the backend
     if (fromCol !== toCol) {
       const task = columns[fromCol][source.index];
       if (task) {

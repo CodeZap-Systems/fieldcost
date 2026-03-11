@@ -27,20 +27,27 @@ export async function POST(req: Request) {
     console.error('POST /api/projects ensureAuthUser error:', error);
     return NextResponse.json({ error: 'Unable to prepare user context' }, { status: 500 });
   }
-  const { count, error: countError } = await supabaseServer
-    .from('projects')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', userId);
-  if (countError) {
-    return NextResponse.json({ error: countError.message }, { status: 500 });
+  
+  // Skip project limit for demo users
+  const isDemoUser = userId?.startsWith('demo-user');
+  
+  if (!isDemoUser) {
+    const { count, error: countError } = await supabaseServer
+      .from('projects')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId);
+    if (countError) {
+      return NextResponse.json({ error: countError.message }, { status: 500 });
+    }
+    if (count !== null && count >= PROJECT_LIMIT) {
+      return NextResponse.json({ error: `Project limit reached (${PROJECT_LIMIT})` }, { status: 400 });
+    }
   }
-  if (count !== null && count >= PROJECT_LIMIT) {
-    return NextResponse.json({ error: `Project limit reached (${PROJECT_LIMIT})` }, { status: 400 });
-  }
+  
   const payload = { ...body, user_id: userId };
   const { data, error } = await supabaseServer.from('projects').insert([payload]).select();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data[0]);
+  return NextResponse.json(data[0], { status: 201 });
 }
 
 export async function PATCH(req: Request) {

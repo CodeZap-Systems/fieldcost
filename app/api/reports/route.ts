@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { supabaseServer } from '../../../lib/supabaseServer';
 import { resolveServerUserId } from '../../../lib/serverUser';
 
+// Explicitly set the route methods to GET only
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const userId = resolveServerUserId(searchParams.get('user_id'));

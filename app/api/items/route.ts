@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     console.error('POST /api/items error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-  return NextResponse.json(data[0]);
+  return NextResponse.json(data[0], { status: 201 });
 }
 
 export async function PATCH(req: Request) {
