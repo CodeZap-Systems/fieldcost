@@ -16,32 +16,40 @@ export async function GET(req: Request) {
   }
 
   try {
+    // Try with company context first
+    let validCompanyId = companyId;
     try {
-      const { companyId: validCompanyId } = await getCompanyContext(userId, companyId);
-      
-      const { data, error } = await supabaseServer
-        .from('projects')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('company_id', validCompanyId)
-        .order('id', { ascending: false });
-      
-      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-      const dataWithCompanyId = (data || []).map(item => ({ ...item, company_id: validCompanyId }));
-      return NextResponse.json(dataWithCompanyId);
+      const context = await getCompanyContext(userId, companyId);
+      validCompanyId = context.companyId;
     } catch (contextError) {
-      // Fallback: get projects without strict company context
-      const { data, error } = await supabaseServer
-        .from('projects')
-        .select('*')
-        .eq('user_id', userId)
-        .order('id', { ascending: false });
-      
-      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-      return NextResponse.json(data || []);
+      console.warn('getCompanyContext failed, using provided companyId:', contextError);
+      // Continue with original companyId
     }
+
+    const { data, error } = await supabaseServer
+      .from('projects')
+      .select('*')
+      .eq('user_id', userId);
+    
+    if (error) {
+      console.error('Projects query error:', error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    
+    // Filter by company_id if available
+    const filtered = validCompanyId 
+      ? (data || []).filter(p => p.company_id === validCompanyId)
+      : (data || []);
+    
+    const withCompanyId = filtered.map(item => ({ 
+      ...item, 
+      company_id: validCompanyId || item.company_id 
+    }));
+    
+    return NextResponse.json(withCompanyId);
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 400 });
+    console.error('GET /api/projects exception:', err);
+    return NextResponse.json({ error: String(err) }, { status: 500 });
   }
 }
 
