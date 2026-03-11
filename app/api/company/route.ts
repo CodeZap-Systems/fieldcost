@@ -88,7 +88,6 @@ export async function GET(req: Request) {
   try {
     ({ userId } = await resolveUserContext(req));
     
-    // Check if this is a demo user or a real user
     const isDemo = isDemoUserId(userId);
     
     const { data, error } = await supabaseServer
@@ -102,28 +101,50 @@ export async function GET(req: Request) {
     }
 
     const list = Array.isArray(data) ? data : data ? [data] : [];
+    
+    // If user has no companies, create a default one
+    if (!list.length && !isDemo) {
+      console.log(`Auto-creating default company for user ${userId}`);
+      const defaultCompany = normalizeProfile({
+        id: randomUUID(),
+        user_id: userId,
+        name: "My Company",
+        email: null,
+        invoice_template: "standard",
+        default_currency: "ZAR",
+      }, userId);
+      
+      const { data: created, error: createError } = await supabaseServer
+        .from("company_profiles")
+        .insert([defaultCompany])
+        .select()
+        .single();
+      
+      if (!createError && created) {
+        const createdNormalized = normalizeProfile(created, userId);
+        await replaceStoredCompanyProfiles(userId, [createdNormalized], createdNormalized.id);
+        return NextResponse.json({ company: createdNormalized, companies: [createdNormalized] });
+      }
+    }
+    
     if (list.length) {
       const normalized = list.map(entry => normalizeProfile(entry, userId));
       
-      // For real (non-demo) users, filter out demo-company-id from the list
-      const filtered = isDemo 
-        ? normalized 
-        : normalized.filter(p => p.id !== DEMO_COMPANY_ID);
+      // For real users: prefer real companies over demo, but allow both
+      // Separate demo from real companies
+      const demoCompanies = normalized.filter(p => p.id === DEMO_COMPANY_ID);
+      const realCompanies = normalized.filter(p => p.id !== DEMO_COMPANY_ID);
       
-      // If all companies were filtered out (shouldn't happen), use first real one
-      const validList = filtered.length > 0 ? filtered : normalized;
+      // For real users: prioritize real companies if they exist
+      // For demo users: show all (including demo)
+      const validList = isDemo ? normalized : (realCompanies.length > 0 ? realCompanies : normalized);
       
       const stored = await getStoredCompanyProfiles(userId);
       
-      // For real users, also filter stored profiles to remove demo company
-      const storedFiltered = isDemo 
-        ? stored.activeCompanyId 
-        : (stored.activeCompanyId === DEMO_COMPANY_ID ? null : stored.activeCompanyId);
-      
-      const preferredId =
-        requestedCompanyId || storedFiltered || validList[0]?.id || null;
+      // Get preferred company ID
+      const preferredId = requestedCompanyId || stored.activeCompanyId || validList[0]?.id || null;
       const active = preferredId
-        ? validList.find(profile => profile.id === preferredId) ?? validList[0]
+        ? normalized.find(profile => profile.id === preferredId) ?? validList[0]
         : validList[0] ?? null;
       if (active) {
         await replaceStoredCompanyProfiles(userId, validList, active.id);
@@ -133,43 +154,30 @@ export async function GET(req: Request) {
       return NextResponse.json({ company: active ?? null, companies: validList });
     }
 
+    // Fallback to localStorage
     const fallback = await getStoredCompanyProfiles(userId);
-    
-    // For real users, filter out demo company from fallback
-    const fallbackFiltered = isDemo 
-      ? fallback.profiles 
-      : fallback.profiles.filter(p => p.id !== DEMO_COMPANY_ID);
-    
-    const fallbackPreferredId = isDemo 
-      ? (requestedCompanyId || fallback.activeCompanyId || fallbackFiltered[0]?.id || null)
-      : (requestedCompanyId || (fallback.activeCompanyId === DEMO_COMPANY_ID ? null : fallback.activeCompanyId) || fallbackFiltered[0]?.id || null);
-    
-    const fallbackActive = fallbackPreferredId
-      ? fallbackFiltered.find(profile => profile.id === fallbackPreferredId) ?? fallbackFiltered[0]
-      : fallbackFiltered[0] ?? null;
-    if (fallbackActive) {
-      await setActiveStoredCompanyProfile(userId, fallbackActive.id);
+    if (fallback.profiles.length) {
+      const fallbackPreferredId = requestedCompanyId || fallback.activeCompanyId || fallback.profiles[0]?.id || null;
+      const fallbackActive = fallbackPreferredId
+        ? fallback.profiles.find(profile => profile.id === fallbackPreferredId) ?? fallback.profiles[0]
+        : fallback.profiles[0] ?? null;
+      if (fallbackActive) {
+        await setActiveStoredCompanyProfile(userId, fallbackActive.id);
+      }
+      return NextResponse.json({ company: fallbackActive ?? null, companies: fallback.profiles });
     }
-    return NextResponse.json({ company: fallbackActive ?? null, companies: fallbackFiltered });
+
+    // No companies anywhere - this shouldn't happen for non-demo users now
+    return NextResponse.json({ company: null, companies: [] });
   } catch (err) {
     console.error("GET /api/company exception", err);
     if (isMissingTableError(err)) {
-      const isDemo = isDemoUserId(userId);
       const fallback = await getStoredCompanyProfiles(userId);
-      
-      // For real users, filter out demo company
-      const fallbackFiltered = isDemo 
-        ? fallback.profiles 
-        : fallback.profiles.filter(p => p.id !== DEMO_COMPANY_ID);
-      
-      const fallbackPreferredId = isDemo 
-        ? (requestedCompanyId || fallback.activeCompanyId || fallbackFiltered[0]?.id || null)
-        : (requestedCompanyId || (fallback.activeCompanyId === DEMO_COMPANY_ID ? null : fallback.activeCompanyId) || fallbackFiltered[0]?.id || null);
-      
+      const fallbackPreferredId = url.searchParams.get("company_id") || fallback.activeCompanyId || fallback.profiles[0]?.id || null;
       const fallbackActive = fallbackPreferredId
-        ? fallbackFiltered.find(profile => profile.id === fallbackPreferredId) ?? fallbackFiltered[0]
-        : fallbackFiltered[0] ?? null;
-      return NextResponse.json({ company: fallbackActive ?? null, companies: fallbackFiltered });
+        ? fallback.profiles.find(profile => profile.id === fallbackPreferredId) ?? fallback.profiles[0]
+        : fallback.profiles[0] ?? null;
+      return NextResponse.json({ company: fallbackActive ?? null, companies: fallback.profiles });
     }
     return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
   }
