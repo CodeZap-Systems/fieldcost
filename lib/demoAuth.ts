@@ -1,8 +1,7 @@
 import { randomUUID } from "crypto";
 import type { User } from "@supabase/supabase-js";
 import { supabaseServer } from "./supabaseServer";
-import { DEMO_ADMIN_USER_ID, DEMO_SUBCONTRACTOR_USER_ID } from "./userIdentity";
-import { normalizeUserId } from "./demoUserUUIDs";
+import { DEMO_ADMIN_USER_ID, DEMO_SUBCONTRACTOR_USER_ID, normalizeUserId } from "./userIdentity";
 
 const DEMO_LABELS: Record<string, string> = {
   [DEMO_ADMIN_USER_ID]: "demo-admin",

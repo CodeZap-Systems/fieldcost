@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabaseServer } from '../../../../lib/supabaseServer';
 import { ensureAuthUser } from '../../../../lib/demoAuth';
 import { getCompanyContext } from '../../../../lib/companyContext';
-import { normalizeUserId } from '../../../../lib/demoUserUUIDs';
+import { normalizeUserId } from '../../../../lib/userIdentity';
 
 interface TestResult {
   testName: string;

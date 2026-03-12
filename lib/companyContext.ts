@@ -6,7 +6,7 @@
  */
 
 import { supabaseServer } from './supabaseServer';
-import { normalizeUserId } from './demoUserUUIDs';
+import { normalizeUserId } from './userIdentity';
 
 export interface CompanyContext {
   userId: string;

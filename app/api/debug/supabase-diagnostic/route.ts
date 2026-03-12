@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseServer } from '../../../../lib/supabaseServer';
-import { normalizeUserId } from '../../../../lib/demoUserUUIDs';
+import { normalizeUserId } from '../../../../lib/userIdentity';
 
 interface DiagnosticResult {
   status: 'success' | 'error';
