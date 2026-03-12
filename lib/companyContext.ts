@@ -53,7 +53,7 @@ export async function getCompanyContext(userId: string, companyId?: number | str
       // Create a default company for users who don't have one yet
       const { data: newCompany, error: createError } = await supabaseServer
         .from('company_profiles')
-        .insert([{ user_id: userId, company_name: `${userId}'s Company`, currency: 'ZAR' }])
+        .insert([{ user_id: userId, name: `${userId}'s Company`, default_currency: 'ZAR' }])
         .select('id')
         .single();
       
