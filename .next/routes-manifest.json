@@ -263,6 +263,18 @@
       "namedRegex": "^/api/debug/health(?:/)?$"
     },
     {
+      "page": "/api/debug/livecompany-test",
+      "regex": "^/api/debug/livecompany\\-test(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/debug/livecompany\\-test(?:/)?$"
+    },
+    {
+      "page": "/api/debug/supabase-diagnostic",
+      "regex": "^/api/debug/supabase\\-diagnostic(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/debug/supabase\\-diagnostic(?:/)?$"
+    },
+    {
       "page": "/api/demo",
       "regex": "^/api/demo(?:/)?$",
       "routeKeys": {},

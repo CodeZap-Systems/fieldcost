@@ -2,6 +2,8 @@
   "version": 1,
   "functions": {
     "/api/company/logo": {},
+    "/api/debug/livecompany-test": {},
+    "/api/debug/supabase-diagnostic": {},
     "/api/invoices/export": {},
     "/api/task-photos": {}
   }

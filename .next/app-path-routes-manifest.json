@@ -39,6 +39,8 @@
   "/api/customers/route": "/api/customers",
   "/api/db-migrate/route": "/api/db-migrate",
   "/api/debug/health/route": "/api/debug/health",
+  "/api/debug/livecompany-test/route": "/api/debug/livecompany-test",
+  "/api/debug/supabase-diagnostic/route": "/api/debug/supabase-diagnostic",
   "/api/demo/cleanup/route": "/api/demo/cleanup",
   "/api/demo/route": "/api/demo",
   "/api/demo/seed/route": "/api/demo/seed",

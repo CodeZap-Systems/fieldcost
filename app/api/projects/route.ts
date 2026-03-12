@@ -72,16 +72,25 @@ export async function POST(req: Request) {
   // Determine company ID with fallback for demo users
   const isDemoUser = userId === 'demo' || userId?.startsWith('demo-');
   let validCompanyId = 1; // Default demo company
+  let companyContextError: Error | null = null;
+  
+  console.log(`[POST /api/projects] User: "${userId}" (isDemoUser: ${isDemoUser})`);
   
   try {
+    console.log(`[POST /api/projects] Attempting getCompanyContext...`);
     const context = await getCompanyContext(userId, companyId);
     validCompanyId = context.companyId;
+    console.log(`[POST /api/projects] ✅ Got company context: companyId=${validCompanyId}`);
   } catch (contextError) {
-    console.warn(`[POST /api/projects] getCompanyContext failed for user ${userId}:`, contextError);
+    companyContextError = contextError as Error;
+    console.warn(`[POST /api/projects] ⚠️  getCompanyContext failed: ${(contextError as Error).message}`);
+    
     if (!isDemoUser) {
+      console.error(`[POST /api/projects] ❌ Non-demo user failed company context, returning 500`);
       return NextResponse.json({ error: 'Unable to prepare user context' }, { status: 500 });
     }
-    console.log(`[POST /api/projects] Using demo company fallback for user: ${userId}`);
+    
+    console.log(`[POST /api/projects] ℹ️  Demo user fallback triggered, using company_id=1`);
     // Demo users fall back to company_id = 1
   }
   

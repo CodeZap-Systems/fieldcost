@@ -39,6 +39,8 @@
   "/api/customers/route": "app/api/customers/route.js",
   "/api/db-migrate/route": "app/api/db-migrate/route.js",
   "/api/debug/health/route": "app/api/debug/health/route.js",
+  "/api/debug/livecompany-test/route": "app/api/debug/livecompany-test/route.js",
+  "/api/debug/supabase-diagnostic/route": "app/api/debug/supabase-diagnostic/route.js",
   "/api/demo/cleanup/route": "app/api/demo/cleanup/route.js",
   "/api/demo/route": "app/api/demo/route.js",
   "/api/demo/seed/route": "app/api/demo/seed/route.js",
