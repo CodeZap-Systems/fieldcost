@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabaseServer } from '../../../../lib/supabaseServer';
 import { ensureAuthUser } from '../../../../lib/demoAuth';
 import { getCompanyContext } from '../../../../lib/companyContext';
+import { normalizeUserId } from '../../../../lib/demoUserUUIDs';
 
 interface TestResult {
   testName: string;
@@ -141,6 +142,7 @@ export async function GET() {
   // Test 5: Check if demo-live-test user exists
   try {
     console.log('[livecompany-test] Test 5: Check auth.users for demo-live-test...');
+    const demoLiveTestId = normalizeUserId('demo-live-test');
     const { data, error } = await supabaseServer.auth.admin.listUsers();
     
     if (error) {
@@ -151,18 +153,18 @@ export async function GET() {
         error: error.message,
       });
     } else if (data && Array.isArray(data.users)) {
-      const testUser = (data.users as any[]).find((u: any) => u.id === 'demo-live-test');
+      const testUser = (data.users as any[]).find((u: any) => u.id === demoLiveTestId);
       if (testUser) {
         results.push({
           testName: 'Check demo-live-test user',
           status: 'PASS',
-          details: `User exists in auth.users (email: ${testUser.email})`,
+          details: `User exists in auth.users (id: ${testUser.id}, email: ${testUser.email})`,
         });
       } else {
         results.push({
           testName: 'Check demo-live-test user',
           status: 'FAIL',
-          details: `demo-live-test user not found in auth.users`,
+          details: `demo-live-test user (${demoLiveTestId}) not found in auth.users`,
         });
       }
     } else {

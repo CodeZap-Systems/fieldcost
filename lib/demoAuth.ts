@@ -2,6 +2,7 @@ import { randomUUID } from "crypto";
 import type { User } from "@supabase/supabase-js";
 import { supabaseServer } from "./supabaseServer";
 import { DEMO_ADMIN_USER_ID, DEMO_SUBCONTRACTOR_USER_ID } from "./userIdentity";
+import { normalizeUserId } from "./demoUserUUIDs";
 
 const DEMO_LABELS: Record<string, string> = {
   [DEMO_ADMIN_USER_ID]: "demo-admin",
@@ -47,11 +48,15 @@ export async function ensureAuthUser(userId?: string | null): Promise<User | und
     throw new EnsureAuthUserError(err);
   }
 
-  console.log(`[ensureAuthUser] Looking up auth user: "${normalized}"`);
-  const lookup = await supabaseServer.auth.admin.getUserById(normalized);
+  // Normalize user ID for Supabase (convert demo users to UUIDs)
+  const supabaseUserId = normalizeUserId(normalized);
+  console.log(`[ensureAuthUser] Normalized user ID: "${normalized}" → "${supabaseUserId}"`);
+
+  console.log(`[ensureAuthUser] Looking up auth user by ID: "${supabaseUserId}"`);
+  const lookup = await supabaseServer.auth.admin.getUserById(supabaseUserId);
   
   if (lookup.data?.user) {
-    console.log(`[ensureAuthUser] Found existing user: "${normalized}"`);
+    console.log(`[ensureAuthUser] Found existing user: "${supabaseUserId}"`);
     return lookup.data.user;
   }
   
@@ -66,10 +71,10 @@ export async function ensureAuthUser(userId?: string | null): Promise<User | und
 
   const alias = DEMO_LABELS[normalized] || `demo-${normalized.slice(0, 8)}`;
   const email = `${slugify(alias)}@fieldcost.demo`;
-  console.log(`[ensureAuthUser] Creating new demo user: "${normalized}" (alias: "${alias}", email: "${email}")`);
+  console.log(`[ensureAuthUser] Creating new demo user: "${normalized}" with UUID "${supabaseUserId}" (alias: "${alias}", email: "${email}")`);
 
   const created = await supabaseServer.auth.admin.createUser({
-    id: normalized,
+    id: supabaseUserId,
     email,
     email_confirm: true,
     password: randomUUID(),
@@ -88,6 +93,6 @@ export async function ensureAuthUser(userId?: string | null): Promise<User | und
     throw new EnsureAuthUserError(errMsg);
   }
 
-  console.log(`[ensureAuthUser] Successfully created user: "${normalized}"`);
+  console.log(`[ensureAuthUser] Successfully created user: "${supabaseUserId}"`);
   return created.data.user;
 }

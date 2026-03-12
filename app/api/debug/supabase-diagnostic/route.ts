@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseServer } from '../../../../lib/supabaseServer';
+import { normalizeUserId } from '../../../../lib/demoUserUUIDs';
 
 interface DiagnosticResult {
   status: 'success' | 'error';
@@ -114,7 +115,9 @@ export async function GET() {
   // Test 4: Demo User Creation Simulation
   try {
     console.log('[supabase-diagnostic] Testing demo user creation flow...');
-    const testUserId = `diagnostic-test-${Date.now()}`;
+    const testUserName = 'demo-diagnostic-test';
+    const testUserId = normalizeUserId(testUserName);
+    console.log(`[supabase-diagnostic] Normalized user ID: "${testUserName}" → "${testUserId}"`);
     
     // First check if exists
     const { data: existingUser, error: lookupError } = await supabaseServer.auth.admin.getUserById(testUserId);
@@ -132,11 +135,11 @@ export async function GET() {
       console.log(`[supabase-diagnostic] Attempting to create test user: ${testUserId}`);
       const { data: newUser, error: createError } = await supabaseServer.auth.admin.createUser({
         id: testUserId,
-        email: 'diagnostic-test@fieldcost.demo',
+        email: 'demo-diagnostic-test@fieldcost.demo',
         email_confirm: true,
         password: 'test-password-123',
         user_metadata: {
-          label: 'diagnostic-test',
+          label: 'demo-diagnostic-test',
           isDemo: true,
         },
       });
