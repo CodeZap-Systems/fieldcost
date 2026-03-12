@@ -62,8 +62,23 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Unable to prepare user context' }, { status: 500 });
   }
 
+  // Determine company ID with fallback for demo users
+  const isDemoUser = userId === 'demo' || userId?.startsWith('demo-');
+  let validCompanyId = 1; // Default demo company
+  
   try {
-    const { companyId: validCompanyId } = await getCompanyContext(userId, companyId);
+    const context = await getCompanyContext(userId, companyId);
+    validCompanyId = context.companyId;
+  } catch (contextError) {
+    console.warn(`[POST /api/customers] getCompanyContext failed for user ${userId}:`, contextError);
+    if (!isDemoUser) {
+      return NextResponse.json({ error: 'Unable to prepare user context' }, { status: 500 });
+    }
+    console.log(`[POST /api/customers] Using demo company fallback for user: ${userId}`);
+    // Demo users fall back to company_id = 1
+  }
+  
+  try {
     
     // Build payload - exclude company_id if it's not needed or causes schema errors
     const payload = { 

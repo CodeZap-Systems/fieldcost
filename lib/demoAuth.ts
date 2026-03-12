@@ -24,32 +24,49 @@ export class EnsureAuthUserError extends Error {
 
 export async function ensureAuthUser(userId?: string | null): Promise<User | undefined> {
   const normalized = userId?.trim();
-  if (!normalized) return undefined;
+  if (!normalized) {
+    console.log('[ensureAuthUser] No user ID provided, returning undefined');
+    return undefined;
+  }
 
   // For demo users, skip auth verification if service role key is missing
   // Demo users are for testing only and don't require strict auth validation
   const isDemoUser = normalized === "demo" || normalized.startsWith("demo-");
+  console.log(`[ensureAuthUser] Processing user: "${normalized}" (isDemoUser: ${isDemoUser})`);
   
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.warn(`[ensureAuthUser] Missing SUPABASE_SERVICE_ROLE_KEY (isDemoUser: ${isDemoUser})`);
     if (isDemoUser) {
       // For demo users, allow operation to proceed without auth verification
-      console.warn(`Demo user "${normalized}" proceeding without auth verification (service role key missing)`);
+      console.warn(`[ensureAuthUser] Demo user "${normalized}" proceeding without auth verification`);
       return undefined;
     }
     // For real users, authentication is required
-    throw new EnsureAuthUserError(
-      "Supabase service role key (SUPABASE_SERVICE_ROLE_KEY) is required. Add it to your environment variables."
-    );
+    const err = "Supabase service role key (SUPABASE_SERVICE_ROLE_KEY) is required. Add it to your environment variables.";
+    console.error(`[ensureAuthUser] Error for non-demo user: ${err}`);
+    throw new EnsureAuthUserError(err);
   }
 
+  console.log(`[ensureAuthUser] Looking up auth user: "${normalized}"`);
   const lookup = await supabaseServer.auth.admin.getUserById(normalized);
-  if (lookup.data?.user) return lookup.data.user;
-  if (lookup.error && !/user not found/i.test(lookup.error.message)) {
-    throw new EnsureAuthUserError(`Unable to verify Supabase auth user: ${lookup.error.message}`);
+  
+  if (lookup.data?.user) {
+    console.log(`[ensureAuthUser] Found existing user: "${normalized}"`);
+    return lookup.data.user;
+  }
+  
+  if (lookup.error) {
+    console.log(`[ensureAuthUser] Lookup error: ${lookup.error.message}`);
+    if (!/user not found/i.test(lookup.error.message)) {
+      const errMsg = `Unable to verify Supabase auth user: ${lookup.error.message}`;
+      console.error(`[ensureAuthUser] ${errMsg}`);
+      throw new EnsureAuthUserError(errMsg);
+    }
   }
 
   const alias = DEMO_LABELS[normalized] || `demo-${normalized.slice(0, 8)}`;
   const email = `${slugify(alias)}@fieldcost.demo`;
+  console.log(`[ensureAuthUser] Creating new demo user: "${normalized}" (alias: "${alias}", email: "${email}")`);
 
   const created = await supabaseServer.auth.admin.createUser({
     id: normalized,
@@ -66,8 +83,11 @@ export async function ensureAuthUser(userId?: string | null): Promise<User | und
   });
 
   if (created.error) {
-    throw new EnsureAuthUserError(`Unable to create demo auth user: ${created.error.message}`);
+    const errMsg = `Unable to create demo auth user: ${created.error.message}`;
+    console.error(`[ensureAuthUser] ${errMsg}`);
+    throw new EnsureAuthUserError(errMsg);
   }
 
+  console.log(`[ensureAuthUser] Successfully created user: "${normalized}"`);
   return created.data.user;
 }

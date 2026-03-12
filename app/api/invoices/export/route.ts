@@ -200,13 +200,25 @@ export async function GET(req: Request) {
       });
     }
 
-    const pdfBuffer = await buildPdf(invoiceRows, companyRow);
-    return new NextResponse(new Uint8Array(pdfBuffer), {
-      headers: {
-        "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="invoices-professional.pdf"`,
-      },
-    });
+    try {
+      const pdfBuffer = await buildPdf(invoiceRows, companyRow);
+      return new NextResponse(new Uint8Array(pdfBuffer), {
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `attachment; filename="invoices-professional.pdf"`,
+        },
+      });
+    } catch (pdfErr) {
+      console.error("GET /api/invoices/export PDF generation failed, falling back to CSV", pdfErr);
+      // Fallback to CSV if PDF generation fails
+      const csv = buildCsv(buildLedgerRows(invoiceRows));
+      return new NextResponse(csv, {
+        headers: {
+          "Content-Type": "text/csv",
+          "Content-Disposition": `attachment; filename="invoices-ledger.csv"`,
+        },
+      });
+    }
   } catch (err) {
     console.error("GET /api/invoices/export exception", err);
     return NextResponse.json({ error: "Unable to export invoices" }, { status: 500 });
