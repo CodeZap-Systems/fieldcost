@@ -346,16 +346,14 @@ async function testLiveCompanyMode() {
       user_id: TEST_LIVE_USER,
       lines: [
         {
-          description: "Site Survey - 16 hours",
+          name: "Site Survey - 16 hours",
           quantity: 16,
-          unit: "hours",
           rate: 2000,
           total: 32000,
         },
         {
-          description: "Report Generation",
+          name: "Report Generation",
           quantity: 1,
-          unit: "service",
           rate: 13000,
           total: 13000,
         }
