@@ -251,6 +251,12 @@
       "namedRegex": "^/api/customers(?:/)?$"
     },
     {
+      "page": "/api/db-migrate",
+      "regex": "^/api/db\\-migrate(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/db\\-migrate(?:/)?$"
+    },
+    {
       "page": "/api/debug/health",
       "regex": "^/api/debug/health(?:/)?$",
       "routeKeys": {},

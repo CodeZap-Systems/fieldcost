@@ -37,6 +37,7 @@
   "/api/company/switch/route": "app/api/company/switch/route.js",
   "/api/crew/route": "app/api/crew/route.js",
   "/api/customers/route": "app/api/customers/route.js",
+  "/api/db-migrate/route": "app/api/db-migrate/route.js",
   "/api/debug/health/route": "app/api/debug/health/route.js",
   "/api/demo/cleanup/route": "app/api/demo/cleanup/route.js",
   "/api/demo/route": "app/api/demo/route.js",

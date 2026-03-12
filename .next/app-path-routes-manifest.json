@@ -37,6 +37,7 @@
   "/api/company/switch/route": "/api/company/switch",
   "/api/crew/route": "/api/crew",
   "/api/customers/route": "/api/customers",
+  "/api/db-migrate/route": "/api/db-migrate",
   "/api/debug/health/route": "/api/debug/health",
   "/api/demo/cleanup/route": "/api/demo/cleanup",
   "/api/demo/route": "/api/demo",

@@ -47,11 +47,22 @@ export async function getCompanyContext(userId: string, companyId?: number | str
       .limit(1)
       .single();
     
-    if (error || !company) {
-      throw new Error('No company found for user');
+    if (!error && company) {
+      resolvedCompanyId = company.id;
+    } else {
+      // Create a default company for users who don't have one yet
+      const { data: newCompany, error: createError } = await supabaseServer
+        .from('company_profiles')
+        .insert([{ user_id: userId, company_name: `${userId}'s Company`, currency: 'ZAR' }])
+        .select('id')
+        .single();
+      
+      if (createError || !newCompany) {
+        throw new Error(`Unable to find or create company for user: ${createError?.message || 'Unknown error'}`);
+      }
+      
+      resolvedCompanyId = newCompany.id;
     }
-    
-    resolvedCompanyId = company.id;
   }
 
   return { userId, companyId: resolvedCompanyId };

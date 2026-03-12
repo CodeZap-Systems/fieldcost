@@ -15,7 +15,7 @@ const TEST_TIMEOUT = 30000;
 
 // Different user IDs for testing
 const DEMO_USER = "demo";
-const TEST_LIVE_USER = "test-live-123";
+const TEST_LIVE_USER = "demo-live-test";
 
 let testResults = {
   demo: { passed: 0, failed: 0, tests: [] },
@@ -192,16 +192,14 @@ async function testDemoMode() {
       user_id: DEMO_USER,
       lines: [
         {
-          description: "Installation Service",
+          name: "Installation Service",
           quantity: 8,
-          unit: "hours",
           rate: 2500,
           total: 20000,
         },
         {
-          description: "Materials",
+          name: "Materials",
           quantity: 1,
-          unit: "lump",
           rate: 5000,
           total: 5000,
         }
