@@ -14,14 +14,26 @@ export async function GET(req: Request) {
   }
 
   try {
-    const { data, error } = await supabaseServer
+    let query = supabaseServer
       .from('tasks')
       .select('*, project:projects(name)')
       .eq('user_id', userId)
       .order('id', { ascending: false });
     
+    if (companyId) {
+      query = query.eq('company_id', companyId);
+    }
+    
+    const { data, error } = await query;
+    
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json(data);
+    
+    // Ensure company_id is in response
+    const withCompanyId = (data || []).map(task => ({
+      ...task,
+      company_id: task.company_id || companyId
+    }));
+    return NextResponse.json(withCompanyId);
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 400 });
   }
@@ -61,18 +73,58 @@ export async function POST(req: Request) {
       billable: typeof body.billable === 'boolean' ? body.billable : body.billable === 'false' ? false : true,
       photo_url: body.photo_url ?? null,
       user_id: userId,
-      company_id: validCompanyId,
+      ...(body.company_id !== undefined && { company_id: validCompanyId })
     };
-    const { data, error } = await supabaseServer
+    
+    let query = supabaseServer
       .from('tasks')
       .insert([payload])
       .select('*, crew_member:crew_members(id, name, hourly_rate)');
+    
+    const { data, error } = await query;
+    
     if (error) {
+      // If schema cache error, try without company_id
+      if (error.message?.includes('company_id')) {
+        const simplePayload = {
+          name: body.name,
+          description: body.description ?? null,
+          project_id: body.project_id ?? null,
+          status: body.status ?? 'todo',
+          seconds: body.seconds ?? 0,
+          assigned_to: body.assigned_to ?? null,
+          crew_member_id: crewId,
+          billable: typeof body.billable === 'boolean' ? body.billable : body.billable === 'false' ? false : true,
+          photo_url: body.photo_url ?? null,
+          user_id: userId
+        };
+        
+        const { data: simpleData, error: simpleError } = await supabaseServer
+          .from('tasks')
+          .insert([simplePayload])
+          .select('*, crew_member:crew_members(id, name, hourly_rate)');
+        
+        if (simpleError) {
+          console.error('POST /api/tasks error:', simpleError);
+          return NextResponse.json({ error: simpleError.message }, { status: 500 });
+        }
+        
+        return NextResponse.json({
+          ...simpleData[0],
+          company_id: validCompanyId
+        });
+      }
+      
       console.error('POST /api/tasks error:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
-    return NextResponse.json(data[0]);
+    
+    return NextResponse.json({
+      ...data[0],
+      company_id: validCompanyId
+    });
   } catch (err) {
+    console.error('POST /api/tasks exception:', err);
     return NextResponse.json({ error: String(err) }, { status: 400 });
   }
 }

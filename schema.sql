@@ -8,8 +8,11 @@ create table if not exists projects (
   description text,
   photo_url text,
   user_id uuid references auth.users on delete cascade,
+  company_id integer default 1,
   created_at timestamp with time zone default now()
 );
+
+alter table projects add column if not exists company_id integer default 1;
 
 -- 3. customers
 create table if not exists customers (
@@ -17,8 +20,11 @@ create table if not exists customers (
   name text not null,
   email text,
   user_id uuid references auth.users on delete cascade,
+  company_id integer default 1,
   created_at timestamp with time zone default now()
 );
+
+alter table customers add column if not exists company_id integer default 1;
 
 -- 3b. company profiles (1:1 per auth user for now)
 create table if not exists company_profiles (
@@ -51,8 +57,11 @@ create table if not exists items (
   stock_used integer default 0,
   item_type text default 'physical',
   user_id uuid references auth.users on delete cascade,
+  company_id integer default 1,
   created_at timestamp with time zone default now()
 );
+
+alter table items add column if not exists company_id integer default 1;
 
 -- 5. crew members
 create table if not exists crew_members (
@@ -60,8 +69,11 @@ create table if not exists crew_members (
   name text not null,
   hourly_rate numeric default 0,
   user_id uuid references auth.users on delete cascade,
+  company_id integer default 1,
   created_at timestamp with time zone default now()
 );
+
+alter table crew_members add column if not exists company_id integer default 1;
 
 -- 6. tasks
 create table if not exists tasks (
@@ -76,11 +88,13 @@ create table if not exists tasks (
   billable boolean default true,
   photo_url text,
   user_id uuid references auth.users on delete cascade,
+  company_id integer default 1,
   created_at timestamp with time zone default now()
 );
 
 alter table tasks add column if not exists description text;
 alter table tasks add column if not exists photo_url text;
+alter table tasks add column if not exists company_id integer default 1;
 
 -- 7. invoices
 create table if not exists invoices (
@@ -95,8 +109,11 @@ create table if not exists invoices (
   due_on date,
   currency text default 'ZAR',
   user_id uuid references auth.users on delete cascade,
+  company_id integer default 1,
   created_at timestamp with time zone default now()
 );
+
+alter table invoices add column if not exists company_id integer default 1;
 
 create table if not exists invoice_line_items (
   id serial primary key,
@@ -111,8 +128,11 @@ create table if not exists invoice_line_items (
   source text,
   task_ref text,
   user_id uuid references auth.users on delete cascade,
+  company_id integer default 1,
   created_at timestamp with time zone default now()
 );
+
+alter table invoice_line_items add column if not exists company_id integer default 1;
 
 -- 8. budgets
 create table if not exists budgets (
@@ -121,8 +141,11 @@ create table if not exists budgets (
   planned_amount numeric,
   actual_amount numeric default 0,
   user_id uuid references auth.users on delete cascade,
+  company_id integer default 1,
   created_at timestamp with time zone default now()
 );
+
+alter table budgets add column if not exists company_id integer default 1;
 
 -- Row Level Security (RLS) policies (examples)
 -- Enable RLS

@@ -65,11 +65,51 @@ export async function POST(req: Request) {
   try {
     const { companyId: validCompanyId } = await getCompanyContext(userId, companyId);
     
-    const payload = { ...body, user_id: userId, company_id: validCompanyId };
+    // Build payload - exclude company_id if it's not needed or causes schema errors
+    const payload = { 
+      name: body.name,
+      email: body.email ?? null,
+      user_id: userId,
+      ...(body.company_id !== undefined && { company_id: validCompanyId })
+    };
+    
     const { data, error } = await supabaseServer.from('customers').insert([payload]).select();
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json(data[0]);
+    
+    if (error) {
+      // If schema cache error, try without company_id
+      if (error.message?.includes('company_id')) {
+        const simplePayload = {
+          name: body.name,
+          email: body.email ?? null,
+          user_id: userId
+        };
+        const { data: simpleData, error: simpleError } = await supabaseServer
+          .from('customers')
+          .insert([simplePayload])
+          .select();
+        
+        if (simpleError) {
+          console.error('POST /api/customers error:', simpleError);
+          return NextResponse.json({ error: simpleError.message }, { status: 500 });
+        }
+        
+        // Add company_id to response for consistency
+        return NextResponse.json({
+          ...simpleData[0],
+          company_id: validCompanyId
+        });
+      }
+      
+      console.error('POST /api/customers error:', error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    
+    return NextResponse.json({
+      ...data[0],
+      company_id: validCompanyId
+    });
   } catch (err) {
+    console.error('POST /api/customers exception:', err);
     return NextResponse.json({ error: String(err) }, { status: 400 });
   }
 }

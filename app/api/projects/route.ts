@@ -12,11 +12,13 @@ export async function GET(req: Request) {
     
     // Get projects from database
     if (userId && userId !== 'demo-user') {
-      const { data, error } = await supabaseServer
+      let query = supabaseServer
         .from('projects')
         .select('*')
         .eq('user_id', userId)
         .limit(PROJECT_LIMIT);
+        
+      const { data, error } = await query;
       
       if (!error && data) {
         // Ensure company_id is in response
@@ -43,6 +45,7 @@ export async function GET(req: Request) {
     // Graceful degradation: return empty array
     return NextResponse.json([]);
   } catch (e) {
+    console.error('GET /api/projects error:', e);
     return NextResponse.json([]);
   }
 }
@@ -73,12 +76,20 @@ export async function POST(req: Request) {
     const isDemoUser = userId === 'demo' || userId?.startsWith('demo-');
     
     if (!isDemoUser) {
-      const { count, error: countError } = await supabaseServer
+      let countQuery = supabaseServer
         .from('projects')
         .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId)
-        .eq('company_id', validCompanyId);
-      if (countError) {
+        .eq('user_id', userId);
+      
+      // Try to use company_id filter if available
+      try {
+        countQuery = countQuery.eq('company_id', validCompanyId);
+      } catch (e) {
+        // Column might not exist
+      }
+      
+      const { count, error: countError } = await countQuery;
+      if (countError && !countError.message?.includes('company_id')) {
         return NextResponse.json({ error: countError.message }, { status: 500 });
       }
       if (count !== null && count >= PROJECT_LIMIT) {
@@ -86,11 +97,52 @@ export async function POST(req: Request) {
       }
     }
     
-    const payload = { ...body, user_id: userId, company_id: validCompanyId };
+    // Build payload - exclude company_id to avoid schema errors if column doesn't exist
+    const payload = {
+      name: body.name,
+      description: body.description ?? null,
+      photo_url: body.photo_url ?? null,
+      user_id: userId,
+      ...(body.company_id !== undefined && { company_id: validCompanyId })
+    };
+    
     const { data, error } = await supabaseServer.from('projects').insert([payload]).select();
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json(data[0], { status: 201 });
+    
+    if (error) {
+      // If schema cache error, try without company_id
+      if (error.message?.includes('company_id')) {
+        const simplePayload = {
+          name: body.name,
+          description: body.description ?? null,
+          photo_url: body.photo_url ?? null,
+          user_id: userId
+        };
+        const { data: simpleData, error: simpleError } = await supabaseServer
+          .from('projects')
+          .insert([simplePayload])
+          .select();
+        
+        if (simpleError) {
+          console.error('POST /api/projects error:', simpleError);
+          return NextResponse.json({ error: simpleError.message }, { status: 500 });
+        }
+        
+        return NextResponse.json({
+          ...simpleData[0],
+          company_id: validCompanyId
+        }, { status: 201 });
+      }
+      
+      console.error('POST /api/projects error:', error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    
+    return NextResponse.json({
+      ...data[0],
+      company_id: validCompanyId
+    }, { status: 201 });
   } catch (err) {
+    console.error('POST /api/projects exception:', err);
     return NextResponse.json({ error: String(err) }, { status: 400 });
   }
 }

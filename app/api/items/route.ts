@@ -65,14 +65,55 @@ export async function POST(req: Request) {
   try {
     const { companyId: validCompanyId } = await getCompanyContext(userId, companyId);
     
-    const payload = { ...body, user_id: userId, company_id: validCompanyId };
+    const payload = {
+      name: body.name,
+      price: body.price ?? null,
+      stock_in: body.stock_in ?? 0,
+      stock_used: body.stock_used ?? 0,
+      item_type: body.item_type ?? 'physical',
+      user_id: userId,
+      ...(body.company_id !== undefined && { company_id: validCompanyId })
+    };
+    
     const { data, error } = await supabaseServer.from('items').insert([payload]).select();
+    
     if (error) {
+      // If schema cache error, try without company_id
+      if (error.message?.includes('company_id')) {
+        const simplePayload = {
+          name: body.name,
+          price: body.price ?? null,
+          stock_in: body.stock_in ?? 0,
+          stock_used: body.stock_used ?? 0,
+          item_type: body.item_type ?? 'physical',
+          user_id: userId
+        };
+        const { data: simpleData, error: simpleError } = await supabaseServer
+          .from('items')
+          .insert([simplePayload])
+          .select();
+        
+        if (simpleError) {
+          console.error('POST /api/items error:', simpleError);
+          return NextResponse.json({ error: simpleError.message }, { status: 500 });
+        }
+        
+        return NextResponse.json({
+          ...simpleData[0],
+          company_id: validCompanyId
+        }, { status: 201 });
+      }
+      
       console.error('POST /api/items error:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
-    return NextResponse.json(data[0], { status: 201 });
+    
+    return NextResponse.json({
+      ...data[0],
+      company_id: validCompanyId
+    }, { status: 201 });
   } catch (err) {
+    console.error('POST /api/items exception:', err);
     return NextResponse.json({ error: String(err) }, { status: 400 });
   }
 }

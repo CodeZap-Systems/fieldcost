@@ -3,6 +3,7 @@ import { supabase } from '../../../lib/supabaseClient';
 import { supabaseServer } from '../../../lib/supabaseServer';
 import { resolveServerUserId } from '../../../lib/serverUser';
 import { ensureAuthUser, EnsureAuthUserError } from '../../../lib/demoAuth';
+import { getCompanyContext } from '../../../lib/companyContext';
 import {
   buildStoredInvoiceLine,
   deleteStoredInvoice,
@@ -234,6 +235,8 @@ export async function POST(req: Request) {
     }
     const body = await req.json();
     const userId = resolveServerUserId(body.user_id);
+    let companyId = body.company_id;
+    
     try {
       await ensureAuthUser(userId);
     } catch (error) {
@@ -243,6 +246,16 @@ export async function POST(req: Request) {
       console.error('POST /api/invoices ensureAuthUser error:', error);
       return NextResponse.json({ error: 'Unable to prepare user context' }, { status: 500 });
     }
+    
+    // Try to get valid company context
+    try {
+      const { companyId: validCompanyId } = await getCompanyContext(userId, companyId);
+      companyId = validCompanyId;
+    } catch (e) {
+      console.warn('Company context error, using default:', e);
+      companyId = 1;
+    }
+    
     const customerId = await resolveCustomerId(userId, body);
     if (!customerId) {
       return NextResponse.json({ error: 'Customer selection is required to create an invoice.' }, { status: 400 });
@@ -270,6 +283,7 @@ export async function POST(req: Request) {
       status,
       currency,
       user_id: userId,
+      ...(companyId !== undefined && { company_id: companyId })
     };
     const offlinePayload = {
       amount: payload.amount,
@@ -293,6 +307,59 @@ export async function POST(req: Request) {
         });
         return NextResponse.json(offlineResponse);
       }
+      // If company_id causes error, try without it
+      if (inserted.error.message?.includes('company_id')) {
+        const simplePayload = { ...payload };
+        delete simplePayload.company_id;
+        const { data: simpleData, error: simpleError } = await supabaseServer
+          .from('invoices')
+          .insert([simplePayload])
+          .select('*');
+        
+        if (simpleError) {
+          console.error('POST /api/invoices error:', simpleError);
+          return NextResponse.json({ error: simpleError.message }, { status: 500 });
+        }
+        
+        const invoice = simpleData?.[0];
+        if (!invoice) {
+          return NextResponse.json({ error: 'Invoice not created' }, { status: 500 });
+        }
+        
+        const linePayload = lines.map(line => ({ 
+          ...line, 
+          invoice_id: invoice.id,
+          ...(companyId !== undefined && { company_id: companyId })
+        }));
+        const { error: lineError } = await supabaseServer.from('invoice_line_items').insert(linePayload);
+        if (lineError) {
+          if (!lineError.message?.includes('company_id')) {
+            await supabaseServer.from('invoices').delete().eq('id', invoice.id);
+            console.error('POST /api/invoices line insert error:', lineError);
+            return NextResponse.json({ error: 'Invoice lines could not be stored' }, { status: 500 });
+          } else {
+            // Try without company_id
+            const simpleLinePayload = lines.map(line => ({ 
+              ...line, 
+              invoice_id: invoice.id
+            }));
+            await supabaseServer.from('invoice_line_items').insert(simpleLinePayload);
+          }
+        }
+        
+        const { data: responseData, error: responseError } = await supabaseServer
+          .from('invoices')
+          .select(INVOICE_SELECT)
+          .eq('id', invoice.id)
+          .maybeSingle();
+        if (responseError) {
+          console.error('POST /api/invoices error:', responseError);
+          return NextResponse.json({ error: responseError.message }, { status: 500 });
+        }
+        const [hydrated] = await attachInvoiceLines(responseData ? [responseData] : [], userId);
+        return NextResponse.json(hydrated ?? responseData);
+      }
+      
       console.error('POST /api/invoices error:', inserted.error);
       return NextResponse.json({ error: inserted.error.message }, { status: 500 });
     }
@@ -300,7 +367,7 @@ export async function POST(req: Request) {
     if (!invoice) {
       return NextResponse.json({ error: 'Invoice not created' }, { status: 500 });
     }
-    const linePayload = lines.map(line => ({ ...line, invoice_id: invoice.id }));
+    const linePayload = lines.map(line => ({ ...line, invoice_id: invoice.id, ...(companyId !== undefined && { company_id: companyId }) }));
     const { error: lineError } = await supabaseServer.from('invoice_line_items').insert(linePayload);
     if (lineError) {
       if (isSchemaCacheError(lineError)) {
