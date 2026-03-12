@@ -3,20 +3,30 @@ import { createHash } from 'crypto';
 /**
  * Generate a deterministic UUID for demo users
  * Same input always generates the same UUID
- * Based on UUID v5 (namespace-based) approach
+ * Based on UUID v5 (namespace-based) approach using SHA1
  */
 export function getDemoUserUUID(demoUserName: string): string {
-  // Use a namespace for FieldCost demo users
-  const FIELDCOST_DEMO_NAMESPACE = '550e8400-e29b-41d4-a716-446655440000';
+  // Use a namespace UUID for FieldCost demo users (RFC 4122 v5)
+  // Namespace: FieldCost Demo (a custom namespace UUID)
+  const FIELDCOST_DEMO_NAMESPACE_BYTES = Buffer.from([
+    0x55, 0x0e, 0x84, 0x00, 0xe2, 0x9b, 0x41, 0xd4,
+    0xa7, 0x16, 0x44, 0x66, 0x55, 0x44, 0x00, 0x00
+  ]);
   
-  // Create a deterministic UUID from the demo user name
-  // This ensures "demo" always maps to the same UUID
+  // Create SHA1 hash of namespace + name
   const hash = createHash('sha1');
-  hash.update(FIELDCOST_DEMO_NAMESPACE + demoUserName);
+  hash.update(Buffer.concat([FIELDCOST_DEMO_NAMESPACE_BYTES, Buffer.from(demoUserName)]));
   const digest = hash.digest();
 
-  // Format as UUID v5: 8-4-4-4-12
-  const uuid = `${digest.toString('hex', 0, 4)}-${digest.toString('hex', 4, 6)}-5${digest.toString('hex', 7, 10)}-${(0x80 | (digest[10] & 0x3f)).toString(16).padStart(2, '0')}${digest.toString('hex', 11, 12)}-${digest.toString('hex', 12, 18)}`;
+  // Set version to 5 (SHA1) by setting bits 12-15 of time_hi_and_version to 0101
+  digest[6] = (digest[6] & 0x0f) | 0x50;
+  
+  // Set variant to RFC 4122 by setting bits 6-7 of clock_seq_hi_and_reserved to 10
+  digest[8] = (digest[8] & 0x3f) | 0x80;
+
+  // Format as UUID string: 8-4-4-4-12
+  const hex = digest.toString('hex');
+  const uuid = `${hex.substring(0, 8)}-${hex.substring(8, 12)}-${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20, 32)}`;
   
   return uuid.toLowerCase();
 }
