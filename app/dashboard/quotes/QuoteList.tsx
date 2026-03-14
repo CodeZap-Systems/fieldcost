@@ -98,6 +98,27 @@ export function QuoteList({ companyId = "1", onSelectQuote, onCreateNew }: Quote
     }
   };
 
+  const handleDownloadPDF = async (quoteId: number, reference: string) => {
+    try {
+      const res = await fetch(`/api/quotes/${quoteId}/export/pdf?company_id=${companyId}`);
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `Quote-${reference || quoteId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        setError("Failed to download PDF");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to download PDF");
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "draft":
@@ -197,7 +218,7 @@ export function QuoteList({ companyId = "1", onSelectQuote, onCreateNew }: Quote
                     {formatDate(quote.created_at)}
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                       {quote.status === "draft" && (
                         <>
                           <button
@@ -222,6 +243,12 @@ export function QuoteList({ companyId = "1", onSelectQuote, onCreateNew }: Quote
                           Convert to Invoice
                         </button>
                       )}
+                      <button
+                        onClick={() => handleDownloadPDF(quote.id, quote.reference)}
+                        className="text-orange-600 hover:text-orange-800 text-sm"
+                      >
+                        📥 PDF
+                      </button>
                       <button
                         onClick={() => onSelectQuote?.(quote)}
                         className="text-gray-600 hover:text-gray-800 text-sm"

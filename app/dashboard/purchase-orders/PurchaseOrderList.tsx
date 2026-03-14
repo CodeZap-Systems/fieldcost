@@ -96,6 +96,27 @@ export function PurchaseOrderList({ companyId = "1", onSelectPO, onCreateNew }: 
     }
   };
 
+  const handleDownloadPDF = async (poId: number, reference: string) => {
+    try {
+      const res = await fetch(`/api/purchase-orders/${poId}/export/pdf?company_id=${companyId}`);
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `PO-${reference || poId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        setError("Failed to download PDF");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to download PDF");
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "draft":
@@ -208,7 +229,7 @@ export function PurchaseOrderList({ companyId = "1", onSelectPO, onCreateNew }: 
                     {formatDate(po.created_at)}
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                       {po.status === "draft" && (
                         <>
                           <button
@@ -241,6 +262,12 @@ export function PurchaseOrderList({ companyId = "1", onSelectPO, onCreateNew }: 
                           Log Receipt
                         </button>
                       )}
+                      <button
+                        onClick={() => handleDownloadPDF(po.id, po.po_reference)}
+                        className="text-orange-600 hover:text-orange-800 text-sm"
+                      >
+                        📥 PDF
+                      </button>
                       <button
                         onClick={() => onSelectPO?.(po)}
                         className="text-gray-600 hover:text-gray-800 text-sm"
