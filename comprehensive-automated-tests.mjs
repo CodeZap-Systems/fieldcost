@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+﻿#!/usr/bin/env node
 /**
  * Comprehensive Automated Test Suite for FieldCost
  * Tests all API endpoints, CRUD operations, data isolation, error handling, and edge cases
@@ -98,11 +98,11 @@ function addTest(category, name, status, details = {}) {
   if (status === 'PASS') {
     testResults.passed++;
     testResults.categories[category].passed++;
-    console.log(`  ✅ ${name}`);
+    console.log(`  Γ£à ${name}`);
   } else {
     testResults.failed++;
     testResults.categories[category].failed++;
-    console.log(`  ❌ ${name}`);
+    console.log(`  Γ¥î ${name}`);
     if (details.error) {
       console.log(`     Error: ${details.error}`);
     }
@@ -121,7 +121,7 @@ function addTest(category, name, status, details = {}) {
 
 async function testHealthAndBasics() {
   console.log('\n' + '='.repeat(70));
-  console.log('🏥 HEALTH & BASIC CONNECTIVITY TESTS');
+  console.log('≡ƒÅÑ HEALTH & BASIC CONNECTIVITY TESTS');
   console.log('='.repeat(70));
 
   try {
@@ -141,7 +141,7 @@ async function testHealthAndBasics() {
 
 async function testProjectCRUD() {
   console.log('\n' + '='.repeat(70));
-  console.log('📊 PROJECT CRUD OPERATIONS');
+  console.log('≡ƒôè PROJECT CRUD OPERATIONS');
   console.log('='.repeat(70));
 
   let projectId = null;
@@ -212,7 +212,7 @@ async function testProjectCRUD() {
 
 async function testCustomerCRUD() {
   console.log('\n' + '='.repeat(70));
-  console.log('👥 CUSTOMER CRUD OPERATIONS');
+  console.log('≡ƒæÑ CUSTOMER CRUD OPERATIONS');
   console.log('='.repeat(70));
 
   let customerId = null;
@@ -283,7 +283,7 @@ async function testCustomerCRUD() {
 
 async function testTaskCRUD() {
   console.log('\n' + '='.repeat(70));
-  console.log('✅ TASK CRUD OPERATIONS');
+  console.log('Γ£à TASK CRUD OPERATIONS');
   console.log('='.repeat(70));
 
   let taskId = null;
@@ -354,7 +354,7 @@ async function testTaskCRUD() {
 
 async function testInvoiceCRUD() {
   console.log('\n' + '='.repeat(70));
-  console.log('💰 INVOICE CRUD OPERATIONS');
+  console.log('≡ƒÆ░ INVOICE CRUD OPERATIONS');
   console.log('='.repeat(70));
 
   let customerId = null;
@@ -451,7 +451,7 @@ async function testInvoiceCRUD() {
 
 async function testDataIsolation() {
   console.log('\n' + '='.repeat(70));
-  console.log('🔒 DATA ISOLATION & SECURITY TESTS');
+  console.log('≡ƒöÆ DATA ISOLATION & SECURITY TESTS');
   console.log('='.repeat(70));
 
   // Demo project count
@@ -488,7 +488,7 @@ async function testDataIsolation() {
 
 async function testErrorHandling() {
   console.log('\n' + '='.repeat(70));
-  console.log('⚠️ ERROR HANDLING & EDGE CASES');
+  console.log('ΓÜá∩╕Å ERROR HANDLING & EDGE CASES');
   console.log('='.repeat(70));
 
   // Invalid project ID
@@ -547,7 +547,7 @@ async function testErrorHandling() {
 
 async function testReportsAndExports() {
   console.log('\n' + '='.repeat(70));
-  console.log('📈 REPORTS & EXPORT FUNCTIONALITY');
+  console.log('≡ƒôê REPORTS & EXPORT FUNCTIONALITY');
   console.log('='.repeat(70));
 
   // Reports endpoint
@@ -589,7 +589,7 @@ async function testReportsAndExports() {
 
 async function testAuthAndPermissions() {
   console.log('\n' + '='.repeat(70));
-  console.log('🔐 AUTHENTICATION & PERMISSIONS');
+  console.log('≡ƒöÉ AUTHENTICATION & PERMISSIONS');
   console.log('='.repeat(70));
 
   // Demo user operations
@@ -640,7 +640,7 @@ async function testAuthAndPermissions() {
 
 async function testMultiTierSupport() {
   console.log('\n' + '='.repeat(70));
-  console.log('🏗️ MULTI-TIER & FEATURE SUPPORT');
+  console.log('≡ƒÅù∩╕Å MULTI-TIER & FEATURE SUPPORT');
   console.log('='.repeat(70));
 
   // Tier 1 (Demo) features
@@ -691,12 +691,12 @@ async function testMultiTierSupport() {
 
 async function runAllTests() {
   console.log('\n');
-  console.log('╔' + '═'.repeat(68) + '╗');
-  console.log('║' + ' '.repeat(20) + '🚀 COMPREHENSIVE AUTOMATED TEST SUITE' + ' '.repeat(10) + '║');
-  console.log('║' + ' '.repeat(15) + 'Testing: FieldCost Production Management System' + ' '.repeat(10) + '║');
-  console.log('╚' + '═'.repeat(68) + '╝');
-  console.log(`\n📍 Target: ${BASE_URL}`);
-  console.log(`⏰ Started: ${new Date().toISOString()}\n`);
+  console.log('Γòö' + 'ΓòÉ'.repeat(68) + 'Γòù');
+  console.log('Γòæ' + ' '.repeat(20) + '≡ƒÜÇ COMPREHENSIVE AUTOMATED TEST SUITE' + ' '.repeat(10) + 'Γòæ');
+  console.log('Γòæ' + ' '.repeat(15) + 'Testing: FieldCost Production Management System' + ' '.repeat(10) + 'Γòæ');
+  console.log('ΓòÜ' + 'ΓòÉ'.repeat(68) + 'Γò¥');
+  console.log(`\n≡ƒôì Target: ${BASE_URL}`);
+  console.log(`ΓÅ░ Started: ${new Date().toISOString()}\n`);
 
   try {
     await testHealthAndBasics();
@@ -714,34 +714,34 @@ async function runAllTests() {
   }
 
   // Print summary
-  console.log('\n' + '═'.repeat(70));
-  console.log('📊 TEST SUMMARY REPORT');
-  console.log('═'.repeat(70));
+  console.log('\n' + 'ΓòÉ'.repeat(70));
+  console.log('≡ƒôè TEST SUMMARY REPORT');
+  console.log('ΓòÉ'.repeat(70));
 
   for (const [category, results] of Object.entries(testResults.categories)) {
     const passRate = Math.round((results.passed / (results.passed + results.failed)) * 100);
     console.log(`\n${category}:`);
-    console.log(`  ✅ Passed: ${results.passed}`);
-    console.log(`  ❌ Failed: ${results.failed}`);
-    console.log(`  📈 Pass Rate: ${passRate}%`);
+    console.log(`  Γ£à Passed: ${results.passed}`);
+    console.log(`  Γ¥î Failed: ${results.failed}`);
+    console.log(`  ≡ƒôê Pass Rate: ${passRate}%`);
   }
 
-  console.log('\n' + '═'.repeat(70));
-  console.log('📈 OVERALL RESULTS');
-  console.log('═'.repeat(70));
+  console.log('\n' + 'ΓòÉ'.repeat(70));
+  console.log('≡ƒôê OVERALL RESULTS');
+  console.log('ΓòÉ'.repeat(70));
   const overallRate = Math.round((testResults.passed / testResults.total) * 100);
   console.log(`Total Tests: ${testResults.total}`);
-  console.log(`✅ Passed: ${testResults.passed}`);
-  console.log(`❌ Failed: ${testResults.failed}`);
-  console.log(`📊 Overall Pass Rate: ${overallRate}%`);
+  console.log(`Γ£à Passed: ${testResults.passed}`);
+  console.log(`Γ¥î Failed: ${testResults.failed}`);
+  console.log(`≡ƒôè Overall Pass Rate: ${overallRate}%`);
 
   if (testResults.failed === 0) {
-    console.log('\n✅ ALL TESTS PASSED - APPLICATION IS PRODUCTION READY!\n');
+    console.log('\nΓ£à ALL TESTS PASSED - APPLICATION IS PRODUCTION READY!\n');
   } else {
-    console.log(`\n⚠️  ${testResults.failed} test(s) failed. Review output above.\n`);
+    console.log(`\nΓÜá∩╕Å  ${testResults.failed} test(s) failed. Review output above.\n`);
   }
 
-  console.log('═'.repeat(70));
+  console.log('ΓòÉ'.repeat(70));
   console.log(`Completed: ${new Date().toISOString()}`);
 }
 
