@@ -1,0 +1,63 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]:
+          - generic [ref=e6]: FC
+          - generic [ref=e7]:
+            - generic [ref=e8]: FieldCost
+            - generic [ref=e9]: MVP
+        - button "✕" [ref=e10] [cursor=pointer]
+      - navigation [ref=e11]:
+        - button "🎬 Demo ›" [ref=e13] [cursor=pointer]:
+          - generic [ref=e14]: 🎬
+          - generic [ref=e15]: Demo
+          - generic [ref=e16]: ›
+        - button "👤 Account ›" [ref=e18] [cursor=pointer]:
+          - generic [ref=e19]: 👤
+          - generic [ref=e20]: Account
+          - generic [ref=e21]: ›
+      - link "Sign In" [ref=e23] [cursor=pointer]:
+        - /url: /auth/login
+    - main [ref=e25]
+  - generic [ref=e27]:
+    - generic [ref=e28]:
+      - generic [ref=e30]: FC
+      - heading "FieldCost" [level=1] [ref=e31]
+      - paragraph [ref=e32]: Field Operations & Invoicing Platform
+    - generic [ref=e33]:
+      - heading "Sign In" [level=2] [ref=e34]
+      - generic [ref=e35]:
+        - generic [ref=e36]: Email Address
+        - textbox "you@company.com" [ref=e37]
+      - generic [ref=e38]:
+        - generic [ref=e39]:
+          - generic [ref=e40]: Password
+          - link "Forgot password?" [ref=e41] [cursor=pointer]:
+            - /url: /auth/forgot-password
+        - generic [ref=e42]:
+          - textbox "••••••••" [ref=e43]
+          - button "Show" [ref=e44] [cursor=pointer]
+      - button "Sign In" [ref=e45] [cursor=pointer]
+    - generic [ref=e46]:
+      - heading "Try Demo" [level=3] [ref=e47]
+      - paragraph [ref=e48]: Explore FieldCost with pre-loaded demo data. No account needed.
+      - link "Launch Demo" [ref=e49] [cursor=pointer]:
+        - /url: /auth/demo-login
+    - paragraph [ref=e51]:
+      - text: Don't have an account?
+      - link "Create one" [ref=e52] [cursor=pointer]:
+        - /url: /auth/register
+    - paragraph [ref=e54]: © 2026 FieldCost MVP. All rights reserved.
+  - button "Open Next.js Dev Tools" [ref=e60] [cursor=pointer]:
+    - generic [ref=e63]:
+      - text: Compiling
+      - generic [ref=e64]:
+        - generic [ref=e65]: .
+        - generic [ref=e66]: .
+        - generic [ref=e67]: .
+  - alert [ref=e68]
+```

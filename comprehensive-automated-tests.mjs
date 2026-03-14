@@ -5,6 +5,7 @@
  * Run: node comprehensive-automated-tests.mjs
  */
 
+import http from 'http';
 import https from 'https';
 import { URL } from 'url';
 
@@ -16,6 +17,8 @@ const TEST_TIMEOUT = 30000;
 const DEMO_USER = 'demo';
 const LIVE_USER = 'demo-live-test';
 const ADMIN_USER = 'demo-admin';
+const DEMO_COMPANY_ID = 8;
+const LIVE_COMPANY_ID = 9;
 
 let testResults = {
   total: 0,
@@ -133,7 +136,7 @@ async function testHealthAndBasics() {
 
   try {
     const home = await httpRequest('GET', '/');
-    addTest('Health', 'Homepage Accessible', health.status >= 200 && health.status < 400 ? 'PASS' : 'FAIL', { status: health.status });
+    addTest('Health', 'Homepage Accessible', home.status >= 200 && home.status < 400 ? 'PASS' : 'FAIL', { status: home.status });
   } catch (err) {
     addTest('Health', 'Homepage Accessible', 'FAIL', { error: err.message });
   }
@@ -154,6 +157,7 @@ async function testProjectCRUD() {
       budget: 50000,
       currency: 'ZAR',
       user_id: DEMO_USER,
+      company_id: DEMO_COMPANY_ID,
     });
     if (createRes.status === 200 || createRes.status === 201) {
       projectId = createRes.body?.id;
@@ -167,7 +171,7 @@ async function testProjectCRUD() {
 
   // READ (LIST)
   try {
-    const listRes = await httpRequest('GET', `projects?user_id=${DEMO_USER}`);
+    const listRes = await httpRequest('GET', `projects?company_id=${DEMO_COMPANY_ID}`);
     if (listRes.status === 200 && Array.isArray(listRes.body)) {
       addTest('Projects', 'READ Projects (List)', 'PASS', { count: listRes.body.length });
     } else {
@@ -180,10 +184,12 @@ async function testProjectCRUD() {
   // UPDATE
   if (projectId) {
     try {
-      const updateRes = await httpRequest('PUT', `projects/${projectId}`, {
+      const updateRes = await httpRequest('PATCH', 'projects', {
+        id: projectId,
         name: `Updated Auto Project ${Date.now()}`,
         description: 'Updated description',
         user_id: DEMO_USER,
+        company_id: DEMO_COMPANY_ID,
       });
       if (updateRes.status === 200) {
         addTest('Projects', 'UPDATE Project', 'PASS', { id: projectId });
@@ -198,7 +204,11 @@ async function testProjectCRUD() {
   // DELETE
   if (projectId) {
     try {
-      const deleteRes = await httpRequest('DELETE', `projects/${projectId}`, { user_id: DEMO_USER });
+      const deleteRes = await httpRequest('DELETE', 'projects', { 
+        id: projectId,
+        user_id: DEMO_USER,
+        company_id: DEMO_COMPANY_ID,
+      });
       if (deleteRes.status === 200 || deleteRes.status === 204) {
         addTest('Projects', 'DELETE Project', 'PASS', { id: projectId });
       } else {
@@ -225,6 +235,7 @@ async function testCustomerCRUD() {
       phone: '+27812345678',
       address: '123 Test Street',
       user_id: DEMO_USER,
+      company_id: DEMO_COMPANY_ID,
     });
     if (createRes.status === 200 || createRes.status === 201) {
       customerId = createRes.body?.id;
@@ -238,7 +249,7 @@ async function testCustomerCRUD() {
 
   // READ (LIST)
   try {
-    const listRes = await httpRequest('GET', `customers?user_id=${DEMO_USER}`);
+    const listRes = await httpRequest('GET', `customers?company_id=${DEMO_COMPANY_ID}`);
     if (listRes.status === 200 && Array.isArray(listRes.body)) {
       addTest('Customers', 'READ Customers (List)', 'PASS', { count: listRes.body.length });
     } else {
@@ -251,10 +262,12 @@ async function testCustomerCRUD() {
   // UPDATE
   if (customerId) {
     try {
-      const updateRes = await httpRequest('PUT', `customers/${customerId}`, {
+      const updateRes = await httpRequest('PATCH', 'customers', {
+        id: customerId,
         name: `Updated Customer ${Date.now()}`,
         email: `updated-${Date.now()}@example.com`,
         user_id: DEMO_USER,
+        company_id: DEMO_COMPANY_ID,
       });
       if (updateRes.status === 200) {
         addTest('Customers', 'UPDATE Customer', 'PASS', { id: customerId });
@@ -269,7 +282,11 @@ async function testCustomerCRUD() {
   // DELETE
   if (customerId) {
     try {
-      const deleteRes = await httpRequest('DELETE', `customers/${customerId}`, { user_id: DEMO_USER });
+      const deleteRes = await httpRequest('DELETE', 'customers', { 
+        id: customerId,
+        user_id: DEMO_USER,
+        company_id: DEMO_COMPANY_ID,
+      });
       if (deleteRes.status === 200 || deleteRes.status === 204) {
         addTest('Customers', 'DELETE Customer', 'PASS', { id: customerId });
       } else {
@@ -296,6 +313,7 @@ async function testTaskCRUD() {
       status: 'pending',
       priority: 'high',
       user_id: DEMO_USER,
+      company_id: DEMO_COMPANY_ID,
     });
     if (createRes.status === 200 || createRes.status === 201) {
       taskId = createRes.body?.id;
@@ -309,7 +327,7 @@ async function testTaskCRUD() {
 
   // READ (LIST)
   try {
-    const listRes = await httpRequest('GET', `tasks?user_id=${DEMO_USER}`);
+    const listRes = await httpRequest('GET', `tasks?company_id=${DEMO_COMPANY_ID}`);
     if (listRes.status === 200 && Array.isArray(listRes.body)) {
       addTest('Tasks', 'READ Tasks (List)', 'PASS', { count: listRes.body.length });
     } else {
@@ -322,10 +340,12 @@ async function testTaskCRUD() {
   // UPDATE
   if (taskId) {
     try {
-      const updateRes = await httpRequest('PUT', `tasks/${taskId}`, {
+      const updateRes = await httpRequest('PATCH', 'tasks', {
+        id: taskId,
         name: `Updated Task ${Date.now()}`,
         status: 'in-progress',
         user_id: DEMO_USER,
+        company_id: DEMO_COMPANY_ID,
       });
       if (updateRes.status === 200) {
         addTest('Tasks', 'UPDATE Task', 'PASS', { id: taskId });
@@ -340,7 +360,11 @@ async function testTaskCRUD() {
   // DELETE
   if (taskId) {
     try {
-      const deleteRes = await httpRequest('DELETE', `tasks/${taskId}`, { user_id: DEMO_USER });
+      const deleteRes = await httpRequest('DELETE', 'tasks', { 
+        id: taskId,
+        user_id: DEMO_USER,
+        company_id: DEMO_COMPANY_ID,
+      });
       if (deleteRes.status === 200 || deleteRes.status === 204) {
         addTest('Tasks', 'DELETE Task', 'PASS', { id: taskId });
       } else {
@@ -407,7 +431,7 @@ async function testInvoiceCRUD() {
 
   // READ (LIST)
   try {
-    const listRes = await httpRequest('GET', `invoices?user_id=${DEMO_USER}`);
+    const listRes = await httpRequest('GET', `invoices?company_id=${DEMO_COMPANY_ID}`);
     if (listRes.status === 200 && Array.isArray(listRes.body)) {
       addTest('Invoices', 'READ Invoices (List)', 'PASS', { count: listRes.body.length });
     } else {
@@ -456,11 +480,11 @@ async function testDataIsolation() {
 
   // Demo project count
   try {
-    const demoRes = await httpRequest('GET', `projects?user_id=${DEMO_USER}`);
+    const demoRes = await httpRequest('GET', `projects?company_id=${DEMO_COMPANY_ID}`);
     const demoCount = Array.isArray(demoRes.body) ? demoRes.body.length : 0;
 
     // Live project count
-    const liveRes = await httpRequest('GET', `projects?user_id=${LIVE_USER}`);
+    const liveRes = await httpRequest('GET', `projects?company_id=${LIVE_COMPANY_ID}`);
     const liveCount = Array.isArray(liveRes.body) ? liveRes.body.length : 0;
 
     // They should be different (isolation)
@@ -552,7 +576,7 @@ async function testReportsAndExports() {
 
   // Reports endpoint
   try {
-    const reportsRes = await httpRequest('GET', `reports?user_id=${DEMO_USER}`);
+    const reportsRes = await httpRequest('GET', `reports?company_id=${DEMO_COMPANY_ID}`);
     if (reportsRes.status === 200) {
       addTest('Reports', 'Access Reports', 'PASS', { status: reportsRes.status });
     } else {
@@ -564,7 +588,7 @@ async function testReportsAndExports() {
 
   // CSV Export
   try {
-    const csvRes = await httpRequest('GET', `invoices/export?user_id=${DEMO_USER}&format=csv`);
+    const csvRes = await httpRequest('GET', `invoices/export?company_id=${DEMO_COMPANY_ID}&format=csv`);
     if (csvRes.status === 200) {
       addTest('Exports', 'CSV Export', 'PASS', { status: csvRes.status });
     } else {
@@ -576,7 +600,7 @@ async function testReportsAndExports() {
 
   // PDF Export (with CSV fallback)
   try {
-    const pdfRes = await httpRequest('GET', `invoices/export?user_id=${DEMO_USER}&format=pdf`);
+    const pdfRes = await httpRequest('GET', `invoices/export?company_id=${DEMO_COMPANY_ID}&format=pdf`);
     if (pdfRes.status === 200) {
       addTest('Exports', 'PDF Export (or fallback)', 'PASS', { status: pdfRes.status });
     } else {
@@ -645,7 +669,7 @@ async function testMultiTierSupport() {
 
   // Tier 1 (Demo) features
   try {
-    const tier1Res = await httpRequest('GET', `projects?user_id=${DEMO_USER}`);
+    const tier1Res = await httpRequest('GET', `projects?company_id=${DEMO_COMPANY_ID}`);
     if (tier1Res.status === 200 && Array.isArray(tier1Res.body)) {
       addTest('Features', 'Tier 1 (Demo) - Projects', 'PASS', { count: tier1Res.body.length });
     } else {
@@ -657,7 +681,7 @@ async function testMultiTierSupport() {
 
   // Tier 2 (Live Company) features
   try {
-    const tier2Res = await httpRequest('GET', `projects?user_id=${LIVE_USER}`);
+    const tier2Res = await httpRequest('GET', `projects?company_id=${LIVE_COMPANY_ID}`);
     if (tier2Res.status === 200 && Array.isArray(tier2Res.body)) {
       addTest('Features', 'Tier 2 (Live) - Projects', 'PASS', { count: tier2Res.body.length });
     } else {
@@ -669,8 +693,8 @@ async function testMultiTierSupport() {
 
   // Company isolation verification
   try {
-    const demoInvoicesRes = await httpRequest('GET', `invoices?user_id=${DEMO_USER}`);
-    const liveInvoicesRes = await httpRequest('GET', `invoices?user_id=${LIVE_USER}`);
+    const demoInvoicesRes = await httpRequest('GET', `invoices?company_id=${DEMO_COMPANY_ID}`);
+    const liveInvoicesRes = await httpRequest('GET', `invoices?company_id=${LIVE_COMPANY_ID}`);
     
     const demoCount = Array.isArray(demoInvoicesRes.body) ? demoInvoicesRes.body.length : 0;
     const liveCount = Array.isArray(liveInvoicesRes.body) ? liveInvoicesRes.body.length : 0;

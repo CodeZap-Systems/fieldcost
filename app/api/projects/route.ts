@@ -182,53 +182,65 @@ export async function POST(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-  const body = await req.json();
-  const { id, user_id: incomingUserId, company_id: incomingCompanyId, ...fields } = body;
-  const userId = resolveServerUserId(incomingUserId);
-  const companyId = incomingCompanyId;
-  
-  if (!userId || !id) {
-    return NextResponse.json({ error: 'User ID and project ID required' }, { status: 400 });
-  }
-
   try {
-    const { companyId: validCompanyId } = await getCompanyContext(userId, companyId);
-    
-    const { data, error } = await supabaseServer
-      .from('projects')
-      .update(fields)
-      .eq('id', id)
-      .eq('user_id', userId)
-      .eq('company_id', validCompanyId)
-      .select();
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json(data[0]);
+    const body = await req.json();
+    const { id, company_id: incomingCompanyId, ...fields } = body;
+
+    // Get authenticated user with fallback - use same pattern as GET
+    const userId = await resolveUserContext(req);
+    const companyId = incomingCompanyId;
+
+    if (!userId || !id) {
+      return NextResponse.json({ error: 'User ID and project ID required' }, { status: 400 });
+    }
+
+    try {
+      const { companyId: validCompanyId } = await getCompanyContext(userId, companyId);
+
+      const { data, error } = await supabaseServer
+        .from('projects')
+        .update(fields)
+        .eq('id', id)
+        .eq('user_id', userId)
+        .eq('company_id', validCompanyId)
+        .select();
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json(data[0], { status: 200 });
+    } catch (err) {
+      return NextResponse.json({ error: String(err) }, { status: 400 });
+    }
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 400 });
+    return NextResponse.json({ error: 'Request processing failed' }, { status: 500 });
   }
 }
 
 export async function DELETE(req: Request) {
-  const { id, user_id: incomingUserId, company_id: incomingCompanyId } = await req.json();
-  const userId = resolveServerUserId(incomingUserId);
-  const companyId = incomingCompanyId;
-  
-  if (!userId || !id) {
-    return NextResponse.json({ error: 'User ID and project ID required' }, { status: 400 });
-  }
-
   try {
-    const { companyId: validCompanyId } = await getCompanyContext(userId, companyId);
-    
-    const { error } = await supabaseServer
-      .from('projects')
-      .delete()
-      .eq('id', id)
-      .eq('user_id', userId)
-      .eq('company_id', validCompanyId);
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json({ success: true });
+    const { id, company_id: incomingCompanyId } = await req.json();
+
+    // Get authenticated user with fallback - use same pattern as GET
+    const userId = await resolveUserContext(req);
+    const companyId = incomingCompanyId;
+
+    if (!userId || !id) {
+      return NextResponse.json({ error: 'User ID and project ID required' }, { status: 400 });
+    }
+
+    try {
+      const { companyId: validCompanyId } = await getCompanyContext(userId, companyId);
+
+      const { error } = await supabaseServer
+        .from('projects')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', userId)
+        .eq('company_id', validCompanyId);
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ success: true }, { status: 200 });
+    } catch (err) {
+      return NextResponse.json({ error: String(err) }, { status: 400 });
+    }
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 400 });
+    return NextResponse.json({ error: 'Request processing failed' }, { status: 500 });
   }
 }

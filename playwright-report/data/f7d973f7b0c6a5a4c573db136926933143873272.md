@@ -1,0 +1,75 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]:
+          - generic [ref=e6]: FC
+          - generic [ref=e7]:
+            - generic [ref=e8]: FieldCost
+            - generic [ref=e9]: MVP
+        - button "✕" [ref=e10] [cursor=pointer]
+      - navigation [ref=e11]:
+        - button "🎬 Demo ›" [ref=e13] [cursor=pointer]:
+          - generic [ref=e14]: 🎬
+          - generic [ref=e15]: Demo
+          - generic [ref=e16]: ›
+        - button "👤 Account ›" [ref=e18] [cursor=pointer]:
+          - generic [ref=e19]: 👤
+          - generic [ref=e20]: Account
+          - generic [ref=e21]: ›
+      - link "Sign In" [ref=e23]:
+        - /url: /auth/login
+    - main [ref=e26]
+  - generic [ref=e28]:
+    - generic [ref=e29]:
+      - generic [ref=e31]: FC
+      - heading "FieldCost" [level=1] [ref=e32]
+      - paragraph [ref=e33]: Create your workspace
+    - generic [ref=e34]:
+      - heading "Create Account" [level=2] [ref=e35]
+      - generic [ref=e36]:
+        - generic [ref=e37]:
+          - generic [ref=e38]: First Name
+          - textbox "John" [ref=e39]
+        - generic [ref=e40]:
+          - generic [ref=e41]: Last Name
+          - textbox "Doe" [ref=e42]
+      - generic [ref=e43]:
+        - generic [ref=e44]: Company Name
+        - textbox "Your Company" [ref=e45]
+      - generic [ref=e46]:
+        - generic [ref=e47]: Work Email
+        - textbox "you@company.com" [ref=e48]
+      - generic [ref=e49]:
+        - generic [ref=e50]: Password
+        - generic [ref=e51]:
+          - textbox "••••••••" [ref=e52]
+          - button "Show" [ref=e53] [cursor=pointer]
+        - paragraph [ref=e54]: At least 8 characters
+      - generic [ref=e55]:
+        - generic [ref=e56]: Confirm Password
+        - textbox "••••••••" [ref=e57]
+      - generic [ref=e58]:
+        - generic [ref=e59]: Your Role
+        - combobox [ref=e60]:
+          - option "Admin (Full Access)" [selected]
+          - option "Field Crew (Limited Access)"
+      - button "Create My Workspace" [ref=e61] [cursor=pointer]
+      - paragraph [ref=e62]: By registering, you agree to our Terms of Service and Privacy Policy
+    - paragraph [ref=e64]:
+      - text: Already have an account?
+      - link "Sign in" [ref=e65]:
+        - /url: /auth/login
+    - paragraph [ref=e67]: © 2026 FieldCost MVP. All rights reserved.
+  - button "Open Next.js Dev Tools" [ref=e73] [cursor=pointer]:
+    - generic [ref=e76]:
+      - text: Compiling
+      - generic [ref=e77]:
+        - generic [ref=e78]: .
+        - generic [ref=e79]: .
+        - generic [ref=e80]: .
+  - alert [ref=e81]
+```

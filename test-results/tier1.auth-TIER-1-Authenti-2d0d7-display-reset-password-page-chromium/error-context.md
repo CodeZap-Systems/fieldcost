@@ -1,0 +1,43 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]:
+          - generic [ref=e6]: FC
+          - generic [ref=e7]:
+            - generic [ref=e8]: FieldCost
+            - generic [ref=e9]: MVP
+        - button "✕" [ref=e10] [cursor=pointer]
+      - navigation [ref=e11]:
+        - button "🎬 Demo ›" [ref=e13] [cursor=pointer]:
+          - generic [ref=e14]: 🎬
+          - generic [ref=e15]: Demo
+          - generic [ref=e16]: ›
+        - button "👤 Account ›" [ref=e18] [cursor=pointer]:
+          - generic [ref=e19]: 👤
+          - generic [ref=e20]: Account
+          - generic [ref=e21]: ›
+      - link "Sign In" [ref=e23] [cursor=pointer]:
+        - /url: /auth/login
+    - main [ref=e26]
+  - main [ref=e27]:
+    - generic [ref=e28]:
+      - generic [ref=e29]:
+        - heading "Set a new password" [level=1] [ref=e30]
+        - paragraph [ref=e31]: Choose a strong password to secure your FieldCost account.
+      - textbox "New password" [disabled] [ref=e32]
+      - textbox "Confirm new password" [disabled] [ref=e33]
+      - button "Update password" [disabled] [ref=e34]
+      - generic [ref=e35]: Recovery link is invalid or expired.
+  - button "Open Next.js Dev Tools" [ref=e41] [cursor=pointer]:
+    - generic [ref=e44]:
+      - text: Compiling
+      - generic [ref=e45]:
+        - generic [ref=e46]: .
+        - generic [ref=e47]: .
+        - generic [ref=e48]: .
+  - alert [ref=e49]
+```

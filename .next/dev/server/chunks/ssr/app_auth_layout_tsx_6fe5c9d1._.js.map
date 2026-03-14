@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/HOME/Downloads/fieldcost/app/auth/layout.tsx"],"sourcesContent":["import React from \"react\";\r\n\r\nexport default function AuthLayout({ children }: { children: React.ReactNode }) {\r\n  return (\r\n    <div>\r\n      {children}\r\n    </div>\r\n  );\r\n}\r\n"],"names":[],"mappings":";;;;;;AAEe,SAAS,WAAW,EAAE,QAAQ,EAAiC;IAC5E,qBACE,8OAAC;kBACE;;;;;;AAGP"}}]
-}

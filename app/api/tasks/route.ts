@@ -167,59 +167,71 @@ export async function POST(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-  const body = await req.json();
-  const { id, user_id: incomingUserId, company_id: incomingCompanyId, ...fields } = body;
-  const userId = resolveServerUserId(incomingUserId);
-  const companyId = incomingCompanyId;
-  
-  if (!userId || !id) {
-    return NextResponse.json({ error: 'User ID and task ID required' }, { status: 400 });
-  }
-
   try {
-    const { companyId: validCompanyId } = await getCompanyContext(userId, companyId);
-    
-    if (Object.prototype.hasOwnProperty.call(fields, 'crew_member_id')) {
-      fields.crew_member_id = fields.crew_member_id ? Number(fields.crew_member_id) : null;
+    const body = await req.json();
+    const { id, company_id: incomingCompanyId, ...fields } = body;
+
+    // Get authenticated user with fallback - use same pattern as GET
+    const userId = await resolveUserContext(req);
+    const companyId = incomingCompanyId;
+
+    if (!userId || !id) {
+      return NextResponse.json({ error: 'User ID and task ID required' }, { status: 400 });
     }
-    if (Object.prototype.hasOwnProperty.call(fields, 'billable') && typeof fields.billable !== 'boolean') {
-      fields.billable = fields.billable !== 'false';
+
+    try {
+      const { companyId: validCompanyId } = await getCompanyContext(userId, companyId);
+      
+      if (Object.prototype.hasOwnProperty.call(fields, 'crew_member_id')) {
+        fields.crew_member_id = fields.crew_member_id ? Number(fields.crew_member_id) : null;
+      }
+      if (Object.prototype.hasOwnProperty.call(fields, 'billable') && typeof fields.billable !== 'boolean') {
+        fields.billable = fields.billable !== 'false';
+      }
+      const { data, error } = await supabaseServer
+        .from('tasks')
+        .update(fields)
+        .eq('id', id)
+        .eq('user_id', userId)
+        .eq('company_id', validCompanyId)
+        .select('*, crew_member:crew_members(id, name, hourly_rate)');
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json(data[0], { status: 200 });
+    } catch (err) {
+      return NextResponse.json({ error: String(err) }, { status: 400 });
     }
-    const { data, error } = await supabaseServer
-      .from('tasks')
-      .update(fields)
-      .eq('id', id)
-      .eq('user_id', userId)
-      .eq('company_id', validCompanyId)
-      .select('*, crew_member:crew_members(id, name, hourly_rate)');
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json(data[0]);
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 400 });
+    return NextResponse.json({ error: 'Request processing failed' }, { status: 500 });
   }
 }
 
 export async function DELETE(req: Request) {
-  const { id, user_id: incomingUserId, company_id: incomingCompanyId } = await req.json();
-  const userId = resolveServerUserId(incomingUserId);
-  const companyId = incomingCompanyId;
-  
-  if (!userId || !id) {
-    return NextResponse.json({ error: 'User ID and task ID required' }, { status: 400 });
-  }
-
   try {
-    const { companyId: validCompanyId } = await getCompanyContext(userId, companyId);
-    
-    const { error } = await supabaseServer
-      .from('tasks')
-      .delete()
-      .eq('id', id)
-      .eq('user_id', userId)
-      .eq('company_id', validCompanyId);
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json({ success: true });
+    const { id, company_id: incomingCompanyId } = await req.json();
+
+    // Get authenticated user with fallback - use same pattern as GET
+    const userId = await resolveUserContext(req);
+    const companyId = incomingCompanyId;
+
+    if (!userId || !id) {
+      return NextResponse.json({ error: 'User ID and task ID required' }, { status: 400 });
+    }
+
+    try {
+      const { companyId: validCompanyId } = await getCompanyContext(userId, companyId);
+      
+      const { error } = await supabaseServer
+        .from('tasks')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', userId)
+        .eq('company_id', validCompanyId);
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ success: true }, { status: 200 });
+    } catch (err) {
+      return NextResponse.json({ error: String(err) }, { status: 400 });
+    }
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 400 });
+    return NextResponse.json({ error: 'Request processing failed' }, { status: 500 });
   }
 }
