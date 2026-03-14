@@ -169,21 +169,15 @@ export default function SageNav() {
 
   // Filter sections based on auth state
   const visibleSections = NAV_SECTIONS.filter(section => {
+    // Account & Demo sections only for non-authenticated users (demo mode)
     if (section.label === "Account" && user) {
-      return false; // Hide Account links if logged in
+      return false; // Hide Account if logged in
     }
     if (section.label === "Demo" && user) {
-      return false; // Hide Demo links if logged in
+      return false; // Hide Demo if logged in
     }
-    if (section.label === "Operations" && !user) {
-      return false; // Hide Operations if not logged in
-    }
-    if (section.label === "Tasks" && !user) {
-      return false; // Hide Tasks if not logged in
-    }
-    if (section.label === "Workspace" && !user) {
-      return false; // Hide Dashboard link if not logged in
-    }
+    // Operations, Tasks, Workspace should show for BOTH authenticated AND demo users
+    // Only filter them based on other conditions
     return true;
   });
 
