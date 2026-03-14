@@ -219,24 +219,7 @@ jobs:
         run: npm ci
       
       - name: ℹ️ AI Tests Skipped (OpenAI API key required)
-        if: ${{ !secrets.OPENAI_API_KEY }}
         run: echo "AI tests require OPENAI_API_KEY secret"
-      
-      - name: Start dev server
-        if: ${{ secrets.OPENAI_API_KEY }}
-        run: npm run dev > /tmp/server.log 2>&1 &
-      
-      - name: Wait for server
-        if: ${{ secrets.OPENAI_API_KEY }}
-        run: sleep 5 && curl -f http://localhost:3000
-      
-      - name: Run AI exploratory tests
-        if: ${{ secrets.OPENAI_API_KEY }}
-        run: |
-          echo "AI exploratory testing would run here"
-          echo "This requires OPENAI_API_KEY" 
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
   # ============================================================
   # STEP 6: TEST REPORT & SUMMARY
