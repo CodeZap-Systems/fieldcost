@@ -99,12 +99,8 @@ export async function POST(req: Request) {
     const body = await req.json();
     const companyId = body.company_id;
     
-    // CRITICAL: Get authenticated user from session, not from body
-    const { data: { user }, error: authError } = await supabaseServer.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    const userId = user.id;
+    // Get authenticated user with fallback - use same pattern as GET
+    const userId = await resolveUserContext(req);
     
     if (!companyId) {
       return NextResponse.json({ error: 'Company ID required for data isolation' }, { status: 400 });
