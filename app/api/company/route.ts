@@ -25,17 +25,30 @@ const sanitize = (value?: unknown) => {
 };
 
 async function resolveUserContext(req: Request, provided?: string | null) {
-  const { data, error } = await supabase.auth.getUser();
-  if (error) {
-    console.warn("/api/company supabase auth lookup warning", error.message);
+  // Try to get user from Authorization header first
+  const authHeader = req.headers.get("authorization");
+  let authUserId: string | null = null;
+  
+  if (authHeader?.startsWith("Bearer ")) {
+    try {
+      const token = authHeader.slice(7);
+      const { data } = await supabaseServer.auth.getUser(token);
+      if (data?.user?.id) {
+        authUserId = data.user.id;
+        console.log(`[resolveUserContext] ✅ Got authenticated user: ${authUserId}`);
+        return { userId: authUserId };
+      }
+    } catch (err) {
+      console.warn("[resolveUserContext] ⚠️  Failed to get user from Authorization header:", err);
+    }
   }
-  const authUserId = data?.user?.id;
-  if (authUserId) {
-    return { userId: authUserId };
-  }
+
+  // Fallback: Use provided or query parameter
   const { searchParams } = new URL(req.url);
   const fallback = provided ?? searchParams.get("user_id");
-  return { userId: resolveServerUserId(fallback) };
+  const resolved = resolveServerUserId(fallback);
+  console.warn(`[resolveUserContext] ⚠️  No auth header, using fallback user: ${resolved}`);
+  return { userId: resolved };
 }
 
 function isMissingTableError(error: unknown) {
@@ -78,6 +91,7 @@ function normalizeProfile(payload: ProfileInput, userId: string): StoredCompanyP
     default_currency: payload?.default_currency ?? "ZAR",
     erp_targets: Array.isArray(payload?.erp_targets) ? payload.erp_targets : [],
     updated_at: payload?.updated_at ?? new Date().toISOString(),
+    is_demo: (payload as any)?.is_demo === true,
   };
 }
 
@@ -90,6 +104,7 @@ export async function GET(req: Request) {
     
     const isDemo = isDemoUserId(userId);
     
+    // Get user's own companies
     const { data, error } = await supabaseServer
       .from("company_profiles")
       .select("*")
@@ -100,15 +115,45 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const list = Array.isArray(data) ? data : data ? [data] : [];
+    let list = Array.isArray(data) ? data : data ? [data] : [];
     
-    // If user has no companies, create a default one
+    // CRITICAL: Only fetch demo companies for demo users (not authenticated users)
+    let demoCompaniesData = [];
+    if (isDemo) {
+      try {
+        const { data: demoCompanies, error: demoError } = await supabaseServer
+          .from("company_profiles")
+          .select("*")
+          .eq("is_demo", true)
+          .order("name", { ascending: true });
+        
+        if (!demoError && Array.isArray(demoCompanies)) {
+          demoCompaniesData = demoCompanies;
+        }
+      } catch (err) {
+        console.warn("[GET /api/company] Could not fetch demo companies:", err);
+      }
+    }
+    
+    // If user has no companies, create a default one using registered company name
     if (!list.length && !isDemo) {
       console.log(`Auto-creating default company for user ${userId}`);
+      
+      // Try to get registered company name from auth user metadata
+      let registeredCompanyName = "My Company"; // Default fallback
+      try {
+        const { data: authData } = await supabase.auth.getUser();
+        if (authData?.user?.user_metadata?.companyName) {
+          registeredCompanyName = authData.user.user_metadata.companyName;
+        }
+      } catch (err) {
+        console.warn("Could not fetch auth metadata for company name:", err);
+      }
+      
       const defaultCompany = normalizeProfile({
         id: randomUUID(),
         user_id: userId,
-        name: "My Company",
+        name: registeredCompanyName,  // Use registered name, not hardcoded
         email: null,
         invoice_template: "standard",
         default_currency: "ZAR",
@@ -127,25 +172,48 @@ export async function GET(req: Request) {
       }
     }
     
-    if (list.length) {
-      const normalized = list.map(entry => normalizeProfile(entry, userId));
+    // Combine user's companies with demo companies ONLY for demo users
+    const allCompanies = isDemo ? [...list, ...demoCompaniesData] : list;
+    
+    if (allCompanies.length) {
+      const normalized = allCompanies.map(entry => normalizeProfile(entry, userId));
       
-      // For real users: prefer real companies over demo, but allow both
-      // Separate demo from real companies
-      const demoCompanies = normalized.filter(p => p.id === DEMO_COMPANY_ID);
-      const realCompanies = normalized.filter(p => p.id !== DEMO_COMPANY_ID);
+      console.log(`[GET /api/company] userId=${userId}, isDemo=${isDemo}, allCompanies=${JSON.stringify(normalized.map(c => ({ id: c.id, name: c.name, is_demo: c.is_demo })))}`);
       
-      // For real users: prioritize real companies if they exist
-      // For demo users: show all (including demo)
-      const validList = isDemo ? normalized : (realCompanies.length > 0 ? realCompanies : normalized);
+      // Separate owned companies from demo companies
+      const ownedCompanies = normalized.filter(p => !p.is_demo);
+      const demoCompanies = normalized.filter(p => p.is_demo === true);
+      
+      console.log(`[GET /api/company] ownedCompanies=${JSON.stringify(ownedCompanies.map(c => ({ id: c.id, name: c.name })))}, demoCompanies=${JSON.stringify(demoCompanies.map(c => ({ id: c.id, name: c.name })))}`);
+      
+      // CRITICAL: ALWAYS put owned (non-demo) companies FIRST for ALL users
+      // This ensures live companies are preferred as default selection
+      const validList = [...ownedCompanies, ...demoCompanies];
       
       const stored = await getStoredCompanyProfiles(userId);
       
-      // Get preferred company ID
-      const preferredId = requestedCompanyId || stored.activeCompanyId || validList[0]?.id || null;
+      // Get preferred company ID - but never default to demo company for authenticated users
+      let preferredId = requestedCompanyId || stored.activeCompanyId || null;
+      
+      console.log(`[GET /api/company] requestedCompanyId=${requestedCompanyId}, stored.activeCompanyId=${stored.activeCompanyId}, preferredId=${preferredId}`);
+      
+      // For authenticated users, validate that preferred company is NOT a demo company
+      if (!isDemo && preferredId) {
+        const preferred = normalized.find(p => p.id === preferredId);
+        if (preferred?.is_demo) {
+          // Ignore demo company preference for authenticated users
+          console.log(`[GET /api/company] Ignoring demo company preference for authenticated user`);
+
+          preferredId = null;
+        }
+      }
+      
       const active = preferredId
-        ? normalized.find(profile => profile.id === preferredId) ?? validList[0]
+        ? normalized.find(profile => profile.id === preferredId && (!isDemo ? !profile.is_demo : true)) ?? validList[0]
         : validList[0] ?? null;
+      
+      console.log(`[GET /api/company] FINAL SELECTION: active=${JSON.stringify({ id: active?.id, name: active?.name, is_demo: active?.is_demo })}`);
+      
       if (active) {
         await replaceStoredCompanyProfiles(userId, validList, active.id);
       } else {
@@ -157,14 +225,29 @@ export async function GET(req: Request) {
     // Fallback to localStorage
     const fallback = await getStoredCompanyProfiles(userId);
     if (fallback.profiles.length) {
-      const fallbackPreferredId = requestedCompanyId || fallback.activeCompanyId || fallback.profiles[0]?.id || null;
-      const fallbackActive = fallbackPreferredId
-        ? fallback.profiles.find(profile => profile.id === fallbackPreferredId) ?? fallback.profiles[0]
-        : fallback.profiles[0] ?? null;
+      const fallbackPreferredId = requestedCompanyId || fallback.activeCompanyId || null;
+      
+      // Remove demo companies from fallback for authenticated users
+      const fallbackProfiles = isDemo 
+        ? fallback.profiles 
+        : fallback.profiles.filter(p => !p.is_demo);
+      
+      // Validate preferred company is not demo for authenticated users
+      let validPreferredId = fallbackPreferredId;
+      if (!isDemo && validPreferredId) {
+        const preferred = fallbackProfiles.find(p => p.id === validPreferredId);
+        if (!preferred?.id) {
+          validPreferredId = null;
+        }
+      }
+      
+      const fallbackActive = validPreferredId
+        ? fallbackProfiles.find(profile => profile.id === validPreferredId) ?? fallbackProfiles[0]
+        : fallbackProfiles[0] ?? null;
       if (fallbackActive) {
         await setActiveStoredCompanyProfile(userId, fallbackActive.id);
       }
-      return NextResponse.json({ company: fallbackActive ?? null, companies: fallback.profiles });
+      return NextResponse.json({ company: fallbackActive ?? null, companies: fallbackProfiles });
     }
 
     // No companies anywhere - this shouldn't happen for non-demo users now

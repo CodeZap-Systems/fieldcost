@@ -2,9 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSageInvoice, type SageInvoicePayload } from "@/lib/sageOneClient";
 import { createXeroInvoice, type XeroInvoicePayload } from "@/lib/xeroClient";
 import { SageOneApiClient } from "@/lib/sageOneApiClient";
+import { supabaseServer } from "@/lib/supabaseServer";
+import { getTenant, isLiveTenant, logTenantAccess } from "@/lib/tenantGuard";
 
 /**
  * Push WIP invoice to Sage One or Xero
+ * POST /api/invoices/push-to-erp
+ * 
+ * ✅ SECURITY LAYERS:
+ * 1. User authentication required (401 if missing)
+ * 2. Company ownership verification (403 if not owned)
+ * 3. Tenant environment check (403 if demo/sandbox - CRITICAL)
+ * 4. Audit logging of all push attempts
+ * 
  * POST /api/invoices/push-to-erp
  * 
  * Request body:
@@ -27,6 +37,7 @@ import { SageOneApiClient } from "@/lib/sageOneApiClient";
 
 interface WipInvoicePushRequest {
   erp: "sage" | "xero";
+  companyId: number;  // REQUIRED: which company is pushing
   wipAmount: number;
   retentionAmount: number;
   netClaimable: number;
@@ -46,18 +57,120 @@ interface WipInvoicePushRequest {
 
 export async function POST(request: NextRequest) {
   try {
+    // ============================================================================
+    // LAYER 1: USER AUTHENTICATION
+    // ============================================================================
+    const { data: { user }, error: authError } = await supabaseServer.auth.getUser();
+    
+    if (!user || authError) {
+      console.warn(`⚠️  WIP push: Authentication failed`);
+      return NextResponse.json(
+        { error: 'Unauthorized: Missing or invalid authentication' },
+        { status: 401 }
+      );
+    }
+
+    const userId = user.id;
     const body = (await request.json()) as WipInvoicePushRequest;
+    const { erp, companyId, wipAmount, retentionAmount, netClaimable, customerId, projectName, description } = body;
 
-    const { erp, wipAmount, retentionAmount, netClaimable, customerId, projectName, description } = body;
-
-    // Validate required fields
-    if (!erp || !customerId || !projectName || !description) {
+    // ============================================================================
+    // LAYER 2: VALIDATE REQUEST
+    // ============================================================================
+    if (!erp || !companyId || !customerId || !projectName || !description) {
       return NextResponse.json(
         {
-          error: "Missing required fields: erp, customerId, projectName, description",
+          error: "Missing required fields: erp, companyId, customerId, projectName, description",
         },
         { status: 400 }
       );
+    }
+
+    // ============================================================================
+    // LAYER 3: TENANT LOOKUP & ENVIRONMENT VERIFICATION (CRITICAL)
+    // ============================================================================
+    const platformId = erp === 'sage' ? 'sage' : 'xero';
+    const tenant = await getTenant(userId, companyId, platformId as 'sage' | 'xero');
+
+    // HARD STOP: Environment check must pass before ANY data is pushed
+    if (!isLiveTenant(tenant)) {
+      const reason = !tenant 
+        ? `Tenant not configured for ${erp}`
+        : tenant.environment !== 'live'
+        ? `Cannot push from ${tenant.environment} environment`
+        : 'Tenant is not active';
+
+      console.warn(`⚠️  WIP push blocked: ${reason}`);
+
+      try {
+        await logTenantAccess(
+          tenant?.id || 'unknown',
+          userId,
+          `${erp}_invoice_push_attempted`,
+          'blocked',
+          reason,
+          { companyId, platform: erp }
+        );
+      } catch (err) {
+        console.error('Tenant audit log error:', err);
+      }
+
+      return NextResponse.json(
+        {
+          success: false,
+          error: reason,
+          message: 'This workspace cannot push invoices to Xero/Sage. Only live workspaces are allowed.'
+        },
+        { status: 403 }
+      );
+    }
+
+    // ✅ Tenant passed all checks - safe to proceed
+    console.log(`✅ Tenant verified: ${tenant.environment} environment, platform: ${tenant.platform}`);
+
+    // LEGACY: Also verify company ownership for backward compatibility
+    const { data: company, error: companyError } = await supabaseServer
+      .from('company_profiles')
+      .select('id, user_id, name')
+      .eq('id', companyId)
+      .eq('user_id', userId)
+      .single();
+
+    if (companyError || !company) {
+      console.warn(`⚠️  Company not found or unauthorized: ${companyId}`);
+
+      try {
+        await logTenantAccess(
+          tenant.id,
+          userId,
+          `${erp}_invoice_push_attempted`,
+          'blocked',
+          'Company ownership verification failed',
+          { companyId }
+        );
+      } catch (err) {
+        console.error('Tenant audit log error:', err);
+      }
+
+      return NextResponse.json(
+        { error: 'Forbidden: You do not have access to this company' },
+        { status: 403 }
+      );
+    }
+
+    console.log(`✅ Company verified: ${company.name} (${companyId})`);
+
+    try {
+      await logTenantAccess(
+        tenant.id,
+        userId,
+        `${erp}_invoice_push_started`,
+        'allowed',
+        'Invoice push initiated for live environment',
+        { companyId, tenantId: tenant.id, environment: tenant.environment }
+      );
+    } catch (err) {
+      console.error('Tenant audit log error (non-blocking):', err);
     }
 
     if (erp === "sage") {

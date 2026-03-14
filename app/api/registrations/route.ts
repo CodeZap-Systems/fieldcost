@@ -57,12 +57,12 @@ export async function POST(req: Request) {
 
     console.log("Attempting to sign up user:", { email, companyName, role });
 
-    const { error } = await client.auth.signUp({
+    const { data, error } = await client.auth.signUp({
       email,
       password,
       options: {
         data: { role, companyName, companyOnboarded: false },
-        emailRedirectTo: `${siteUrl}/auth/login?verified=1`,
+        emailRedirectTo: `${siteUrl}/auth/callback?verified=1`,
       },
     });
 
@@ -88,7 +88,13 @@ export async function POST(req: Request) {
     console.log("Supabase sign up successful for:", email);
     await recordRegistration(registrationEntry);
 
-    return NextResponse.json({ success: true, message: "Registration email sent. Please confirm to continue." });
+    // Note: Supabase automatically sends verification emails via configured SMTP
+    // If emails aren't being sent, please check Supabase project settings
+
+    return NextResponse.json({ 
+      success: true, 
+      message: "Registration successful! A verification email has been sent to " + email + ". Please check your inbox and click the verification link to confirm your account."
+    });
   } catch (error) {
     console.error("POST /api/registrations error:", error);
     const errorMsg = error instanceof Error ? error.message : "Unknown error";

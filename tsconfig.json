@@ -38,6 +38,9 @@
   ],
   "exclude": [
     "node_modules",
-    "DEMO_INTEGRATION_EXAMPLES.tsx"
+    "DEMO_INTEGRATION_EXAMPLES.tsx",
+    "tests/**/*",
+    "e2e/**/*",
+    ".next"
   ]
 }

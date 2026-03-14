@@ -7,9 +7,11 @@ import { useRouter } from "next/navigation";
 import KanbanBoard from "./KanbanBoard";
 import TaskForm from "./TaskForm";
 import TaskPhotoUpload from "./TaskPhotoUpload";
+import { BackButton } from "../../../app/components/BackButton";
 import { ensureClientUserId } from "../../../lib/clientUser";
 import { getDemoTasks, getDemoCustomers, getDemoCrew, getDemoProjects } from "../../../lib/demoMockData";
 import { canUseDemoFixtures } from "../../../lib/userIdentity";
+import { readActiveCompanyId } from "../../../lib/companySwitcher";
 
 type Task = {
   id: number;
@@ -75,6 +77,7 @@ export default function TasksPage() {
   const [crewFlash, setCrewFlash] = useState({ success: "", error: "" });
   const [crewSaving, setCrewSaving] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [companyId, setCompanyId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [invoiceTask, setInvoiceTask] = useState<Task | null>(null);
@@ -89,14 +92,16 @@ export default function TasksPage() {
   const fetchTasks = useCallback(async (resolvedUserId: string) => {
     const allowDemo = canUseDemoFixtures(resolvedUserId);
     try {
-      const res = await fetch(`/api/tasks?user_id=${resolvedUserId}`);
+      const params = new URLSearchParams({ user_id: resolvedUserId });
+      if (companyId) params.set('company_id', companyId);
+      const res = await fetch(`/api/tasks?${params.toString()}`);
       if (!res.ok) throw new Error("Failed to load tasks");
       const data = await res.json();
       const list = Array.isArray(data) ? data : [];
       if (list.length) {
         setTasks(list.map(normalizeTask));
         setDemoTasksData(false);
-      } else if (allowDemo) {
+      } else if (allowDemo && !companyId) {
         setTasks(getDemoTasks(resolvedUserId).map(normalizeTask));
         setDemoTasksData(true);
       } else {
@@ -104,7 +109,7 @@ export default function TasksPage() {
         setDemoTasksData(false);
       }
     } catch {
-      if (allowDemo) {
+      if (allowDemo && !companyId) {
         setTasks(getDemoTasks(resolvedUserId).map(normalizeTask));
         setDemoTasksData(true);
       } else {
@@ -113,19 +118,21 @@ export default function TasksPage() {
       }
       setError("Unable to load tasks");
     }
-  }, []);
+  }, [companyId]);
 
   const fetchCustomers = useCallback(async (resolvedUserId: string) => {
     const allowDemo = canUseDemoFixtures(resolvedUserId);
     try {
-      const res = await fetch(`/api/customers?user_id=${resolvedUserId}`);
+      const params = new URLSearchParams({ user_id: resolvedUserId });
+      if (companyId) params.set('company_id', companyId);
+      const res = await fetch(`/api/customers?${params.toString()}`);
       if (!res.ok) throw new Error("Failed to load customers");
       const data = await res.json();
       const list = Array.isArray(data) ? data : [];
       if (list.length) {
         setCustomers(list);
         setDemoCustomersData(false);
-      } else if (allowDemo) {
+      } else if (allowDemo && !companyId) {
         setCustomers(getDemoCustomers(resolvedUserId));
         setDemoCustomersData(true);
       } else {
@@ -133,7 +140,7 @@ export default function TasksPage() {
         setDemoCustomersData(false);
       }
     } catch {
-      if (allowDemo) {
+      if (allowDemo && !companyId) {
         setCustomers(getDemoCustomers(resolvedUserId));
         setDemoCustomersData(true);
       } else {
@@ -141,12 +148,14 @@ export default function TasksPage() {
         setDemoCustomersData(false);
       }
     }
-  }, []);
+  }, [companyId]);
 
   const fetchCrew = useCallback(async (resolvedUserId: string) => {
     const allowDemo = canUseDemoFixtures(resolvedUserId);
     try {
-      const res = await fetch(`/api/crew?user_id=${resolvedUserId}`);
+      const params = new URLSearchParams({ user_id: resolvedUserId });
+      if (companyId) params.set('company_id', companyId);
+      const res = await fetch(`/api/crew?${params.toString()}`);
       if (!res.ok) throw new Error("Failed to load crew");
       const data = await res.json();
       const roster = Array.isArray(data) ? [...data].sort((a, b) => a.name.localeCompare(b.name)) : [];
@@ -172,19 +181,21 @@ export default function TasksPage() {
       }
       setCrewFlash({ success: "", error: "Unable to load crew roster." });
     }
-  }, []);
+  }, [companyId]);
 
   const fetchProjects = useCallback(async (resolvedUserId: string) => {
     const allowDemo = canUseDemoFixtures(resolvedUserId);
     try {
-      const res = await fetch(`/api/projects?user_id=${resolvedUserId}`);
+      const params = new URLSearchParams({ user_id: resolvedUserId });
+      if (companyId) params.set('company_id', companyId);
+      const res = await fetch(`/api/projects?${params.toString()}`);
       if (!res.ok) throw new Error("Failed to load projects");
       const data = await res.json();
       const list = Array.isArray(data) ? data : [];
       if (list.length) {
         setProjects(list);
         setDemoProjectsData(false);
-      } else if (allowDemo) {
+      } else if (allowDemo && !companyId) {
         setProjects(getDemoProjects(resolvedUserId));
         setDemoProjectsData(true);
       } else {
@@ -192,7 +203,7 @@ export default function TasksPage() {
         setDemoProjectsData(false);
       }
     } catch {
-      if (allowDemo) {
+      if (allowDemo && !companyId) {
         setProjects(getDemoProjects(resolvedUserId));
         setDemoProjectsData(true);
       } else {
@@ -200,7 +211,7 @@ export default function TasksPage() {
         setDemoProjectsData(false);
       }
     }
-  }, []);
+  }, [companyId]);
 
   useEffect(() => {
     let active = true;
@@ -214,6 +225,12 @@ export default function TasksPage() {
     return () => {
       active = false;
     };
+  }, []);
+
+  // Load active company ID
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setCompanyId(readActiveCompanyId());
   }, []);
 
   useEffect(() => {
@@ -232,8 +249,8 @@ export default function TasksPage() {
   }, [fetchCustomers, fetchCrew, fetchProjects, fetchTasks, userId]);
 
   async function handleAddTask(taskInput: { name: string; description: string; assigned_to?: string; crew_member_id?: number | null; project_id?: number | null; billable: boolean }) {
-    if (!userId) {
-      setError("Resolving user...");
+    if (!userId || !companyId) {
+      setError("User or company context not available");
       return false;
     }
     setLoading(true);
@@ -245,6 +262,7 @@ export default function TasksPage() {
         status: "todo",
         seconds: 0,
         user_id: userId,
+        company_id: companyId,
         assigned_to: taskInput.assigned_to || null,
         crew_member_id: taskInput.crew_member_id ?? null,
         project_id: taskInput.project_id ?? null,
@@ -270,8 +288,8 @@ export default function TasksPage() {
 
   async function handleCrewSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!userId) {
-      setCrewFlash({ success: "", error: "Resolving user..." });
+    if (!userId || !companyId) {
+      setCrewFlash({ success: "", error: "User or company context not available" });
       return;
     }
     if (!crewForm.name.trim()) {
@@ -289,7 +307,7 @@ export default function TasksPage() {
       const res = await fetch("/api/crew", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: crewForm.name.trim(), hourly_rate: hourlyRate, user_id: userId }),
+        body: JSON.stringify({ name: crewForm.name.trim(), hourly_rate: hourlyRate, user_id: userId, company_id: companyId }),
       });
       if (!res.ok) throw new Error("Failed to add crew");
       const newMember = await res.json();
@@ -482,9 +500,12 @@ export default function TasksPage() {
           <h1 className="text-2xl font-bold">Tasks &amp; site evidence</h1>
           <p className="text-gray-600">Add tasks, capture proof, and push ready work to invoicing.</p>
         </div>
-        <Link href="/dashboard/invoices" className="inline-flex items-center justify-center rounded-lg border border-indigo-200 bg-white px-4 py-2 text-sm font-semibold text-indigo-700 shadow-sm hover:bg-indigo-50">
-          Open invoicing
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/dashboard/invoices" className="inline-flex items-center justify-center rounded-lg border border-indigo-200 bg-white px-4 py-2 text-sm font-semibold text-indigo-700 shadow-sm hover:bg-indigo-50">
+            Open invoicing
+          </Link>
+          <BackButton />
+        </div>
       </header>
 
       <section className="bg-white rounded-xl shadow p-6">

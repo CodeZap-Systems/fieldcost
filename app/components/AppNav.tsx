@@ -51,6 +51,15 @@ const MANAGEMENT_SECTIONS = [
       { href: "/dashboard/invoices?page=reports", text: "Invoice Reports" },
     ],
   },
+  {
+    label: "Reports",
+    links: [
+      { href: "/dashboard/projects/reports/pandl", text: "Project P&L" },
+      { href: "/dashboard/items/reports/margin", text: "Item Margins" },
+      { href: "/dashboard/tasks/reports/crew-engagement", text: "Crew Engagement" },
+      { href: "/dashboard/test-data", text: "Test Data & Reports" },
+    ],
+  },
 ];
 
 const FIELD_SECTIONS = [
@@ -83,21 +92,35 @@ const DEMO_SWITCHES = [
 export default function AppNav() {
   const pathname = usePathname();
   const [role, setRole] = React.useState<string | null>(null);
+  const [email, setEmail] = React.useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = React.useState(false);
   const [demoUserId, setDemoUserId] = React.useState<string | null>(null);
-  const [companies, setCompanies] = React.useState<Array<{ id: string; name: string }>>([]);
+  const [companies, setCompanies] = React.useState<Array<{ id: string; name: string; is_demo?: boolean }>>([]);
   const [activeCompanyId, setActiveCompanyId] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
-      setRole(data?.user?.user_metadata?.role || null);
+      if (data?.user) {
+        setRole(data.user.user_metadata?.role || null);
+        setEmail(data.user.email || null);
+        setIsAuthenticated(true);
+        // CRITICAL: Clear demo user ID when user authenticates
+        if (typeof window !== "undefined") {
+          window.localStorage.removeItem("demoUserId");
+        }
+        setDemoUserId(null);
+      } else {
+        setIsAuthenticated(false);
+      }
     });
   }, []);
 
   React.useEffect(() => {
-    if (typeof window === "undefined") return;
+    // CRITICAL: Only use demoUserId if NOT authenticated
+    if (typeof window === "undefined" || isAuthenticated) return;
     const stored = window.localStorage.getItem("demoUserId");
     setDemoUserId(stored ? normalizeUserId(stored) : null);
-  }, []);
+  }, [isAuthenticated]);
 
   React.useEffect(() => {
     if (typeof window === "undefined") return;
@@ -123,10 +146,13 @@ export default function AppNav() {
           .map((entry: any) => ({
             id: entry?.id ? String(entry.id) : "",
             name: entry?.name || "Untitled company",
+            is_demo: entry?.is_demo === true,
           }))
           .filter(entry => entry.id);
         setCompanies(normalized);
-        const resolvedId = payload?.company?.id ? String(payload.company.id) : normalized[0]?.id ?? null;
+        // CRITICAL: Always prefer owned (non-demo) companies as default
+        const ownedCompanies = normalized.filter(c => !c.is_demo);
+        const resolvedId = payload?.company?.id ? String(payload.company.id) : (ownedCompanies[0]?.id ?? normalized[0]?.id ?? null);
         if (resolvedId && resolvedId !== activeCompanyId) {
           setActiveCompanyId(resolvedId);
           persistActiveCompanyId(resolvedId);
@@ -158,10 +184,12 @@ export default function AppNav() {
   const sections = role === "subcontractor" ? FIELD_SECTIONS : MANAGEMENT_SECTIONS;
 
   // Convert to company options format
+  // NOTE: isDemo would be passed from API if company has is_demo=true flag
+  // For now, use isDemoCompany() for DEMO_COMPANY_ID format
   const companyOptions: CompanyOption[] = companies.map(company => ({
     id: company.id,
     name: company.name,
-    isDemo: isDemoCompany(company.id),
+    isDemo: isDemoCompany(company.id) || (company as any).is_demo === true,
   }));
 
   return (
@@ -213,37 +241,65 @@ export default function AppNav() {
               </div>
             </div>
           ))}
-          <div className="workspace-nav-section">
-            <span>Demo</span>
-            <div className="workspace-nav-links">
-              {DEMO_SWITCHES.map(option => (
-                <button
-                  key={option.id}
-                  type="button"
-                  onClick={() => handleDemoSwitch(option.id)}
-                  className={demoUserId === normalizeUserId(option.id) ? "active" : undefined}
-                  aria-pressed={demoUserId === normalizeUserId(option.id)}
-                >
-                  {option.label}
-                </button>
-              ))}
-              <Link href="/auth/demo-login" aria-current={pathname === "/auth/demo-login" ? "page" : undefined}>
-                Demo login
-              </Link>
-              <Link href="/demo-signup" aria-current={pathname === "/demo-signup" ? "page" : undefined}>
-                Demo signup
-              </Link>
+          {/* Company Settings - only show if authenticated */}
+          {isAuthenticated && activeCompanyId && (
+            <div className="workspace-nav-section">
+              <span>Settings</span>
+              <div className="workspace-nav-links">
+                <Link href="/dashboard/company-settings" aria-current={pathname === "/dashboard/company-settings" ? "page" : undefined}>
+                  Company Settings
+                </Link>
+              </div>
             </div>
-          </div>
+          )}
+          {/* Demo section - only show if NOT authenticated */}
+          {!isAuthenticated && (
+            <div className="workspace-nav-section">
+              <span>Demo</span>
+              <div className="workspace-nav-links">
+                {DEMO_SWITCHES.map(option => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onClick={() => handleDemoSwitch(option.id)}
+                    className={demoUserId === normalizeUserId(option.id) ? "active" : undefined}
+                    aria-pressed={demoUserId === normalizeUserId(option.id)}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+                <Link href="/auth/demo-login" aria-current={pathname === "/auth/demo-login" ? "page" : undefined}>
+                  Demo login
+                </Link>
+                <Link href="/demo-signup" aria-current={pathname === "/demo-signup" ? "page" : undefined}>
+                  Demo signup
+                </Link>
+              </div>
+            </div>
+          )}
           <div className="workspace-nav-section">
             <span>Account</span>
-            <div className="workspace-nav-links">
-              {AUTH_LINKS.map(link => (
-                <Link key={link.href} href={link.href} aria-current={pathname === link.href ? "page" : undefined}>
-                  {link.label}
+            {isAuthenticated ? (
+              <div className="workspace-nav-links">
+                <div className="px-3 py-2 text-xs text-gray-600 border-b border-gray-200">
+                  <div className="font-semibold truncate">{email}</div>
+                </div>
+                <Link href="/dashboard/company-settings" aria-current={pathname === "/dashboard/company-settings" ? "page" : undefined}>
+                  Company Settings
                 </Link>
-              ))}
-            </div>
+                <Link href="/auth/logout" className="text-red-600 hover:text-red-700 hover:bg-red-50">
+                  Logout
+                </Link>
+              </div>
+            ) : (
+              <div className="workspace-nav-links">
+                {AUTH_LINKS.map(link => (
+                  <Link key={link.href} href={link.href} aria-current={pathname === link.href ? "page" : undefined}>
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </aside>

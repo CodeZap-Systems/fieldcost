@@ -1,0 +1,3 @@
+{
+  "/api/auth/callback/xero/route": "app/api/auth/callback/xero/route.js"
+}

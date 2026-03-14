@@ -136,7 +136,37 @@ export async function POST() {
     await ensureDemoUsers();
     await purgeDemoData();
 
-    const customers = await insertReturning('customers', customerSeed) as Array<typeof customerSeed[0] & { id: number }>;
+    // Ensure demo companies exist and get their IDs
+    const userCompanyMap = new Map<string, number>();
+    for (const userId of demoUserIds) {
+      // Get or create demo company for this user
+      const { data: company, error: companyError } = await supabaseServer
+        .from('company_profiles')
+        .select('id')
+        .eq('user_id', userId)
+        .limit(1)
+        .single();
+      
+      let companyId: number;
+      if (company?.id) {
+        companyId = company.id;
+      } else {
+        // Create a default company for demo user if one doesn't exist
+        const { data: newCompany, error: createError } = await supabaseServer
+          .from('company_profiles')
+          .insert([{ user_id: userId, name: 'Demo Company', default_currency: 'ZAR' }])
+          .select('id')
+          .single();
+        
+        if (createError || !newCompany) {
+          throw new Error(`Failed to create demo company for ${userId}: ${createError?.message}`);
+        }
+        companyId = newCompany.id;
+      }
+      userCompanyMap.set(userId, companyId);
+    }
+
+    const customers = await insertReturning('customers', customerSeed.map(c => ({ ...c, company_id: userCompanyMap.get(c.user_id) }))) as Array<typeof customerSeed[0] & { id: number; company_id: number }>;
     const customerMap = new Map<string, number>();
     customers.forEach(customer => {
       if (customer?.id) customerMap.set(keyFor(customer.user_id, customer.name), customer.id);
@@ -147,6 +177,7 @@ export async function POST() {
       name,
       description,
       photo_url,
+      company_id: userCompanyMap.get(user_id),
     }));
     const projects = await insertReturning('projects', projectInsertPayload) as Array<typeof projectInsertPayload[0] & { id: number }>;
     const projectMap = new Map<string, number>();
@@ -163,9 +194,10 @@ export async function POST() {
           planned_amount: seed.planned_amount,
           actual_amount: seed.actual_amount,
           user_id: seed.user_id,
+          company_id: userCompanyMap.get(seed.user_id),
         };
       })
-      .filter(Boolean) as Array<{ project_id: number; planned_amount: number; actual_amount: number; user_id: string }>;
+      .filter(Boolean) as Array<{ project_id: number; planned_amount: number; actual_amount: number; user_id: string; company_id: number | undefined }>;
 
     const taskPayload = taskSeed
       .map(seed => {
@@ -179,6 +211,7 @@ export async function POST() {
           status: seed.status,
           seconds: seed.seconds,
           assigned_to: seed.assigned_to,
+          company_id: userCompanyMap.get(seed.user_id),
         };
       })
       .filter(Boolean) as Array<{
@@ -189,6 +222,7 @@ export async function POST() {
         status: string;
         seconds: number;
         assigned_to: string;
+        company_id: number | undefined;
       }>;
 
     const invoicePayload = invoiceSeed
@@ -200,12 +234,13 @@ export async function POST() {
           customer_id: customerId,
           amount: seed.amount,
           description: seed.description,
+          company_id: userCompanyMap.get(seed.user_id),
         };
       })
-      .filter(Boolean) as Array<{ user_id: string; customer_id: number; amount: number; description: string }>;
+      .filter(Boolean) as Array<{ user_id: string; customer_id: number; amount: number; description: string; company_id: number | undefined }>;
 
     const budgetsInserted = await insertSimple('budgets', budgetPayload);
-    const itemsInserted = await insertSimple('items', itemSeed);
+    const itemsInserted = await insertSimple('items', itemSeed.map(item => ({ ...item, company_id: userCompanyMap.get(item.user_id) })));
     const tasksInserted = await insertSimple('tasks', taskPayload);
     const invoicesInserted = await insertSimple('invoices', invoicePayload);
 

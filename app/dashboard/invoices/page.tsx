@@ -4,9 +4,12 @@ import Link from "next/link";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import InvoiceForm from "./InvoiceForm";
+import { downloadInvoicePDF } from "../../../lib/invoicePDF";
+import { BackButton } from "../../../app/components/BackButton";
 import { ensureClientUserId } from "../../../lib/clientUser";
 import { getDemoInvoices } from "../../../lib/demoMockData";
 import { canUseDemoFixtures } from "../../../lib/userIdentity";
+import { readActiveCompanyId } from "../../../lib/companySwitcher";
 
 type InvoiceRecord = {
   id: number;
@@ -45,6 +48,7 @@ function InvoicesPageContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [companyId, setCompanyId] = useState<string | null>(null);
   const [usingDemoData, setUsingDemoData] = useState(false);
   const [offlineCount, setOfflineCount] = useState(0);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
@@ -68,6 +72,12 @@ function InvoicesPageContent() {
     };
   }, []);
 
+  // Load active company ID
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setCompanyId(readActiveCompanyId());
+  }, []);
+
   const loadInvoices = useCallback(
     async ({ quiet = false }: { quiet?: boolean } = {}) => {
       if (!userId) return;
@@ -76,6 +86,7 @@ function InvoicesPageContent() {
       setError(null);
       try {
         const qs = new URLSearchParams({ user_id: userId });
+        if (companyId) qs.set('company_id', companyId);
         const res = await fetch(`/api/invoices?${qs.toString()}`);
         if (!res.ok) throw new Error("Failed to load");
         const data = await res.json();
@@ -84,7 +95,8 @@ function InvoicesPageContent() {
           setInvoices(list);
           setUsingDemoData(false);
         } else {
-          if (allowDemo) {
+          // Only show demo data if user is demo user AND no company selected
+          if (allowDemo && !companyId) {
             setInvoices(getDemoInvoices(userId));
             setUsingDemoData(true);
           } else {
@@ -107,7 +119,7 @@ function InvoicesPageContent() {
         if (!quiet) setLoading(false);
       }
     },
-    [userId]
+    [userId, companyId]
   );
 
   useEffect(() => {
@@ -156,6 +168,7 @@ function InvoicesPageContent() {
           reference: invoice.reference,
           lines: invoice.lines,
           user_id: invoice.userId,
+          company_id: companyId,  // CRITICAL: Include company_id for data isolation
         }),
       });
       if (!res.ok) throw new Error("Failed to add invoice");
@@ -377,6 +390,7 @@ function InvoicesPageContent() {
           </button>
           <Link href="/dashboard/tasks" className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50">View tasks</Link>
           <Link href="/dashboard/items" className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50">View inventory</Link>
+          <BackButton />
         </div>
       </div>
       {allowDemoData && usingDemoData && (
@@ -413,7 +427,7 @@ function InvoicesPageContent() {
           {allSelected ? "Clear selection" : "Select all"}
         </button>
       </div>
-      <InvoiceForm onAdd={handleAdd} preset={preset} />
+      <InvoiceForm onAdd={handleAdd} preset={preset} companyId={companyId} />
       {loading && <div className="text-center py-8 text-blue-600 font-semibold">Loading invoices…</div>}
       {error && <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-900">{error}</div>}
       {invoices.length === 0 && !loading ? (
@@ -520,6 +534,31 @@ function InvoicesPageContent() {
                     </form>
                   ) : (
                     <div className="flex gap-2">
+                      <button
+                        className="flex-1 rounded border border-blue-300 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100 transition-colors"
+                        onClick={() => {
+                          const invoiceData = {
+                            invoiceNumber: String(inv.id),
+                            date: new Date().toLocaleDateString(),
+                            dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+                            customerName: inv.customer?.name || inv.customer_name || "Customer",
+                            amount: inv.amount || 0,
+                            currency: "R",
+                            lineItems: [
+                              {
+                                description: inv.description || "Invoice Services",
+                                quantity: 1,
+                                rate: inv.amount || 0,
+                                total: inv.amount || 0,
+                              }
+                            ],
+                            notes: inv.description ? `${inv.description}` : undefined,
+                          };
+                          downloadInvoicePDF(invoiceData);
+                        }}
+                      >
+                        🖨 Print PDF
+                      </button>
                       {!inv.demo && (
                         <>
                           <button

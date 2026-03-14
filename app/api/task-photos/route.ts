@@ -2,6 +2,7 @@ import { Buffer } from "node:buffer";
 import { NextResponse } from "next/server";
 import { supabaseServer } from "../../../lib/supabaseServer";
 import { resolveServerUserId } from "../../../lib/serverUser";
+import { getCompanyContext } from "../../../lib/companyContext";
 
 const BUCKET_ID = "photos";
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 MB cap for quick evidence snaps
@@ -37,14 +38,28 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const taskId = searchParams.get('taskId');
   const userId = resolveServerUserId(searchParams.get('user_id'));
+  const companyId = searchParams.get('company_id');
 
   try {
+    // CRITICAL: Require company_id for data isolation
+    if (!companyId || !companyId.trim()) {
+      console.warn(`[SECURITY] GET /api/task-photos: Missing company_id for user ${userId}`);
+      return NextResponse.json(
+        { error: 'company_id parameter is required for data isolation' },
+        { status: 400 }
+      );
+    }
+    
+    // Validate user has access to company
+    await getCompanyContext(userId, companyId);
+
     // If taskId provided, list photos for that task
     if (taskId) {
       const { data, error } = await supabaseServer
         .from('photo_evidence')
         .select('*')
         .eq('task_id', parseInt(taskId))
+        .eq('company_id', companyId)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -58,12 +73,13 @@ export async function GET(request: Request) {
       return NextResponse.json({ photos: data || [], count: data?.length || 0 });
     }
 
-    // Otherwise list all photos for current user
+    // Otherwise list all photos for current company
     if (userId) {
       const { data, error } = await supabaseServer
         .from('photo_evidence')
         .select('*')
         .eq('user_id', userId)
+        .eq('company_id', companyId)
         .order('created_at', { ascending: false });
 
       if (error) {

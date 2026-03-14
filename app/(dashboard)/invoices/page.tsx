@@ -6,6 +6,7 @@ import { useUserRole } from "@/app/useUserRole";
 import { ensureClientUserId } from "@/lib/clientUser";
 import { getDemoInvoices, getDemoTasks } from "@/lib/demoMockData";
 import { canUseDemoFixtures } from "@/lib/userIdentity";
+import { readActiveCompanyId } from "@/lib/companySwitcher";
 
 type InvoiceRecord = {
   id: number;
@@ -66,6 +67,7 @@ export default function InvoicesPage() {
   const [editing, setEditing] = useState<number | null>(null);
   const [editData, setEditData] = useState<{ reference: string; amount: number; description: string }>({ reference: "", amount: 0, description: "" });
   const [userId, setUserId] = useState<string | null>(null);
+  const [companyId, setCompanyId] = useState<string | null>(null);
   const [usingDemoInvoices, setUsingDemoInvoices] = useState(false);
   const [usingDemoTasks, setUsingDemoTasks] = useState(false);
 
@@ -88,6 +90,11 @@ export default function InvoicesPage() {
   }, []);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    setCompanyId(readActiveCompanyId());
+  }, []);
+
+  useEffect(() => {
     if (!userId) return;
     async function load() {
       setLoading(true);
@@ -95,6 +102,7 @@ export default function InvoicesPage() {
       const allowDemo = canUseDemoFixtures(userId);
       try {
         const qs = new URLSearchParams({ user_id: userId });
+        if (companyId) qs.set('company_id', companyId);
         const [invoiceRes, taskRes] = await Promise.all([
           fetch(`/api/invoices?${qs.toString()}`),
           fetch(`/api/tasks?${qs.toString()}`),
@@ -167,7 +175,7 @@ export default function InvoicesPage() {
       }
     }
     load();
-  }, [userId]);
+  }, [userId, companyId]);
 
   async function handleAdd(invoice: InvoiceSubmitPayload) {
     if (!invoice.userId) {
@@ -318,6 +326,7 @@ export default function InvoicesPage() {
       if (selectedIds.length) params.set("ids", selectedIds.join(","));
       if (format === "pdf") params.set("template", pdfTemplate);
       params.set("user_id", userId);
+      if (companyId) params.set("company_id", companyId);
       const res = await fetch(`/api/invoices/export?${params.toString()}`);
       if (!res.ok) throw new Error("Export failed");
       const blob = await res.blob();

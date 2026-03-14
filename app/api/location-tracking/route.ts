@@ -2,15 +2,31 @@ import { NextResponse } from 'next/server';
 import { supabaseServer } from '../../../lib/supabaseServer';
 import { resolveServerUserId } from '../../../lib/serverUser';
 import { ensureAuthUser, EnsureAuthUserError } from '../../../lib/demoAuth';
+import { getCompanyContext } from '../../../lib/companyContext';
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const userId = resolveServerUserId(searchParams.get('user_id'));
+  const companyId = searchParams.get('company_id');
+  
+  // CRITICAL: Require company_id for data isolation - prevent demo/live data mixing
+  if (!companyId || !companyId.trim()) {
+    console.warn(`[SECURITY] GET /api/location-tracking: Missing company_id for user ${userId}`);
+    return NextResponse.json(
+      { error: 'company_id parameter is required for data isolation' },
+      { status: 400 }
+    );
+  }
   
   try {
-    const query = supabaseServer.from('task_location_snapshots').select('*').order('created_at', { ascending: false });
-    const finalQuery = userId ? query.eq('user_id', userId) : query;
-    const { data, error } = await finalQuery;
+    // Validate user has access to company
+    await getCompanyContext(userId, companyId);
+    
+    const { data, error } = await supabaseServer
+      .from('task_location_snapshots')
+      .select('*')
+      .eq('company_id', companyId)
+      .order('created_at', { ascending: false });
     
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json(data || []);

@@ -1,0 +1,1 @@
+{"version":3,"sources":["../../../../app/dashboard/projects/reports/layout.tsx"],"sourcesContent":["export default function ReportsLayout({ children }: { children: React.ReactNode }) {\r\n  return <>{children}</>;\r\n}\r\n"],"names":[],"mappings":"uDAAe,SAAS,EAAc,UAAE,CAAQ,CAAiC,EAC/E,MAAO,CAAA,EAAA,EAAA,GAAA,EAAA,EAAA,QAAA,CAAA,UAAG,GACZ"}

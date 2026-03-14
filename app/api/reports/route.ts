@@ -1,40 +1,56 @@
 import { NextResponse } from 'next/server';
 import { supabaseServer } from '../../../lib/supabaseServer';
 import { resolveServerUserId } from '../../../lib/serverUser';
+import { getCompanyContext } from '../../../lib/companyContext';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const userId = resolveServerUserId(searchParams.get('user_id'));
+  const companyId = searchParams.get('company_id');
   
   if (!userId) {
     return NextResponse.json({ error: 'User ID required' }, { status: 400 });
   }
 
+  if (!companyId) {
+    return NextResponse.json({ error: 'company_id required' }, { status: 400 });
+  }
+
   try {
+    // Validate user has access to company (CRITICAL: prevent demo/live data mixing)
+    await getCompanyContext(userId, companyId);
+
+    // Build queries with strict company_id isolation
+    const tasksQuery = supabaseServer
+      .from('tasks')
+      .select('*', { count: 'exact', head: true })
+      .eq('company_id', companyId);
+    const projectsQuery = supabaseServer
+      .from('projects')
+      .select('*', { count: 'exact', head: true })
+      .eq('company_id', companyId);
+    const invoicesQuery = supabaseServer
+      .from('invoices')
+      .select('id, amount', { count: 'exact' })
+      .eq('company_id', companyId);
+    const customersQuery = supabaseServer
+      .from('customers')
+      .select('*', { count: 'exact', head: true })
+      .eq('company_id', companyId);
+    const itemsQuery = supabaseServer
+      .from('items')
+      .select('id, price, stock_in', { count: 'exact' })
+      .eq('company_id', companyId);
+    
     // Fetch counts for each section
     const [tasksCount, projectsCount, invoicesCount, customersCount, itemsCount] = await Promise.all([
-      supabaseServer
-        .from('tasks')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId),
-      supabaseServer
-        .from('projects')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId),
-      supabaseServer
-        .from('invoices')
-        .select('id, amount', { count: 'exact' })
-        .eq('user_id', userId),
-      supabaseServer
-        .from('customers')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId),
-      supabaseServer
-        .from('items')
-        .select('id, price, stock_in', { count: 'exact' })
-        .eq('user_id', userId),
+      tasksQuery,
+      projectsQuery,
+      invoicesQuery,
+      customersQuery,
+      itemsQuery,
     ]);
 
     const tasksTotal = tasksCount.count || 0;

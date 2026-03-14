@@ -93,9 +93,9 @@ export function SelectableCompanySwitcher({
     setIsOpen(false);
   }
 
-  // Separate demo and real companies
-  const demoCompanies = companies.filter((c) => isDemoCompany(c.id));
-  const liveCompanies = companies.filter((c) => !isDemoCompany(c.id));
+  // Separate demo and live companies - LIVE companies always first
+  const liveCompanies = companies.filter((c) => c.isDemo !== true);
+  const demoCompanies = companies.filter((c) => c.isDemo === true);
 
   return (
     <div
@@ -167,20 +167,18 @@ export function SelectableCompanySwitcher({
                   <button
                     key={company.id}
                     onClick={() => handleCompanySelect(company.id)}
+                    disabled={false}
                     className={`w-full text-left px-4 py-3 text-sm font-medium transition-colors flex items-center justify-between gap-2 ${
-                      isDemoCompany(activeCompanyId) &&
                       activeCompanyId === company.id
                         ? "bg-blue-50 text-blue-700 border-l-2 border-blue-500"
-                        : "text-gray-700 hover:bg-gray-50"
+                        : "text-gray-700 hover:bg-blue-50"
                     }`}
                     role="option"
-                    aria-selected={
-                      isDemoCompany(activeCompanyId) &&
-                      activeCompanyId === company.id
-                    }
+                    aria-selected={activeCompanyId === company.id}
+                    title="Demo company with sample data for testing"
                   >
                     <span className="flex-1 min-w-0">
-                      <p className="font-medium">{company.name}</p>
+                      <p className="font-medium">🧪 DEMO Company</p>
                       <p className="text-xs text-gray-500">
                         Try product with sample data
                       </p>

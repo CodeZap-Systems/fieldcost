@@ -4,7 +4,7 @@
  */
 
 // Demo company ID - represents the shared demo workspace with sample data
-export const DEMO_COMPANY_ID = "demo-company-id";
+export const DEMO_COMPANY_ID = "8";
 
 // UI configuration for demo mode
 export const DEMO_MODE_CONFIG = {

@@ -3,30 +3,56 @@
 import React, { useEffect, useState } from "react";
 import TaskForm from "../TaskForm";
 import TaskTimer from "../TaskTimer";
+import { BackButton } from "../../../../app/components/BackButton";
 import { ensureClientUserId } from "../../../../lib/clientUser";
+import { readActiveCompanyId } from "../../../../lib/companySwitcher";
 
 type CrewMember = { id: number; name: string; hourly_rate: number };
+type Project = { id: number; name: string };
 
 export default function AddTaskPage() {
   const [tab, setTab] = useState("Details");
   const tabs = ["Details", "Time", "Checklist", "Notes"];
   const [crew, setCrew] = useState<CrewMember[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [userId, setUserId] = useState<string>("");
+  const [companyId, setCompanyId] = useState<string>("");
   const [crewError, setCrewError] = useState("");
 
   useEffect(() => {
     let active = true;
-    async function loadCrew() {
+    async function loadData() {
       try {
         const userId = await ensureClientUserId();
-        const res = await fetch(`/api/crew?user_id=${userId}`);
-        if (!res.ok) throw new Error("Failed to load crew");
-        const data = await res.json();
-        if (active) setCrew(Array.isArray(data) ? data : []);
+        const companyId = readActiveCompanyId();
+        setUserId(userId);
+        setCompanyId(companyId || "");
+        
+        if (!companyId) {
+          if (active) setCrewError("Company context not available.");
+          return;
+        }
+        
+        const params = new URLSearchParams({ user_id: userId, company_id: companyId });
+        
+        // Load crew
+        const crewRes = await fetch(`/api/crew?${params.toString()}`);
+        if (crewRes.ok) {
+          const data = await crewRes.json();
+          if (active) setCrew(Array.isArray(data) ? data : []);
+        }
+        
+        // Load projects
+        const projectsRes = await fetch(`/api/projects?${params.toString()}`);
+        if (projectsRes.ok) {
+          const data = await projectsRes.json();
+          if (active) setProjects(Array.isArray(data) ? data : []);
+        }
       } catch {
-        if (active) setCrewError("Unable to load crew list.");
+        if (active) setCrewError("Unable to load data.");
       }
     }
-    loadCrew();
+    loadData();
     return () => {
       active = false;
     };
@@ -34,7 +60,10 @@ export default function AddTaskPage() {
 
   return (
     <main className="p-6 max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Add Task</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">Add Task</h1>
+        <BackButton />
+      </div>
       <div className="mb-4 flex gap-2 border-b">
         {tabs.map(t => (
           <button
@@ -49,18 +78,23 @@ export default function AddTaskPage() {
       {tab === "Details" && (
         <TaskForm
           crew={crew}
+          projects={projects}
+          userId={userId}
+          companyId={companyId}
           onAdd={async task => {
             try {
-              const userId = await ensureClientUserId();
               const res = await fetch("/api/tasks", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ ...task, user_id: userId }),
+                body: JSON.stringify({ ...task, user_id: userId, company_id: companyId }),
               });
               return res.ok;
             } catch {
               return false;
             }
+          }}
+          onProjectAdded={(project) => {
+            setProjects((prev) => [...prev, project]);
           }}
         />
       )}
@@ -69,7 +103,6 @@ export default function AddTaskPage() {
         <TaskTimer
           onSave={async ({ name, seconds }) => {
             try {
-              const userId = await ensureClientUserId();
               const res = await fetch("/api/tasks", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },

@@ -39,6 +39,8 @@ type CompanyProfileRow = {
   address_line1?: string | null;
   address_line2?: string | null;
   default_currency?: string | null;
+  logo_url?: string | null;
+  logo_external_url?: string | null;
 };
 
 const formatDate = (value?: string | null) => {
@@ -136,6 +138,15 @@ async function buildPdf(invoices: InvoiceRow[], company: CompanyProfileRow | nul
   }));
 
   // Convert company profile to CompanyProfile format
+  // Prefer external logo URL, fallback to Supabase storage logo
+  let logoUrl: string | undefined;
+  if (company?.logo_external_url) {
+    logoUrl = company.logo_external_url;
+  } else if (company?.logo_url) {
+    // Convert Supabase storage path to public URL
+    logoUrl = `https://${process.env.NEXT_PUBLIC_SUPABASE_URL?.split("https://")[1]}/storage/v1/object/public/branding/${company.logo_url}`;
+  }
+
   const companyProfile: CompanyProfile = {
     name: company?.name || "FieldCost",
     email: company?.email || undefined,
@@ -143,6 +154,7 @@ async function buildPdf(invoices: InvoiceRow[], company: CompanyProfileRow | nul
     address1: company?.address_line1 || undefined,
     address2: company?.address_line2 || undefined,
     currency: company?.default_currency || "ZAR",
+    logo: logoUrl || undefined,
   };
 
   return generateInvoicesPdf(invoiceData, companyProfile);
@@ -154,6 +166,7 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const format = (searchParams.get("format") || "ledger").toLowerCase();
     const idsParam = searchParams.get("ids");
+    const companyId = searchParams.get("company_id");
 
     const ids = idsParam
       ? idsParam
@@ -166,17 +179,26 @@ export async function GET(req: Request) {
     if (ids.length) {
       query = query.in("id", ids);
     }
+    if (companyId) {
+      query = query.eq("company_id", companyId);
+    }
     const { data: invoices, error } = await query;
     if (error) {
       console.error("GET /api/invoices/export query error", error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const { data: company } = await supabaseServer
+    // Fetch the company profile - prefer the active company, fall back to first user company
+    let companyQuery = supabaseServer
       .from("company_profiles")
       .select("*")
-      .eq("user_id", userId)
-      .maybeSingle();
+      .eq("user_id", userId);
+    
+    if (companyId) {
+      companyQuery = companyQuery.eq("id", companyId);
+    }
+    
+    const { data: company } = await companyQuery.maybeSingle();
     const invoiceRows: InvoiceRow[] = Array.isArray(invoices) ? (invoices as InvoiceRow[]) : [];
     const companyRow: CompanyProfileRow | null = (company as CompanyProfileRow) ?? null;
 

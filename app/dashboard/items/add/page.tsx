@@ -1,14 +1,28 @@
 "use client";
 import ItemForm from "../ItemForm";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { BackButton } from "../../../../app/components/BackButton";
 
 export default function AddItemPage() {
   const [tab, setTab] = useState("Details");
+  const [userId, setUserId] = useState<string | null>(null);
+  const [companyId, setCompanyId] = useState<number | null>(null);
   const tabs = ["Details", "Stock", "Pricing", "Notes"];
+
+  // Load userId and companyId from localStorage
+  useEffect(() => {
+    const storedUserId = localStorage.getItem("demoUserId");
+    const storedCompanyId = localStorage.getItem("fieldcostActiveCompanyId");
+    if (storedUserId) setUserId(storedUserId);
+    if (storedCompanyId) setCompanyId(Number(storedCompanyId));
+  }, []);
 
   return (
     <main className="p-6 max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Add Item</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">Add Item</h1>
+        <BackButton />
+      </div>
       <div className="mb-4 flex gap-2 border-b">
         {tabs.map(t => (
           <button
@@ -25,7 +39,7 @@ export default function AddItemPage() {
           const res = await fetch("/api/items", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(item),
+            body: JSON.stringify({ ...item, user_id: userId, company_id: companyId }),
           });
           return res.ok;
         } catch {

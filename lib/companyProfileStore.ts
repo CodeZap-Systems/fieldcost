@@ -20,6 +20,7 @@ export type StoredCompanyProfile = {
   erp_targets: string[];
   reference?: string | null;
   updated_at?: string;
+  is_demo?: boolean;
 };
 
 type CompanyProfileStoreEntry = {

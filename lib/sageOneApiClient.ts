@@ -18,6 +18,18 @@ export interface SageContact {
   Email?: string;
 }
 
+export interface SageItem {
+  ID: string;
+  Code: string;
+  Name: string;
+  Description?: string;
+  SalesPrice?: number;
+  PurchasePrice?: number;
+  Quantity?: number;
+  UnitOfSales?: string;
+  Status: number;
+}
+
 export interface SageInvoiceItem {
   Description: string;
   Quantity: number;
@@ -51,37 +63,39 @@ export interface SageApiResponse<T> {
 export class SageOneApiClient {
   private readonly username: string;
   private readonly password: string;
-  private readonly apiKey?: string;
+  private readonly apiToken?: string;
   private readonly baseUrl: string;
   private accessToken: string | null = null;
   private tokenExpiry: Date | null = null;
 
-  constructor(username: string, password: string, apiKey?: string, baseUrl?: string) {
+  constructor(username: string, password: string, apiToken?: string, baseUrl?: string) {
     this.username = username;
     this.password = password;
-    this.apiKey = apiKey;
+    this.apiToken = apiToken;
     this.baseUrl = baseUrl || 'https://resellers.accounting.sageone.co.za/api/2.0.0';
   }
 
   /**
    * Authenticate and get access token
-   * Tries API Key method first if provided, then falls back to Basic Auth
+   * Tries API Token method first if provided, then falls back to Basic Auth
    */
   async authenticate(): Promise<boolean> {
     try {
-      // If API Key is provided, try that method first
-      if (this.apiKey) {
+      // If API Token is provided, use it directly
+      if (this.apiToken) {
+        // Test the token by making a request to Company/Current
         const response = await this.makeRequest<any>(
           'GET',
           '/Company/Current',
           {
-            'Authorization': `Bearer ${this.apiKey}`,
+            'Authorization': `Bearer ${this.apiToken}`,
             'Accept': 'application/json',
           }
         );
         
         if (response.success) {
-          this.accessToken = this.apiKey;
+          this.accessToken = this.apiToken;
+          console.log('✅ Sage API Token authentication successful');
           return true;
         }
       }
@@ -102,8 +116,10 @@ export class SageOneApiClient {
         this.accessToken = response.data.AccessToken;
         // Set expiry 1 minute before actual expiry to ensure refresh
         this.tokenExpiry = new Date(Date.now() + (response.data.ExpiresIn - 60) * 1000);
+        console.log('✅ Sage Basic Auth authentication successful');
         return true;
       }
+      console.error('❌ Sage authentication failed');
       return false;
     } catch (error) {
       console.error('Sage authentication failed:', error);
@@ -115,10 +131,35 @@ export class SageOneApiClient {
    * Check and refresh token if needed
    */
   private async ensureToken(): Promise<boolean> {
-    if (!this.accessToken || !this.tokenExpiry || new Date() >= this.tokenExpiry) {
+    if (!this.accessToken || (this.tokenExpiry && new Date() >= this.tokenExpiry)) {
       return await this.authenticate();
     }
     return true;
+  }
+
+  /**
+   * Get current company details
+   */
+  async getCurrentCompany(): Promise<SageApiResponse<any>> {
+    if (!await this.ensureToken()) {
+      return { success: false, error: 'Authentication failed' };
+    }
+
+    try {
+      const response = await this.makeRequest<any>(
+        'GET',
+        '/Company/Current',
+        this.getAuthHeaders()
+      );
+
+      return {
+        success: response.success,
+        data: response.data,
+        error: response.error,
+      };
+    } catch (error) {
+      return { success: false, error: String(error) };
+    }
   }
 
   /**
@@ -164,6 +205,56 @@ export class SageOneApiClient {
       return {
         success: response.success,
         data: response.data?.Contacts,
+        error: response.error,
+      };
+    } catch (error) {
+      return { success: false, error: String(error) };
+    }
+  }
+
+  /**
+   * Get list of items/stock
+   */
+  async getItems(): Promise<SageApiResponse<SageItem[]>> {
+    if (!await this.ensureToken()) {
+      return { success: false, error: 'Authentication failed' };
+    }
+
+    try {
+      const response = await this.makeRequest<{ Items: SageItem[] }>(
+        'GET',
+        '/Item',
+        this.getAuthHeaders()
+      );
+
+      return {
+        success: response.success,
+        data: response.data?.Items,
+        error: response.error,
+      };
+    } catch (error) {
+      return { success: false, error: String(error) };
+    }
+  }
+
+  /**
+   * Get specific item by ID
+   */
+  async getItem(itemId: string): Promise<SageApiResponse<SageItem>> {
+    if (!await this.ensureToken()) {
+      return { success: false, error: 'Authentication failed' };
+    }
+
+    try {
+      const response = await this.makeRequest<SageItem>(
+        'GET',
+        `/Item/${itemId}`,
+        this.getAuthHeaders()
+      );
+
+      return {
+        success: response.success,
+        data: response.data,
         error: response.error,
       };
     } catch (error) {
@@ -301,11 +392,11 @@ export class SageOneApiClient {
   }
 
   /**
-   * Get auth headers with bearer token or API Key
+   * Get auth headers with bearer token or API Token
    */
   private getAuthHeaders(): Record<string, string> {
     return {
-      'Authorization': `Bearer ${this.accessToken || this.apiKey}`,
+      'Authorization': `Bearer ${this.accessToken || this.apiToken}`,
       'Accept': 'application/json',
       'Content-Type': 'application/json',
     };
@@ -315,22 +406,22 @@ export class SageOneApiClient {
 /**
  * Demo/Testing endpoint identity
  */
-export async function testSageConnection(username: string, password: string): Promise<SageApiResponse<any>> {
+export async function testSageConnection(username: string, password: string, apiToken?: string): Promise<SageApiResponse<any>> {
   try {
-    const client = new SageOneApiClient(username, password);
+    const client = new SageOneApiClient(username, password, apiToken);
     
     if (!await client.authenticate()) {
       return { success: false, error: 'Authentication failed with provided credentials' };
     }
 
-    const companies = await client.getCompanies();
+    const company = await client.getCurrentCompany();
     return {
-      success: companies.success,
+      success: company.success,
       data: {
         authenticated: true,
-        companies: companies.data,
+        company: company.data,
       },
-      error: companies.error,
+      error: company.error,
     };
   } catch (error) {
     return { success: false, error: String(error) };

@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import CustomerForm, { type CustomerFormState } from "./CustomerForm";
+import { BackButton } from "../../../app/components/BackButton";
 import { ensureClientUserId } from "../../../lib/clientUser";
 import { getDemoCustomers } from "../../../lib/demoMockData";
 import { canUseDemoFixtures } from "../../../lib/userIdentity";
+import { readActiveCompanyId } from "../../../lib/companySwitcher";
 
 type CustomerRow = { id: number; name: string; email: string; demo?: boolean };
 
@@ -14,6 +16,7 @@ export default function CustomersPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [companyId, setCompanyId] = useState<string | null>(null);
   const [usingDemoData, setUsingDemoData] = useState(false);
   const allowDemoData = userId ? canUseDemoFixtures(userId) : false;
 
@@ -31,6 +34,12 @@ export default function CustomersPage() {
     };
   }, []);
 
+  // Load active company ID
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setCompanyId(readActiveCompanyId());
+  }, []);
+
   useEffect(() => {
     if (!userId) return;
     let active = true;
@@ -39,14 +48,17 @@ export default function CustomersPage() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`/api/customers?user_id=${userId}`);
+        const params = new URLSearchParams({ user_id: userId });
+        if (companyId) params.set('company_id', companyId);
+        const res = await fetch(`/api/customers?${params.toString()}`);
         if (!res.ok) throw new Error('Failed to load customers');
         const payload = await res.json();
         const list = Array.isArray(payload) ? payload : [];
         if (active && list.length > 0) {
           setCustomers(list);
           setUsingDemoData(false);
-        } else if (active && allowDemo) {
+        } else if (active && allowDemo && !companyId) {
+          // Only show demo data if user is demo user AND no company selected
           setCustomers(getDemoCustomers(userId));
           setUsingDemoData(true);
         } else if (active) {
@@ -55,7 +67,8 @@ export default function CustomersPage() {
         }
       } catch (err) {
         if (!active) return;
-        if (allowDemo) {
+        // Only show demo data on error if user is demo user AND no company selected
+        if (allowDemo && !companyId) {
           setCustomers(getDemoCustomers(userId));
           setUsingDemoData(true);
         } else {
@@ -71,17 +84,17 @@ export default function CustomersPage() {
     return () => {
       active = false;
     };
-  }, [userId]);
+  }, [userId, companyId]);
 
   async function handleAdd(customer: CustomerFormState) {
-    if (!userId) {
-      setError('Resolving user...');
+    if (!userId || !companyId) {
+      setError('User or company context not available');
       return false;
     }
     setLoading(true);
     setError(null);
     try {
-      const payload = { name: customer.name, email: customer.email, user_id: userId };
+      const payload = { name: customer.name, email: customer.email, user_id: userId, company_id: companyId };
       const res = await fetch("/api/customers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -162,9 +175,12 @@ export default function CustomersPage() {
     <main className="p-8 space-y-6">
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <h1 className="text-2xl font-bold">Customers</h1>
-        <Link href="/dashboard/invoices" className="inline-flex items-center justify-center rounded-lg border border-indigo-200 bg-white px-4 py-2 text-sm font-semibold text-indigo-700 shadow-sm hover:bg-indigo-50">
-          Open invoicing
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/dashboard/invoices" className="inline-flex items-center justify-center rounded-lg border border-indigo-200 bg-white px-4 py-2 text-sm font-semibold text-indigo-700 shadow-sm hover:bg-indigo-50">
+            Open invoicing
+          </Link>
+          <BackButton />
+        </div>
       </div>
       {allowDemoData && usingDemoData && (
         <div className="rounded-lg border border-dashed border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">

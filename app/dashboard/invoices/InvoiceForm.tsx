@@ -54,6 +54,7 @@ interface InvoiceFormProps {
     taskProjectId?: string | null;
     taskProjectName?: string | null;
   };
+  companyId?: string | null;
 }
 
 const makeLineId = () => (typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`);
@@ -122,7 +123,7 @@ const normalizeTaskPayload = (payload: any): TaskSummary | null => {
   };
 };
 
-export default function InvoiceForm({ onAdd, preset }: InvoiceFormProps) {
+export default function InvoiceForm({ onAdd, preset, companyId }: InvoiceFormProps) {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -175,6 +176,7 @@ export default function InvoiceForm({ onAdd, preset }: InvoiceFormProps) {
     async function load() {
       try {
         const qs = new URLSearchParams({ user_id: userId });
+        if (companyId) qs.set('company_id', companyId);
         const [custRes, itemRes, projectRes, taskRes] = await Promise.all([
           fetch(`/api/customers?${qs.toString()}`),
           fetch(`/api/items?${qs.toString()}`),
@@ -264,7 +266,7 @@ export default function InvoiceForm({ onAdd, preset }: InvoiceFormProps) {
       }
     }
     load();
-  }, [userId]);
+  }, [userId, companyId]);
 
   useEffect(() => {
     if (preset?.customerId) {

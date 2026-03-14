@@ -5,9 +5,11 @@ import { useState, useEffect } from "react";
 import ProjectForm from "./ProjectForm";
 import PhotoUpload from "./PhotoUpload";
 import BudgetActual from "./BudgetActual";
+import { BackButton } from "../../../app/components/BackButton";
 import { ensureClientUserId } from "../../../lib/clientUser";
 import { getDemoProjects } from "../../../lib/demoMockData";
 import { canUseDemoFixtures } from "../../../lib/userIdentity";
+import { readActiveCompanyId } from "../../../lib/companySwitcher";
 
 const PROJECT_LIMIT = 6;
 
@@ -20,7 +22,9 @@ export default function ProjectsPage() {
   const [editing, setEditing] = useState<number | null>(null);
   const [editData, setEditData] = useState<{ name: string; description: string }>({ name: "", description: "" });
   const [userId, setUserId] = useState<string | null>(null);
+  const [companyId, setCompanyId] = useState<string | null>(null);
   const [usingDemoData, setUsingDemoData] = useState(false);
+  // Only show demo fallback if user is actually a demo user (not real users with empty companies)
   const allowDemoData = userId ? canUseDemoFixtures(userId) : false;
 
   useEffect(() => {
@@ -37,6 +41,12 @@ export default function ProjectsPage() {
     };
   }, []);
 
+  // Load active company ID
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setCompanyId(readActiveCompanyId());
+  }, []);
+
   useEffect(() => {
     if (!userId) return;
     const allowDemo = canUseDemoFixtures(userId);
@@ -45,14 +55,17 @@ export default function ProjectsPage() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`/api/projects?user_id=${userId}`);
+        const params = new URLSearchParams({ user_id: userId });
+        if (companyId) params.set('company_id', companyId);
+        const res = await fetch(`/api/projects?${params.toString()}`);
         if (!res.ok) throw new Error('Failed to load projects');
         const payload = await res.json();
         const list = Array.isArray(payload) ? payload : [];
         if (active && list.length > 0) {
           setProjects(list);
           setUsingDemoData(false);
-        } else if (active && allowDemo) {
+        } else if (active && allowDemo && !companyId) {
+          // Only show demo data if user is demo user AND no company selected
           setProjects(getDemoProjects(userId));
           setUsingDemoData(true);
         } else if (active) {
@@ -61,7 +74,8 @@ export default function ProjectsPage() {
         }
       } catch (err) {
         if (!active) return;
-        if (allowDemo) {
+        // Only show demo data on error if user is demo user AND no company selected
+        if (allowDemo && !companyId) {
           setProjects(getDemoProjects(userId));
           setUsingDemoData(true);
         } else {
@@ -77,11 +91,11 @@ export default function ProjectsPage() {
     return () => {
       active = false;
     };
-  }, [userId]);
+  }, [userId, companyId]);
 
   async function handleAdd(project: { name: string; description: string; planned_budget?: number; actual_budget?: number }) {
-    if (!userId) {
-      setError('Resolving user...');
+    if (!userId || !companyId) {
+      setError('User or company context not available');
       return false;
     }
     const realCount = projects.filter(p => !p.demo).length;
@@ -89,7 +103,7 @@ export default function ProjectsPage() {
     setLoading(true);
     setError(null);
     try {
-      const payload = { name: project.name, description: project.description, user_id: userId };
+      const payload = { name: project.name, description: project.description, user_id: userId, company_id: companyId };
       const res = await fetch("/api/projects", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -109,8 +123,7 @@ export default function ProjectsPage() {
             project_id: newProject.id,
             planned_amount: project.planned_budget ?? 0,
             actual_amount: project.actual_budget ?? 0,
-            user_id: userId,
-          }),
+            user_id: userId,            company_id: companyId,          }),
         });
         if (!budgetRes.ok) {
           console.warn("Failed to persist initial budget", await budgetRes.text());
@@ -208,11 +221,17 @@ export default function ProjectsPage() {
 
   return (
     <main className="p-8 space-y-6">
-      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <h1 className="text-2xl font-bold">Projects (max {PROJECT_LIMIT})</h1>
-        <Link href="/dashboard/invoices" className="inline-flex items-center justify-center rounded-lg border border-indigo-200 bg-white px-4 py-2 text-sm font-semibold text-indigo-700 shadow-sm hover:bg-indigo-50">
-          Open invoicing
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/dashboard/projects/reports/pandl" className="inline-flex items-center justify-center rounded-lg border border-green-200 bg-green-50 px-4 py-2 text-sm font-semibold text-green-700 shadow-sm hover:bg-green-100">
+            📊 P&L Report
+          </Link>
+          <Link href="/dashboard/invoices" className="inline-flex items-center justify-center rounded-lg border border-indigo-200 bg-white px-4 py-2 text-sm font-semibold text-indigo-700 shadow-sm hover:bg-indigo-50">
+            Open invoicing
+          </Link>
+          <BackButton />
+        </div>
       </div>
       {allowDemoData && usingDemoData && (
         <div className="rounded-lg border border-dashed border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">

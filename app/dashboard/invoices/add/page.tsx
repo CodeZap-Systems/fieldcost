@@ -1,6 +1,7 @@
 "use client";
 import InvoiceForm from "../InvoiceForm";
 import React, { useState } from "react";
+import { BackButton } from "../../../../app/components/BackButton";
 
 export default function AddInvoicePage() {
   const [tab, setTab] = useState("Details");
@@ -8,7 +9,10 @@ export default function AddInvoicePage() {
 
   return (
     <main className="p-6 max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Add Invoice</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">Add Invoice</h1>
+        <BackButton />
+      </div>
       <div className="mb-4 flex gap-2 border-b">
         {tabs.map(t => (
           <button

@@ -78,10 +78,33 @@ export async function generateInvoicesPdf(
   const fontRegular = await pdf.embedFont(StandardFonts.Helvetica);
   const fontBold = await pdf.embedFont(StandardFonts.HelveticaBold);
 
+  // Fetch and embed logo if provided
+  let logoImage: any = null;
+  if (company.logo) {
+    try {
+      const logoResponse = await fetch(company.logo);
+      if (logoResponse.ok) {
+        const logoBuffer = await logoResponse.arrayBuffer();
+        const logoBytes = new Uint8Array(logoBuffer);
+        
+        // Determine image type from content-type or URL
+        const contentType = logoResponse.headers.get('content-type') || '';
+        if (contentType.includes('png') || company.logo.toLowerCase().endsWith('.png')) {
+          logoImage = await pdf.embedPng(logoBytes);
+        } else if (contentType.includes('jpeg') || contentType.includes('jpg') || company.logo.toLowerCase().endsWith('.jpg') || company.logo.toLowerCase().endsWith('.jpeg')) {
+          logoImage = await pdf.embedJpg(logoBytes);
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to load logo:', company.logo, err);
+      // Continue without logo if fetch fails
+    }
+  }
+
   // Create a separate page for each invoice
   for (const invoice of invoices) {
     const page = pdf.addPage([MEASUREMENTS.pageWidth, MEASUREMENTS.pageHeight]);
-    await renderInvoicePage(page, invoice, company, fontRegular, fontBold);
+    await renderInvoicePage(page, invoice, company, fontRegular, fontBold, logoImage);
   }
 
   const bytes = await pdf.save();
@@ -96,7 +119,8 @@ async function renderInvoicePage(
   invoice: InvoiceData,
   company: CompanyProfile,
   fontRegular: any,
-  fontBold: any
+  fontBold: any,
+  logoImage?: any
 ): Promise<void> {
   const { pageWidth, pageHeight, marginTop, marginLeft, marginRight, contentWidth } = MEASUREMENTS;
   let yPosition = pageHeight - marginTop;
@@ -148,6 +172,19 @@ async function renderInvoicePage(
   };
 
   // Header Section
+  // Draw logo if available
+  if (logoImage) {
+    const logoWidth = 60;
+    const logoHeight = logoImage.height > 0 ? (logoImage.width > 0 ? (logoWidth * logoImage.height) / logoImage.width : logoWidth) : logoWidth;
+    page.drawImage(logoImage, {
+      x: marginLeft,
+      y: yPosition - logoHeight,
+      width: logoWidth,
+      height: Math.min(logoHeight, 60), // Cap height at 60 points
+    });
+    yPosition -= Math.min(logoHeight, 60) + 8;
+  }
+
   drawText(company.name, { fontSize: 24, bold: true, color: COLORS.primary });
   yPosition -= 4;
 

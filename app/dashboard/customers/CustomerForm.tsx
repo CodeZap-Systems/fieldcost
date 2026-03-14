@@ -103,7 +103,7 @@ export default function CustomerForm({ onAdd }: CustomerFormProps) {
     }
   }
 
-  const tabs = ["Details", "Activity", "Additional Contacts", "Notes", "User Defined Fields", "Personal Information", "Sales Graph", "Quotes"];
+  const tabs = ["Details", "Activity", "Additional Contacts", "Notes"];
 
   return (
     <form onSubmit={handleSubmit} className="bg-gray-50 p-6 rounded shadow max-w-4xl mx-auto">

@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useState, useEffect, type FormEvent } from "react";
 import ItemForm from "./ItemForm";
+import { BackButton } from "../../../app/components/BackButton";
 import { ensureClientUserId } from "../../../lib/clientUser";
 import { getDemoItems } from "../../../lib/demoMockData";
 import { canUseDemoFixtures } from "../../../lib/userIdentity";
+import { readActiveCompanyId, ACTIVE_COMPANY_STORAGE_KEY } from "../../../lib/companySwitcher";
 
 type InventoryItem = { id?: number; name: string; price: number; stock_in?: number; stock_used?: number; item_type?: string; demo?: boolean };
 
@@ -19,6 +21,7 @@ export default function ItemsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [companyId, setCompanyId] = useState<string | null>(null);
   const [usingDemoData, setUsingDemoData] = useState(false);
   const allowDemoData = userId ? canUseDemoFixtures(userId) : false;
 
@@ -36,6 +39,15 @@ export default function ItemsPage() {
     };
   }, []);
 
+  // Load active company ID
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const saved = readActiveCompanyId();
+    if (saved) {
+      setCompanyId(saved);
+    }
+  }, []);
+
   useEffect(() => {
     if (!userId) return;
     const allowDemo = canUseDemoFixtures(userId);
@@ -44,14 +56,17 @@ export default function ItemsPage() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`/api/items?user_id=${userId}`);
+        const params = new URLSearchParams({ user_id: userId });
+        if (companyId) params.set('company_id', companyId);
+        const res = await fetch(`/api/items?${params.toString()}`);
         if (!res.ok) throw new Error('Failed to load items');
         const payload = await res.json();
         const list = Array.isArray(payload) ? payload : [];
         if (active && list.length > 0) {
           setItems(list.map(normalizeItem));
           setUsingDemoData(false);
-        } else if (active && allowDemo) {
+        } else if (active && allowDemo && !companyId) {
+          // Only show demo data if user is demo user AND no company selected
           setItems(getDemoItems(userId).map(normalizeItem));
           setUsingDemoData(true);
         } else if (active) {
@@ -60,7 +75,8 @@ export default function ItemsPage() {
         }
       } catch (err) {
         if (!active) return;
-        if (allowDemo) {
+        // Only show demo data on error if user is demo user AND no company selected
+        if (allowDemo && !companyId) {
           setItems(getDemoItems(userId).map(normalizeItem));
           setUsingDemoData(true);
         } else {
@@ -76,11 +92,11 @@ export default function ItemsPage() {
     return () => {
       active = false;
     };
-  }, [userId]);
+  }, [userId, companyId]);
 
   async function handleAdd(item: { name: string; price: number; item_type: string }) {
-    if (!userId) {
-      setError('Resolving user...');
+    if (!userId || !companyId) {
+      setError('User or company context not available');
       return false;
     }
     setLoading(true);
@@ -89,7 +105,7 @@ export default function ItemsPage() {
       const res = await fetch("/api/items", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...item, user_id: userId }),
+        body: JSON.stringify({ ...item, user_id: userId, company_id: companyId }),
       });
       if (!res.ok) throw new Error("Failed to add item");
       const newItem = normalizeItem(await res.json());
@@ -209,9 +225,15 @@ export default function ItemsPage() {
           <h1 className="text-2xl font-bold">Inventory</h1>
           <p className="text-gray-600">Track your stock in, used, and remaining. Update inventory in real time.</p>
         </div>
-        <Link href="/dashboard/invoices" className="inline-flex items-center justify-center rounded-lg border border-indigo-200 bg-white px-4 py-2 text-sm font-semibold text-indigo-700 shadow-sm hover:bg-indigo-50">
-          Open invoicing
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/dashboard/items/reports/margin" className="inline-flex items-center justify-center rounded-lg border border-green-200 bg-green-50 px-4 py-2 text-sm font-semibold text-green-700 shadow-sm hover:bg-green-100">
+            📊 Margin Report
+          </Link>
+          <Link href="/dashboard/invoices" className="inline-flex items-center justify-center rounded-lg border border-indigo-200 bg-white px-4 py-2 text-sm font-semibold text-indigo-700 shadow-sm hover:bg-indigo-50">
+            Open invoicing
+          </Link>
+          <BackButton />
+        </div>
       </div>
       {allowDemoData && usingDemoData && (
         <div className="rounded-lg border border-dashed border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">

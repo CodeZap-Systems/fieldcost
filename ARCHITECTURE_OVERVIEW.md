@@ -270,7 +270,7 @@ Xero          TIER 2 ★    │    Legal GPS
 
 Positioning:
 • TIER 1: Undercut Xero on price
-• TIER 2: Compete with Xero on features
+• TIER 2: Cohttps://fieldcost.vercel.app/api/sage/testmpete with Xero on features
 • TIER 3: Do what Sage X3 can't (legal defensibility)
 ```
 

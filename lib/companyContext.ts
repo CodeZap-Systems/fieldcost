@@ -36,18 +36,29 @@ export async function getCompanyContext(userId: string, companyId?: number | str
     
     const { data: company, error } = await supabaseServer
       .from('company_profiles')
-      .select('id')
+      .select('id, is_demo, user_id')
       .eq('id', resolvedCompanyId)
-      .eq('user_id', normalizedUserId)
       .single();
     
     if (error || !company) {
-      const errMsg = `Company ${companyId} not found or access denied for user "${normalizedUserId}"`;
+      const errMsg = `Company ${companyId} not found for user "${normalizedUserId}"`;
       console.error(`[getCompanyContext] ❌ ${errMsg} (error: ${error?.message || 'no match found'})`);
       throw new Error(errMsg);
     }
+
+    // CRITICAL: Allow access if:
+    // 1. User owns the company (user_id matches), OR
+    // 2. Company is a demo company (is_demo=true) - all users can access
+    const isOwner = company.user_id === normalizedUserId;
+    const isDemoCompany = company.is_demo === true;
     
-    console.log(`[getCompanyContext] ✅ Company ${resolvedCompanyId} validated for user "${normalizedUserId}"`);
+    if (!isOwner && !isDemoCompany) {
+      const errMsg = `Company ${companyId} not found or access denied for user "${normalizedUserId}"`;
+      console.error(`[getCompanyContext] ❌ ${errMsg} (not owner and not demo)`);
+      throw new Error(errMsg);
+    }
+    
+    console.log(`[getCompanyContext] ✅ Company ${resolvedCompanyId} validated for user "${normalizedUserId}" (owner=${isOwner}, demo=${isDemoCompany})`);
   } else {
     // Get the first company if not specified (or could use localStorage activeCompanyId)
     console.log(`[getCompanyContext] Looking up company for user "${normalizedUserId}"...`);

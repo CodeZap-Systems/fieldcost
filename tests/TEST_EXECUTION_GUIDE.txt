@@ -1,0 +1,270 @@
+/**
+ * Test Execution Guide - Quick Reference
+ * Copy these commands and run in your terminal
+ */
+
+# ============================================================================
+# QUICK START
+# ============================================================================
+
+# Run all tests (E2E + API)
+npm test
+
+# Run only E2E tests (UI testing with Playwright)
+npm run test:e2e
+
+# Run only API tests (Backend testing with Jest)
+npm run test:api
+
+# Watch mode - re-run tests as you code
+npm run test:watch
+
+# ============================================================================
+# SPECIFIC MODULE TESTS
+# ============================================================================
+
+# Test authentication flows
+npm run test:auth
+
+# Test project management
+npm run test:projects
+
+# Test task management
+npm run test:tasks
+
+# Test invoicing
+npm run test:invoices
+
+# Test inventory
+npm run test:inventory
+
+# Test company features
+npm run test:company
+
+# Test admin/RBAC
+npm run test:admin
+
+# Test ERP integrations
+npm run test:erp
+
+# Test customers
+npm run test:customers
+
+# ============================================================================
+# TEST DEBUGGING & ANALYSIS
+# ============================================================================
+
+# Run tests with detailed output
+npm run test:verbose
+
+# Run tests with code coverage report
+npm run test:coverage
+
+# Debug a specific test (opens Node.js debugger)
+npm run test:debug -- tests/api/auth.test.ts
+
+# Run only a specific test file
+npm test -- tests/api/projects.test.ts
+
+# Run only a specific test case
+npm test -- --testNamePattern="should create project"
+
+# ============================================================================
+# PLAYWRIGHT E2E TESTS
+# ============================================================================
+
+# Run all Playwright E2E tests
+npm run test:e2e
+
+# Run Playwright tests in headed mode (see browser)
+npx playwright test --headed
+
+# Run specific Playwright test file
+npx playwright test tests/e2e/authentication.spec.ts
+
+# Run tests with specific browser
+npx playwright test --project=chromium
+npx playwright test --project=firefox
+npx playwright test --project=webkit
+
+# Generate test report
+npx playwright show-report
+
+# ============================================================================
+# API TESTS (JEST + SUPERTEST)
+# ============================================================================
+
+# Run all API tests
+npm run test:api
+
+# Run specific API test file
+npm test -- tests/api/auth.test.ts
+
+# Run tests matching pattern
+npm test -- --testNamePattern="should login"
+
+# Run with coverage
+npm run test:coverage
+
+# Generate JUnit XML report (for CI/CD)
+npm run test:report
+
+# ============================================================================
+# CI/CD PIPELINE
+# ============================================================================
+
+# Run tests as in CI environment
+npm run test:ci
+
+# Run E2E tests for CI (JUnit format)
+npm run test:ci:e2e
+
+# ============================================================================
+# PERFORMANCE & LOAD TESTING
+# ============================================================================
+
+# Run performance tests
+npm run test:perf
+
+# Run load test (requires Artillery installed)
+npm run test:load
+
+# ============================================================================
+# CLEANUP & MAINTENANCE
+# ============================================================================
+
+# Clear Jest cache
+npm run test:clean
+
+# Skip slow tests (quick feedback loop during development)
+npm run test:skip-slow
+
+# ============================================================================
+# ENVIRONMENT SETUP
+# ============================================================================
+
+# Start dev server before running tests
+npm run dev
+
+# In another terminal, run tests
+npm test
+
+# ============================================================================
+# TEST DATA SETUP
+# ============================================================================
+
+# Seed test database with demo data
+npm run demo:seed
+
+# This creates:
+# - Default test user: qa_test_user@fieldcost.com
+# - 10 test projects
+# - 20 test tasks
+# - 30 test invoices
+# - Demo customers and inventory
+
+# ============================================================================
+# RUNNING TESTS IN PARALLEL
+# ============================================================================
+
+# Run multiple test instances (faster)
+jest --maxWorkers=4
+
+# ============================================================================
+# EXAMPLE: TYPICAL QA WORKFLOW
+# ============================================================================
+
+# 1. Start dev server
+npm run dev &
+
+# 2. In another terminal, seed demo data
+npm run demo:seed
+
+# 3. Run specific module you're testing
+npm run test:invoices
+
+# 4. If tests fail, run in verbose mode
+npm run test:verbose -- tests/e2e/invoices.spec.ts
+
+# 5. Debug specific test
+npm run test:debug -- tests/api/invoices.test.ts
+
+# 6. Check coverage for that module
+npm run test:coverage -- --testPathPattern=invoices
+
+# ============================================================================
+# EXAMPLE: PRE-COMMIT TESTING
+# ============================================================================
+
+# Run quick smoke tests before committing
+npm test -- --testNamePattern="should.*create" --maxWorkers=1
+
+# ============================================================================
+# EXPECTED OUTPUT
+# ============================================================================
+
+# After running tests, you should see:
+# 
+# PASS tests/api/auth.test.ts (2.3s)
+# PASS tests/api/projects.test.ts (1.8s)
+# PASS tests/e2e/authentication.spec.ts (5.2s)
+# ...
+# 
+# Test Suites: 12 passed, 12 total
+# Tests: 125 passed, 125 total
+# Snapshots: 0 total
+# Time: 45.2s, estimated 52s
+
+# ============================================================================
+# FILE LOCATIONS
+# ============================================================================
+
+# E2E Tests (Playwright)
+tests/e2e/*.spec.ts
+
+# API Tests (Jest + Supertest)
+tests/api/*.test.ts
+
+# Test Helpers
+tests/helpers/
+  - login.ts (login/logout)
+  - test-user.ts (user generation)
+  - test-company.ts (company generation)
+
+# Test Fixtures
+tests/fixtures/test-data.ts (centralized test data)
+
+# Configuration
+jest.config.js (Jest config)
+playwright.config.ts (Playwright config)
+tests/api/setup.ts (Jest setup)
+
+# ============================================================================
+# TROUBLESHOOTING
+# ============================================================================
+
+# Tests timeout or hang?
+# Increase timeout in test file:
+jest.setTimeout(60000);  # 60 seconds
+
+# Cannot find module?
+# Make sure tsconfig.json includes tests/
+# and paths are configured correctly
+
+# Port 3000 already in use?
+# Kill process: lsof -i :3000 | grep LISTEN | awk '{print $2}' | xargs kill -9
+# Or use different port: npm run dev -- --port 3001
+
+# Playwright tests not finding elements?
+# Add waits: await page.waitForLoadState('networkidle')
+# Use debug: npx playwright test --debug
+
+# ============================================================================
+# USEFUL LINKS
+# ============================================================================
+
+# Playwright docs: https://playwright.dev
+# Jest docs: https://jestjs.io
+# Supertest docs: https://github.com/visionmedia/supertest
+# Coverage reports: coverage/lcov-report/index.html (after running tests)
+

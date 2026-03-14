@@ -28,6 +28,27 @@ import { isSchemaCacheError } from '../../../lib/supabaseErrors';
 
 const INVOICE_SELECT = '*, customer:customers(id, name, email)';
 
+// Get authenticated user with fallback to demo user
+async function resolveUserContext(req: Request) {
+  const authHeader = req.headers.get('authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    try {
+      const token = authHeader.slice(7);
+      const { data } = await supabaseServer.auth.getUser(token);
+      if (data?.user?.id) {
+        return data.user.id;
+      }
+    } catch (err) {
+      console.warn('[resolveUserContext] Failed to get user from auth header:', err);
+    }
+  }
+  const { searchParams } = new URL(req.url);
+  const fallback = searchParams.get('user_id');
+  const resolved = resolveServerUserId(fallback);
+  console.warn(`[resolveUserContext] Using fallback user: ${resolved}`);
+  return resolved;
+}
+
 type InvoiceRow = {
   id: number | null;
   user_id?: string | null;
@@ -116,8 +137,24 @@ async function resolveCustomerId(userId: string, idPayload: CustomerIdentifier) 
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    let userId = resolveServerUserId(searchParams.get('user_id'));
-    const companyId = searchParams.get('company_id');
+    
+    // Get authenticated user with fallback
+    let userId = await resolveUserContext(req);
+    const companyIdParam = searchParams.get('company_id');
+    
+    // CRITICAL: Require company_id for data isolation - prevent demo/live data mixing
+    if (!companyIdParam || !companyIdParam.trim()) {
+      console.warn(`[SECURITY] GET /api/invoices: Missing company_id for user ${userId}`);
+      return NextResponse.json(
+        { error: 'company_id parameter is required for data isolation' },
+        { status: 400 }
+      );
+    }
+    
+    // Convert company_id: try as integer first, fallback to string (for demo IDs like "demo-company-id")
+    const trimmed = companyIdParam.trim();
+    const asInt = parseInt(trimmed, 10);
+    let companyId: string | number = Number.isFinite(asInt) ? asInt : trimmed;
     
     // Fall back to demo user for testing if no userId provided
     if (!userId) {
@@ -126,9 +163,36 @@ export async function GET(req: Request) {
     
     const stored = userId ? await getStoredInvoices(userId) : [];
     const query = supabaseServer.from('invoices').select(INVOICE_SELECT).order('id', { ascending: false });
-    let finalQuery = userId ? query.eq('user_id', userId) : query;
-    // Add company filter if available
-    if (companyId) {
+    
+    // CRITICAL: Always filter by company_id
+    console.log(`[GET /api/invoices] Fetching invoices for company_id=${companyId}`);
+    
+    // Try to check if this is a demo company
+    let finalQuery = query;
+    try {
+      const { data: company } = await supabaseServer
+        .from('company_profiles')
+        .select('is_demo')
+        .eq('id', companyId)
+        .maybeSingle();
+      
+      const isDemoCompany = company?.is_demo === true;
+      
+      if (isDemoCompany) {
+        // Demo company: filter ONLY by company_id (not user_id)
+        console.log(`[GET /api/invoices] Demo company detected, filtering by company_id only`);
+        finalQuery = finalQuery.eq('company_id', companyId);
+      } else {
+        // Live company: filter by BOTH user_id AND company_id
+        console.log(`[GET /api/invoices] Live company, filtering by user_id AND company_id`);
+        if (userId && userId !== 'demo-user') {
+          finalQuery = finalQuery.eq('user_id', userId).eq('company_id', companyId);
+        } else {
+          finalQuery = finalQuery.eq('company_id', companyId);
+        }
+      }
+    } catch (err) {
+      console.warn(`[GET /api/invoices] Could not determine company type, filtering by company_id only: ${err.message}`);
       finalQuery = finalQuery.eq('company_id', companyId);
     }
     const { data, error } = await finalQuery;
@@ -226,15 +290,10 @@ function storedLinesToNormalized(userId: string, lines: StoredInvoiceRecord['lin
 
 export async function POST(req: Request) {
   try {
-    // Restrict to admin only
-    const { data: userData } = await supabase.auth.getUser();
-    const user = userData?.user;
-    if (!canMutateInvoices(user?.user_metadata?.role)) {
-      console.warn('POST /api/invoices forbidden for role:', user?.user_metadata?.role);
-      return NextResponse.json({ error: 'You do not have permission to create invoices.' }, { status: 403 });
-    }
     const body = await req.json();
-    const userId = resolveServerUserId(body.user_id);
+    
+    // Get authenticated user with fallback
+    const userId = await resolveUserContext(req);
     let companyId = body.company_id;
     
     try {

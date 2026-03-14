@@ -1,6 +1,7 @@
 "use client";
 import ProjectForm from "../ProjectForm";
 import React, { useState } from "react";
+import { BackButton } from "../../../../app/components/BackButton";
 
 export default function AddProjectPage() {
   // Tab state
@@ -9,7 +10,10 @@ export default function AddProjectPage() {
 
   return (
     <main className="p-6 max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Add Project</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">Add Project</h1>
+        <BackButton />
+      </div>
       <div className="mb-4 flex gap-2 border-b">
         {tabs.map(t => (
           <button
