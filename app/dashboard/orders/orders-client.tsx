@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { readActiveCompanyId } from '@/lib/companySwitcher';
+import { ensureClientUserId } from '@/lib/clientUser';
 
 interface Order {
   id: number;
@@ -21,8 +22,13 @@ export function OrdersClient() {
   useEffect(() => {
     async function fetchOrders() {
       try {
+        const userId = await ensureClientUserId();
         const companyId = readActiveCompanyId() || '8';
-        const res = await fetch(`/api/orders?company_id=${companyId}`);
+        const params = new URLSearchParams({
+          user_id: userId,
+          company_id: companyId,
+        });
+        const res = await fetch(`/api/orders?${params.toString()}`);
         if (!res.ok) throw new Error('Failed to fetch orders');
         const data = await res.json();
         setOrders(Array.isArray(data) ? data : []);

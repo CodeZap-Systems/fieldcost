@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { readActiveCompanyId } from '@/lib/companySwitcher';
+import { ensureClientUserId } from '@/lib/clientUser';
 
 interface Quote {
   id: number;
@@ -22,8 +23,13 @@ export function QuotesClient() {
   useEffect(() => {
     async function fetchQuotes() {
       try {
+        const userId = await ensureClientUserId();
         const companyId = readActiveCompanyId() || '8';
-        const res = await fetch(`/api/quotes?company_id=${companyId}`);
+        const params = new URLSearchParams({
+          user_id: userId,
+          company_id: companyId,
+        });
+        const res = await fetch(`/api/quotes?${params.toString()}`);
         if (!res.ok) throw new Error('Failed to fetch quotes');
         const data = await res.json();
         setQuotes(Array.isArray(data) ? data : []);

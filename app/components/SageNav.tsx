@@ -30,6 +30,8 @@ const NAV_SECTIONS = [
       { href: "/dashboard/projects", text: "Projects", icon: "📁" },
       { href: "/dashboard/customers", text: "Customers", icon: "👥" },
       { href: "/dashboard/items", text: "Inventory", icon: "📦" },
+      { href: "/dashboard/quotes", text: "Quotes", icon: "💬" },
+      { href: "/dashboard/orders", text: "Orders", icon: "📦" },
       { href: "/dashboard/invoices", text: "Invoices", icon: "💰" },
     ],
   },
