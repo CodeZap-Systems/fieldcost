@@ -41,7 +41,7 @@ let allResults = {
 function runTest(file, name) {
   return new Promise((resolve) => {
     const startTime = Date.now();
-    const process = spawn('node', [file], {
+    const testProcess = spawn('node', [file], {
       stdio: 'pipe',
       cwd: process.cwd(),
     });
@@ -49,17 +49,17 @@ function runTest(file, name) {
     let output = '';
     let errorOutput = '';
 
-    process.stdout.on('data', (data) => {
+    testProcess.stdout.on('data', (data) => {
       output += data.toString();
-      process.stdout.write(data);
+      testProcess.stdout.write(data);
     });
 
-    process.stderr.on('data', (data) => {
+    testProcess.stderr.on('data', (data) => {
       errorOutput += data.toString();
-      process.stderr.write(data);
+      testProcess.stderr.write(data);
     });
 
-    process.on('close', (code) => {
+    testProcess.on('close', (code) => {
       const duration = Date.now() - startTime;
       resolve({
         file,
@@ -72,7 +72,7 @@ function runTest(file, name) {
       });
     });
 
-    process.on('error', (err) => {
+    testProcess.on('error', (err) => {
       const duration = Date.now() - startTime;
       resolve({
         file,
