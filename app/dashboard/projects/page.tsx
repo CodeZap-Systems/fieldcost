@@ -6,6 +6,8 @@ import ProjectForm from "./ProjectForm";
 import PhotoUpload from "./PhotoUpload";
 import BudgetActual from "./BudgetActual";
 import { BackButton } from "../../../app/components/BackButton";
+import { Button } from "../../../components/Button";
+import { ConfirmDialog } from "../../../components/ConfirmDialog";
 import { ensureClientUserId } from "../../../lib/clientUser";
 import { getDemoProjects } from "../../../lib/demoMockData";
 import { canUseDemoFixtures } from "../../../lib/userIdentity";
@@ -16,6 +18,7 @@ const PROJECT_LIMIT = 6;
 type ProjectRow = { id?: number; name: string; description: string; photo_url?: string; demo?: boolean };
 
 export default function ProjectsPage() {
+  const [confirmDelete, setConfirmDelete] = useState<{ open: boolean; id: number | null }>({ open: false, id: null });
   const [projects, setProjects] = useState<ProjectRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -181,20 +184,26 @@ export default function ProjectsPage() {
       setError("Demo projects are read-only.");
       return;
     }
+    setConfirmDelete({ open: true, id });
+  }
+
+  async function confirmDeleteProject() {
+    if (!userId || confirmDelete.id === null) return;
     setLoading(true);
     setError(null);
     try {
       const res = await fetch("/api/projects", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, user_id: userId }),
+        body: JSON.stringify({ id: confirmDelete.id, user_id: userId }),
       });
       if (!res.ok) throw new Error("Failed to delete project");
-      setProjects(prev => prev.filter(p => p.id !== id));
+      setProjects(prev => prev.filter(p => p.id !== confirmDelete.id));
     } catch {
       setError("Failed to delete project");
     } finally {
       setLoading(false);
+      setConfirmDelete({ open: false, id: null });
     }
   }
 
@@ -258,16 +267,25 @@ export default function ProjectsPage() {
                     value={editData.description}
                     onChange={e => setEditData(ed => ({ ...ed, description: e.target.value }))}
                   />
-                  <button className="bg-green-600 text-white px-2 py-1 rounded" type="submit">Save</button>
-                  <button className="bg-gray-400 text-white px-2 py-1 rounded" type="button" onClick={() => setEditing(null)}>Cancel</button>
+                  <Button variant="primary" className="px-2 py-1" type="submit">Save</Button>
+                  <Button variant="secondary" className="px-2 py-1" type="button" onClick={() => setEditing(null)}>Cancel</Button>
                 </form>
               ) : (
                 <>
                   <span className="font-semibold">{p.name}</span> — {p.description}
                   {p.id !== undefined && !p.demo ? (
                     <>
-                      <button className="bg-yellow-500 text-white px-2 py-1 rounded ml-2" onClick={() => handleEdit(p as { id: number; name: string; description: string })}>Edit</button>
-                      <button className="bg-red-600 text-white px-2 py-1 rounded ml-2" onClick={() => handleDelete(p.id!)}>Delete</button>
+                      <Button variant="secondary" className="px-2 py-1 ml-2" onClick={() => handleEdit(p as { id: number; name: string; description: string })}>Edit</Button>
+                      <Button variant="danger" className="px-2 py-1 ml-2" onClick={() => handleDelete(p.id!)}>Delete</Button>
+                          <ConfirmDialog
+                            open={confirmDelete.open}
+                            title="Delete Project?"
+                            message="Are you sure you want to delete this project? This cannot be undone."
+                            confirmLabel="Delete"
+                            cancelLabel="Cancel"
+                            onConfirm={confirmDeleteProject}
+                            onCancel={() => setConfirmDelete({ open: false, id: null })}
+                          />
                     </>
                   ) : (
                     <span className="ml-2 rounded-full border border-amber-200 px-2 py-0.5 text-xs uppercase tracking-wide text-amber-600">Demo</span>

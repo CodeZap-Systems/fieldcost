@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { Feedback } from '../../../components/Feedback';
 import { ensureClientUserId } from '@/lib/clientUser';
 import { validateEncryptionPassword } from '@/lib/pdfEncryption';
 import { BackButton } from '@/app/components/BackButton';
@@ -196,17 +197,10 @@ export default function SettingsPage() {
         <BackButton />
       </div>
 
+
       {/* Status Messages */}
-      {error && (
-        <div className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
-          {error}
-        </div>
-      )}
-      {success && (
-        <div className="rounded-lg border border-green-300 bg-green-50 px-4 py-3 text-sm text-green-800">
-          {success}
-        </div>
-      )}
+      <Feedback type="error" message={error || ""} />
+      <Feedback type="success" message={success || ""} />
 
       {/* Settings Form */}
       <form onSubmit={handleSave} className="space-y-8">

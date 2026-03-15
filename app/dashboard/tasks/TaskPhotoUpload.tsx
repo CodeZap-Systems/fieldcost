@@ -1,5 +1,7 @@
 "use client";
 import { useState } from "react";
+import { Button } from "../../../components/Button";
+import { ConfirmDialog } from "../../../components/ConfirmDialog";
 
 interface TaskPhotoUploadProps {
   taskId: number;
@@ -33,9 +35,18 @@ export default function TaskPhotoUpload({ taskId, onUploaded }: TaskPhotoUploadP
     e.target.value = "";
   }
 
-  function removePhoto(index: number) {
-    setPhotos(prev => prev.filter((_, i) => i !== index));
-    setPhotoPreview(prev => prev.filter((_, i) => i !== index));
+  const [confirmRemove, setConfirmRemove] = useState<{ open: boolean; index: number | null }>({ open: false, index: null });
+
+  function handleRemovePhoto(index: number) {
+    setConfirmRemove({ open: true, index });
+  }
+
+  function confirmRemovePhoto() {
+    if (confirmRemove.index !== null) {
+      setPhotos(prev => prev.filter((_, i) => i !== confirmRemove.index));
+      setPhotoPreview(prev => prev.filter((_, i) => i !== confirmRemove.index));
+    }
+    setConfirmRemove({ open: false, index: null });
   }
 
   async function uploadPhoto(photoData: string, index: number) {
@@ -92,21 +103,35 @@ export default function TaskPhotoUpload({ taskId, onUploaded }: TaskPhotoUploadP
                 alt={`Preview ${index + 1}`}
                 className="w-full h-24 object-cover rounded border border-gray-300"
               />
-              <button
+              <Button
                 type="button"
-                onClick={() => removePhoto(index)}
-                className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-700"
+                variant="danger"
+                className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center text-xs p-0"
+                onClick={() => handleRemovePhoto(index)}
+                aria-label="Remove photo"
               >
                 ×
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="primary"
+                className="absolute bottom-1 left-1 right-1 text-xs px-2 py-1"
                 onClick={() => uploadPhoto(preview, index)}
+                loading={uploading}
                 disabled={uploading}
-                className="absolute bottom-1 left-1 right-1 bg-blue-600 text-white text-xs px-2 py-1 rounded hover:bg-blue-700 disabled:opacity-50"
+                aria-label="Upload photo"
               >
                 {uploading ? "Uploading..." : "Upload"}
-              </button>
+              </Button>
+                  <ConfirmDialog
+                    open={confirmRemove.open}
+                    title="Remove Photo?"
+                    message="Are you sure you want to remove this photo? This cannot be undone."
+                    confirmLabel="Remove"
+                    cancelLabel="Cancel"
+                    onConfirm={confirmRemovePhoto}
+                    onCancel={() => setConfirmRemove({ open: false, index: null })}
+                  />
             </div>
           ))}
         </div>

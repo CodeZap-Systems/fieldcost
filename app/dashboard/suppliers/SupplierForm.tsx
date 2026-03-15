@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Feedback } from "../../../components/Feedback";
 import { ensureClientUserId } from "../../../lib/clientUser";
 
 export interface Supplier {
@@ -48,51 +49,51 @@ interface SupplierFormProps {
 }
 
 export function SupplierForm({
-  existingSupplier,
-  companyId = "1",
-  onSubmit,
-  onCancel,
-}: SupplierFormProps) {
-  const userId = ensureClientUserId();
-
-  const [vendorName, setVendorName] = useState(existingSupplier?.vendor_name || "");
-  const [contactName, setContactName] = useState(existingSupplier?.contact_name || "");
-  const [email, setEmail] = useState(existingSupplier?.email || "");
-  const [phone, setPhone] = useState(existingSupplier?.phone || "");
-  const [addressLine1, setAddressLine1] = useState(existingSupplier?.address_line1 || "");
-  const [addressLine2, setAddressLine2] = useState(existingSupplier?.address_line2 || "");
-  const [city, setCity] = useState(existingSupplier?.city || "");
-  const [province, setProvince] = useState(existingSupplier?.province || "");
-  const [postalCode, setPostalCode] = useState(existingSupplier?.postal_code || "");
-  const [country, setCountry] = useState(existingSupplier?.country || "");
-  const [paymentTerms, setPaymentTerms] = useState(existingSupplier?.payment_terms || "Net 30");
-  const [taxId, setTaxId] = useState(existingSupplier?.tax_id || "");
-  const [rating, setRating] = useState(existingSupplier?.rating || 0);
-  const [notes, setNotes] = useState(existingSupplier?.notes || "");
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string>("");
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-
-    if (!vendorName.trim()) {
-      setError("Vendor name is required");
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      const payload = {
-        vendor_name: vendorName,
-        contact_name: contactName || null,
-        email: email || null,
-        phone: phone || null,
-        address_line1: addressLine1 || null,
-        address_line2: addressLine2 || null,
-        city: city || null,
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded shadow max-w-2xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField label="Vendor Name" htmlFor="vendor-name" error={error}>
+          <input
+            id="vendor-name"
+            className="border p-2 rounded w-full"
+            value={vendorName}
+            onChange={e => setVendorName(e.target.value)}
+            required
+          />
+        </FormField>
+        <FormField label="Contact Name" htmlFor="contact-name">
+          <input
+            id="contact-name"
+            className="border p-2 rounded w-full"
+            value={contactName}
+            onChange={e => setContactName(e.target.value)}
+          />
+        </FormField>
+        <FormField label="Email" htmlFor="email">
+          <input
+            id="email"
+            className="border p-2 rounded w-full"
+            type="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+          />
+        </FormField>
+        <FormField label="Phone" htmlFor="phone">
+          <input
+            id="phone"
+            className="border p-2 rounded w-full"
+            value={phone}
+            onChange={e => setPhone(e.target.value)}
+          />
+        </FormField>
+      </div>
+      <div className="flex gap-4 items-center mt-4">
+        <Button type="submit" variant="primary" loading={isSubmitting}>Save</Button>
+        <Feedback type="error" message={error || ""} />
+        <Feedback type="success" message={success || ""} />
+      </div>
+    </form>
+  );
         province: province || null,
         postal_code: postalCode || null,
         country: country || null,

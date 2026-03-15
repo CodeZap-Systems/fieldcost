@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Feedback } from "../../../components/Feedback";
 import { ensureClientUserId } from "../../../lib/clientUser";
 
 interface GRNLineItem {
@@ -58,6 +59,7 @@ export function GoodsReceivedNoteForm({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string>("");
+  const [success, setSuccess] = useState<string>("");
   const [loading, setLoading] = useState(true);
 
   // Fetch PO line items
@@ -88,6 +90,7 @@ export function GoodsReceivedNoteForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setSuccess("");
 
     if (!selectedLineItemId) {
       setError("Please select a line item");
@@ -123,9 +126,11 @@ export function GoodsReceivedNoteForm({
         user_id: userId,
       } as unknown as GRNFormData;
 
-      const success = await onSubmit(payload);
-      if (!success) {
+      const ok = await onSubmit(payload);
+      if (!ok) {
         setError("Failed to log goods received");
+      } else {
+        setSuccess("Goods received successfully logged!");
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -148,11 +153,9 @@ export function GoodsReceivedNoteForm({
         Record receipt of goods against this purchase order line item
       </p>
 
-      {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded">
-          {error}
-        </div>
-      )}
+
+      <Feedback type="error" message={error || ""} />
+      <Feedback type="success" message={success || ""} />
 
       {lineItems.length === 0 ? (
         <div className="p-4 bg-yellow-50 border border-yellow-200 text-yellow-700 rounded">

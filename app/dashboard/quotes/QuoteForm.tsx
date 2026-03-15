@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Feedback } from "../../../components/Feedback";
 import { ensureClientUserId } from "../../../lib/clientUser";
 
 interface Customer {
@@ -107,6 +108,7 @@ export function QuoteForm({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string>("");
+  const [success, setSuccess] = useState<string>("");
 
   // Fetch customers and projects
   useEffect(() => {
@@ -156,6 +158,7 @@ export function QuoteForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setSuccess("");
 
     if (!selectedCustomerId) {
       setError("Customer is required");
@@ -203,9 +206,11 @@ export function QuoteForm({
         user_id: userId,
       } as unknown as QuoteFormData;
 
-      const success = await onSubmit(payload);
-      if (!success) {
+      const ok = await onSubmit(payload);
+      if (!ok) {
         setError("Failed to save quote");
+      } else {
+        setSuccess("Quote saved successfully!");
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -220,11 +225,9 @@ export function QuoteForm({
         {existingQuote ? "Edit Quote" : "Create New Quote"}
       </h2>
 
-      {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded">
-          {error}
-        </div>
-      )}
+
+      <Feedback type="error" message={error || ""} />
+      <Feedback type="success" message={success || ""} />
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Customer and Project Selection */}

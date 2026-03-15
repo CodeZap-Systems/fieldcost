@@ -1,5 +1,8 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
+import { Button } from "../../../components/Button";
+import { FormField } from "../../../components/FormField";
+import { Feedback } from "../../../components/Feedback";
 import { ensureClientUserId } from "../../../lib/clientUser";
 import { getDemoCustomers, getDemoItems, getDemoProjects, getDemoTasks } from "../../../lib/demoMockData";
 import { canUseDemoFixtures } from "../../../lib/userIdentity";
@@ -485,9 +488,9 @@ export default function InvoiceForm({ onAdd, preset, companyId }: InvoiceFormPro
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block font-semibold mb-1">Customer</label>
+        <FormField label="Customer" htmlFor="customer-select" error={status.error === "Select a customer." ? status.error : undefined}>
           <select
+            id="customer-select"
             className="border p-2 rounded w-full"
             value={selectedCustomer}
             onChange={e => setSelectedCustomer(e.target.value)}
@@ -500,114 +503,124 @@ export default function InvoiceForm({ onAdd, preset, companyId }: InvoiceFormPro
               </option>
             ))}
           </select>
-        </div>
-        <div>
-          <label className="block font-semibold mb-1">Reference</label>
+        </FormField>
+        <FormField label="Reference" htmlFor="reference-input">
           <input
+            id="reference-input"
             className="border p-2 rounded w-full"
             placeholder="e.g. Progress draw #3"
             value={reference}
             onChange={e => setReference(e.target.value)}
           />
-        </div>
+        </FormField>
       </div>
 
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold">Line items</h3>
-          <button type="button" className="text-indigo-600 font-medium" onClick={addLine}>+ Add line</button>
+          <Button type="button" variant="secondary" onClick={addLine}>+ Add line</Button>
         </div>
         {lineItems.map((line, idx) => {
           const lineTotal = totals[idx] || 0;
           return (
             <div key={line.id} className="border rounded-lg p-4 grid grid-cols-1 md:grid-cols-6 gap-3">
               <div className="md:col-span-2">
-                <label className="text-sm font-semibold mb-1 block">Item</label>
-                <select
-                  className="border rounded w-full p-2"
-                  value={line.itemId}
-                  onChange={e => updateLine(line.id, "itemId", e.target.value ? Number(e.target.value) : "")}
-                >
-                  <option value="">Select item</option>
-                  {items.map(item => (
-                    <option key={item.id} value={item.id} disabled={item.demo}>
-                      {item.name} — R{item.price?.toFixed(2)}{item.demo ? " (demo)" : ""}
-                    </option>
-                  ))}
-                </select>
+                <FormField label="Item" htmlFor={`item-select-${line.id}`}>
+                  <select
+                    id={`item-select-${line.id}`}
+                    className="border rounded w-full p-2"
+                    value={line.itemId}
+                    onChange={e => updateLine(line.id, "itemId", e.target.value ? Number(e.target.value) : "")}
+                  >
+                    <option value="">Select item</option>
+                    {items.map(item => (
+                      <option key={item.id} value={item.id} disabled={item.demo}>
+                        {item.name}  R{item.price?.toFixed(2)}{item.demo ? " (demo)" : ""}
+                      </option>
+                    ))}
+                  </select>
+                </FormField>
               </div>
               <div>
-                <label className="text-sm font-semibold mb-1 block">Qty</label>
-                <input
-                  type="number"
-                  min="0.25"
-                  step="0.25"
-                  className="border rounded w-full p-2"
-                  value={line.quantity}
-                  onChange={e => updateLine(line.id, "quantity", Number(e.target.value))}
-                />
-              </div>
-              <div>
-                <label className="text-sm font-semibold mb-1 block">Project</label>
-                <select
-                  className="border rounded w-full p-2"
-                  value={
-                    line.projectId === "__custom__"
-                      ? "__custom__"
-                      : line.projectId === ""
-                        ? ""
-                        : String(line.projectId)
-                  }
-                  onChange={e => {
-                    const raw = e.target.value;
-                    setLineItems(prev =>
-                      prev.map(entry => {
-                        if (entry.id !== line.id) return entry;
-                        if (raw === "__custom__") {
-                          return { ...entry, projectId: "__custom__" };
-                        }
-                        if (raw === "") {
-                          return { ...entry, projectId: "", projectCustom: "" };
-                        }
-                        const numeric = Number(raw);
-                        if (!Number.isFinite(numeric)) return entry;
-                        return { ...entry, projectId: numeric, projectCustom: "" };
-                      })
-                    );
-                  }}
-                >
-                  <option value="">Unassigned</option>
-                  {projects.map(project => (
-                    <option key={project.id} value={project.id} disabled={project.demo}>
-                      {project.name}
-                      {project.demo ? " (demo)" : ""}
-                    </option>
-                  ))}
-                  <option value="__custom__">Manual entry…</option>
-                </select>
-                {line.projectId === "__custom__" && (
+                <FormField label="Qty" htmlFor={`qty-input-${line.id}`}>
                   <input
-                    className="mt-2 border rounded w-full p-2"
-                    placeholder="Project name"
-                    value={line.projectCustom}
-                    onChange={e => updateLine(line.id, "projectCustom", e.target.value)}
+                    id={`qty-input-${line.id}`}
+                    type="number"
+                    min="0.25"
+                    step="0.25"
+                    className="border rounded w-full p-2"
+                    value={line.quantity}
+                    onChange={e => updateLine(line.id, "quantity", Number(e.target.value))}
                   />
-                )}
+                </FormField>
+              </div>
+              <div>
+                <FormField label="Project" htmlFor={`project-select-${line.id}`}> 
+                  <select
+                    id={`project-select-${line.id}`}
+                    className="border rounded w-full p-2"
+                    value={
+                      line.projectId === "__custom__"
+                        ? "__custom__"
+                        : line.projectId === ""
+                          ? ""
+                          : String(line.projectId)
+                    }
+                    onChange={e => {
+                      const raw = e.target.value;
+                      setLineItems(prev =>
+                        prev.map(entry => {
+                          if (entry.id !== line.id) return entry;
+                          if (raw === "__custom__") {
+                            return { ...entry, projectId: "__custom__" };
+                          }
+                          if (raw === "") {
+                            return { ...entry, projectId: "", projectCustom: "" };
+                          }
+                          const numeric = Number(raw);
+                          if (!Number.isFinite(numeric)) return entry;
+                          return { ...entry, projectId: numeric, projectCustom: "" };
+                        })
+                      );
+                    }}
+                  >
+                    <option value="">Unassigned</option>
+                    {projects.map(project => (
+                      <option key={project.id} value={project.id} disabled={project.demo}>
+                        {project.name}
+                        {project.demo ? " (demo)" : ""}
+                      </option>
+                    ))}
+                    <option value="__custom__">Manual entry…</option>
+                  </select>
+                  {line.projectId === "__custom__" && (
+                    <input
+                      className="mt-2 border rounded w-full p-2"
+                      placeholder="Project name"
+                      value={line.projectCustom}
+                      onChange={e => updateLine(line.id, "projectCustom", e.target.value)}
+                    />
+                  )}
+                </FormField>
               </div>
               <div className="md:col-span-2">
-                <label className="text-sm font-semibold mb-1 block">Notes</label>
-                <input
-                  className="border rounded w-full p-2"
-                  placeholder="Extra detail"
-                  value={line.note}
-                  onChange={e => updateLine(line.id, "note", e.target.value)}
-                />
+                <FormField label="Notes" htmlFor={`note-input-${line.id}`}> 
+                  <input
+                    id={`note-input-${line.id}`}
+                    className="border rounded w-full p-2"
+                    placeholder="Extra detail"
+                    value={line.note}
+                    onChange={e => updateLine(line.id, "note", e.target.value)}
+                  />
+                </FormField>
               </div>
               <div className="flex flex-col justify-between">
                 <span className="text-xs uppercase text-gray-500">Line total</span>
                 <span className="text-lg font-semibold">R{lineTotal.toFixed(2)}</span>
                 {lineItems.length > 1 && (
-                  <button type="button" className="text-red-500 text-xs" onClick={() => removeLine(line.id)}>Remove</button>
+                  <Button type="button" variant="danger" className="text-xs px-2 py-1" onClick={() => removeLine(line.id)}>
+                    Remove
+                  </Button>
                 )}
               </div>
             </div>
@@ -671,11 +684,13 @@ export default function InvoiceForm({ onAdd, preset, companyId }: InvoiceFormPro
           <p className="text-sm text-gray-500">Actual spend</p>
           <p className="text-2xl font-bold">R{grandTotal.toFixed(2)}</p>
         </div>
-        <button className="bg-indigo-600 text-white px-6 py-3 rounded-lg font-semibold" type="submit">Create invoice</button>
+        <Button className="px-6 py-3" type="submit" loading={status.success === "Invoice added!"}>
+          Create invoice
+        </Button>
       </div>
 
-      {status.success && <div className="text-green-600 text-sm">{status.success}</div>}
-      {status.error && <div className="text-red-600 text-sm">{status.error}</div>}
+      <Feedback type="success" message={status.success || ""} />
+      <Feedback type="error" message={status.error || ""} />
     </form>
   );
 }

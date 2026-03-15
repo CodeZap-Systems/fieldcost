@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useState, useEffect, type FormEvent } from "react";
 import ItemForm from "./ItemForm";
 import { BackButton } from "../../../app/components/BackButton";
+import { Button } from "../../../components/Button";
+import { ConfirmDialog } from "../../../components/ConfirmDialog";
 import { ensureClientUserId } from "../../../lib/clientUser";
 import { getDemoItems } from "../../../lib/demoMockData";
 import { canUseDemoFixtures } from "../../../lib/userIdentity";
@@ -17,6 +19,7 @@ const normalizeItem = (item: InventoryItem): InventoryItem => ({
 });
 
 export default function ItemsPage() {
+  const [confirmDelete, setConfirmDelete] = useState<{ open: boolean; id: number | null }>({ open: false, id: null });
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -161,24 +164,26 @@ export default function ItemsPage() {
   }
 
   async function handleDelete(id: number) {
-    if (!userId) {
-      setError('Resolving user...');
-      return;
-    }
+    setConfirmDelete({ open: true, id });
+  }
+
+  async function confirmDeleteItem() {
+    if (!userId || confirmDelete.id === null) return;
     setLoading(true);
     setError(null);
     try {
       const res = await fetch("/api/items", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, user_id: userId }),
+        body: JSON.stringify({ id: confirmDelete.id, user_id: userId }),
       });
       if (!res.ok) throw new Error("Failed to delete item");
-      setItems(prev => prev.filter(i => i.id !== id));
+      setItems(prev => prev.filter(i => i.id !== confirmDelete.id));
     } catch {
       setError("Failed to delete item");
     } finally {
       setLoading(false);
+      setConfirmDelete({ open: false, id: null });
     }
   }
 
@@ -267,17 +272,18 @@ export default function ItemsPage() {
                     required
                   />
                   <div className="flex gap-2">
-                    <button type="submit" className="rounded bg-green-600 px-3 py-1 text-white">Save</button>
-                    <button
+                    <Button type="submit" variant="primary" className="px-3 py-1">Save</Button>
+                    <Button
                       type="button"
-                      className="rounded bg-gray-400 px-3 py-1 text-white"
+                      variant="secondary"
+                      className="px-3 py-1"
                       onClick={() => {
                         setEditing(null);
                         setEditData({ name: "", price: 0 });
                       }}
                     >
                       Cancel
-                    </button>
+                    </Button>
                   </div>
                 </form>
               ) : (
@@ -296,10 +302,19 @@ export default function ItemsPage() {
                         <span className="rounded-full border border-amber-200 px-2 py-0.5 text-xs uppercase tracking-wide text-amber-600">Demo</span>
                       ) : (
                         <>
-                          <button className="rounded bg-blue-500 px-2 py-1 text-white" onClick={() => handleStockUpdate(item.id!, 'in')}>+ Stock In</button>
-                          <button className="rounded bg-yellow-500 px-2 py-1 text-white" onClick={() => handleStockUpdate(item.id!, 'used')}>+ Used</button>
-                          <button className="rounded bg-yellow-500 px-2 py-1 text-white" onClick={() => handleEdit(item as { id: number; name: string; price: number })}>Edit</button>
-                          <button className="rounded bg-red-600 px-2 py-1 text-white" onClick={() => handleDelete(item.id!)}>Delete</button>
+                          <Button variant="primary" className="px-2 py-1" onClick={() => handleStockUpdate(item.id!, 'in')}>+ Stock In</Button>
+                          <Button variant="secondary" className="px-2 py-1" onClick={() => handleStockUpdate(item.id!, 'used')}>+ Used</Button>
+                          <Button variant="secondary" className="px-2 py-1" onClick={() => handleEdit(item as { id: number; name: string; price: number })}>Edit</Button>
+                          <Button variant="danger" className="px-2 py-1" onClick={() => handleDelete(item.id!)}>Delete</Button>
+                              <ConfirmDialog
+                                open={confirmDelete.open}
+                                title="Delete Item?"
+                                message="Are you sure you want to delete this item? This cannot be undone."
+                                confirmLabel="Delete"
+                                cancelLabel="Cancel"
+                                onConfirm={confirmDeleteItem}
+                                onCancel={() => setConfirmDelete({ open: false, id: null })}
+                              />
                         </>
                       )}
                     </div>

@@ -8,6 +8,8 @@ import KanbanBoard from "./KanbanBoard";
 import TaskForm from "./TaskForm";
 import TaskPhotoUpload from "./TaskPhotoUpload";
 import { BackButton } from "../../../app/components/BackButton";
+import { Button } from "../../../components/Button";
+import { FormField } from "../../../components/FormField";
 import { ensureClientUserId } from "../../../lib/clientUser";
 import { getDemoTasks, getDemoCustomers, getDemoCrew, getDemoProjects } from "../../../lib/demoMockData";
 import { canUseDemoFixtures } from "../../../lib/userIdentity";
@@ -515,18 +517,18 @@ export default function TasksPage() {
             <p className="text-sm text-gray-500">Capture who is on site and what their hourly rate is before assigning work.</p>
           </div>
           <form className="flex flex-col gap-2 md:flex-row md:items-end" onSubmit={handleCrewSubmit}>
-            <div>
-              <label className="block text-xs font-semibold text-gray-500">Name</label>
+            <FormField label="Name" htmlFor="crew-name" error={crewFlash.error}>
               <input
+                id="crew-name"
                 className="mt-1 border rounded px-3 py-2 text-sm"
                 placeholder="Crew member"
                 value={crewForm.name}
                 onChange={e => setCrewForm(form => ({ ...form, name: e.target.value }))}
               />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-500">Rate (R/hr)</label>
+            </FormField>
+            <FormField label="Rate (R/hr)" htmlFor="crew-rate">
               <input
+                id="crew-rate"
                 type="number"
                 min="0"
                 step="5"
@@ -535,18 +537,19 @@ export default function TasksPage() {
                 value={crewForm.rate}
                 onChange={e => setCrewForm(form => ({ ...form, rate: e.target.value }))}
               />
-            </div>
-            <button
+            </FormField>
+            <Button
               type="submit"
-              className="bg-emerald-600 text-white px-4 py-2 rounded font-semibold mt-2 md:mt-0"
+              variant="primary"
+              className="mt-2 md:mt-0"
+              loading={crewSaving}
               disabled={crewSaving}
             >
-              {crewSaving ? "Saving..." : "Add crew"}
-            </button>
+              Add crew
+            </Button>
           </form>
         </div>
-        {crewFlash.success && <div className="text-green-600 text-sm mt-3">{crewFlash.success}</div>}
-        {crewFlash.error && <div className="text-red-600 text-sm mt-3">{crewFlash.error}</div>}
+        {crewFlash.success && <div className="text-green-600 text-sm mt-3" role="status" aria-live="polite">{crewFlash.success}</div>}
         <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {crew.length === 0 && <div className="text-sm text-gray-500">No crew captured yet.</div>}
           {crew.map(member => (
@@ -648,17 +651,18 @@ export default function TasksPage() {
                       </span>
                       {activeTaskId === task.id ? (
                         <>
-                          <button className="text-xs text-green-600" onClick={() => stopTimer(true)}>Save</button>
-                          <button className="text-xs text-gray-500" onClick={() => stopTimer(false)}>Cancel</button>
+                          <Button variant="primary" className="text-xs px-2 py-1" onClick={() => stopTimer(true)}>Save</Button>
+                          <Button variant="secondary" className="text-xs px-2 py-1" onClick={() => stopTimer(false)}>Cancel</Button>
                         </>
                       ) : (
-                        <button
-                          className="text-xs text-indigo-600 disabled:text-gray-400"
+                        <Button
+                          variant="primary"
+                          className="text-xs px-2 py-1"
                           onClick={() => startTimer(task.id)}
                           disabled={!task.crew_member_id}
                         >
                           Start timer
-                        </button>
+                        </Button>
                       )}
                     </div>
                     <TaskPhotoUpload taskId={task.id} onUploaded={url => handlePhotoUploaded(task.id, url)} />
@@ -668,13 +672,14 @@ export default function TasksPage() {
                   </div>
                 </td>
                 <td className="py-3 space-y-2">
-                  <button
-                    className={`${task.billable ? "bg-emerald-600 text-white" : "bg-gray-200 text-gray-500 cursor-not-allowed"} px-3 py-1 rounded text-xs`}
+                  <Button
+                    variant={task.billable ? "primary" : "secondary"}
+                    className="px-3 py-1 text-xs"
                     onClick={() => openInvoice(task)}
                     disabled={!task.billable}
                   >
                     Invoice
-                  </button>
+                  </Button>
                   {!task.billable && <p className="text-xs text-gray-500">Switch to billable to invoice this work.</p>}
                 </td>
               </tr>
@@ -712,8 +717,8 @@ export default function TasksPage() {
             </select>
             {invoiceError && <div className="text-red-600 text-sm mt-2">{invoiceError}</div>}
             <div className="flex justify-end gap-3 mt-6">
-              <button className="text-gray-600" onClick={closeInvoiceModal}>Cancel</button>
-              <button className="bg-indigo-600 text-white px-4 py-2 rounded" onClick={handleInvoiceConfirm}>Go to invoice</button>
+              <Button variant="secondary" onClick={closeInvoiceModal}>Cancel</Button>
+              <Button variant="primary" onClick={handleInvoiceConfirm}>Go to invoice</Button>
             </div>
           </div>
         </div>

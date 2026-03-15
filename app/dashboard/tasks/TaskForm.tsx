@@ -1,5 +1,7 @@
 "use client";
 import { useState } from "react";
+import { Button } from "../../../components/Button";
+import { FormField } from "../../../components/FormField";
 import { InlineCreateModal } from "../../components/InlineCreateModal";
 
 type TaskFormProps = {
@@ -81,23 +83,29 @@ export default function TaskForm({ onAdd, crew = [], projects = [], userId, comp
 
   return (
     <div className="mb-4 flex flex-col gap-2 w-full max-w-xl">
-      <input
-        className="border p-2 rounded"
-        placeholder="Task Name"
-        value={name}
-        onChange={e => setName(e.target.value)}
-        required
-      />
-      <input
-        className="border p-2 rounded"
-        placeholder="Description"
-        value={description}
-        onChange={e => setDescription(e.target.value)}
-      />
+      <FormField label="Task Name" htmlFor="task-name" error={error}>
+        <input
+          id="task-name"
+          className="border p-2 rounded w-full"
+          placeholder="Task Name"
+          value={name}
+          onChange={e => setName(e.target.value)}
+          required
+        />
+      </FormField>
+      <FormField label="Description" htmlFor="task-desc">
+        <input
+          id="task-desc"
+          className="border p-2 rounded w-full"
+          placeholder="Description"
+          value={description}
+          onChange={e => setDescription(e.target.value)}
+        />
+      </FormField>
       {crew.length > 0 && (
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Crew Member</label>
+        <FormField label="Crew Member" htmlFor="crew-select">
           <select
+            id="crew-select"
             className="border p-2 rounded w-full"
             value={assigneeId}
             onChange={e => setAssigneeId(e.target.value)}
@@ -109,41 +117,45 @@ export default function TaskForm({ onAdd, crew = [], projects = [], userId, comp
               </option>
             ))}
           </select>
-        </div>
+        </FormField>
       )}
       {projectsList.length > 0 && (
         <div className="flex gap-2">
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Project</label>
-            <select
-              className="border p-2 rounded w-full"
-              value={projectId}
-              onChange={e => setProjectId(e.target.value)}
-            >
-              <option value="">Select project</option>
-              {projectsList.map(project => (
-                <option key={project.id} value={project.id}>{project.name}</option>
-              ))}
-            </select>
+            <FormField label="Project" htmlFor="project-select">
+              <select
+                id="project-select"
+                className="border p-2 rounded w-full"
+                value={projectId}
+                onChange={e => setProjectId(e.target.value)}
+              >
+                <option value="">Select project</option>
+                {projectsList.map(project => (
+                  <option key={project.id} value={project.id}>{project.name}</option>
+                ))}
+              </select>
+            </FormField>
           </div>
-          <button
+          <Button
             type="button"
+            variant="secondary"
             onClick={() => setShowProjectModal(true)}
-            className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded border border-gray-300 text-sm font-medium self-end"
+            className="self-end"
             title="Add new project"
           >
             +
-          </button>
+          </Button>
         </div>
       )}
       {projectsList.length === 0 && (
-        <button
+        <Button
           type="button"
+          variant="secondary"
           onClick={() => setShowProjectModal(true)}
-          className="w-full p-2 border border-dashed border-blue-300 rounded text-blue-600 hover:bg-blue-50 font-medium"
+          className="w-full border-dashed border-blue-300 text-blue-600 hover:bg-blue-50 font-medium"
         >
           + Add Project
-        </button>
+        </Button>
       )}
       <div className="flex items-center gap-4 text-sm">
         <span className="font-semibold">Task type</span>
@@ -156,13 +168,14 @@ export default function TaskForm({ onAdd, crew = [], projects = [], userId, comp
           Non-billable
         </label>
       </div>
-      <button 
-        className="bg-blue-600 text-white px-4 py-2 rounded min-w-[100px] hover:bg-blue-700" 
+      <Button
         type="button"
+        variant="primary"
+        className="min-w-[100px]"
         onClick={handleSubmit}
       >
         Add
-      </button>
+      </Button>
       {success && <div className="text-green-600 text-sm mt-1">{success}</div>}
       {error && <div className="text-red-600 text-sm mt-1">{error}</div>}
 

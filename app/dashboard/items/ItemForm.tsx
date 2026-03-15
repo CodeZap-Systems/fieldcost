@@ -1,5 +1,8 @@
 "use client";
 import { useState } from "react";
+import { Button } from "../../../components/Button";
+import { FormField } from "../../../components/FormField";
+import { Feedback } from "../../../components/Feedback";
 
 type ItemPayload = { 
   name: string; 
@@ -83,27 +86,33 @@ export default function ItemForm({ onAdd }: { onAdd: (item: ItemPayload) => Prom
   return (
     <form onSubmit={handleSubmit} className="mb-4 space-y-4 w-full max-w-2xl">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <input
-          className="border p-2 rounded"
-          placeholder="Item Name"
-          value={name}
-          onChange={e => setName(e.target.value)}
-          required
-        />
-        <select
-          className="border p-2 rounded"
-          value={itemType}
-          onChange={e => setItemType(e.target.value as ItemPayload["item_type"])}
-        >
-          <option value="physical">Physical item</option>
-          <option value="service">Service</option>
-        </select>
+        <FormField label="Item Name" htmlFor="item-name" error={error}>
+          <input
+            id="item-name"
+            className="border p-2 rounded w-full"
+            placeholder="Item Name"
+            value={name}
+            onChange={e => setName(e.target.value)}
+            required
+          />
+        </FormField>
+        <FormField label="Type" htmlFor="item-type">
+          <select
+            id="item-type"
+            className="border p-2 rounded w-full"
+            value={itemType}
+            onChange={e => setItemType(e.target.value as ItemPayload["item_type"])}
+          >
+            <option value="physical">Physical item</option>
+            <option value="service">Service</option>
+          </select>
+        </FormField>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Cost Price (R)</label>
+        <FormField label="Cost Price (R)" htmlFor="cost-price">
           <input
+            id="cost-price"
             className="w-full border p-2 rounded"
             placeholder="0.00"
             type="number"
@@ -112,10 +121,10 @@ export default function ItemForm({ onAdd }: { onAdd: (item: ItemPayload) => Prom
             value={cost}
             onChange={e => setCost(Number(e.target.value))}
           />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Selling Price (R)*</label>
+        </FormField>
+        <FormField label="Selling Price (R)*" htmlFor="selling-price">
           <input
+            id="selling-price"
             className="w-full border p-2 rounded"
             placeholder="0.00"
             type="number"
@@ -125,15 +134,14 @@ export default function ItemForm({ onAdd }: { onAdd: (item: ItemPayload) => Prom
             onChange={e => setPrice(Number(e.target.value))}
             required
           />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Margin</label>
-          <div className="w-full p-2 rounded bg-gray-50 border border-gray-300 flex items-center">
+        </FormField>
+        <FormField label="Margin" htmlFor="margin-display">
+          <div id="margin-display" className="w-full p-2 rounded bg-gray-50 border border-gray-300 flex items-center">
             <span className="font-semibold">
               R{margin.toFixed(2)} ({marginPercent}%)
             </span>
           </div>
-        </div>
+        </FormField>
       </div>
 
       {/* Photo Upload Section */}
@@ -152,41 +160,70 @@ export default function ItemForm({ onAdd }: { onAdd: (item: ItemPayload) => Prom
                   alt={`Preview ${index + 1}`}
                   className="w-full h-32 object-cover rounded border border-gray-300"
                 />
-                <button
+                <Button
                   type="button"
+                  variant="danger"
+                  className="absolute top-1 right-1 w-6 h-6 flex items-center justify-center"
                   onClick={() => removePhoto(index)}
-                  className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-700"
+                  aria-label="Remove photo"
                 >
                   ×
-                </button>
+                </Button>
               </div>
             ))}
           </div>
         )}
 
-        {/* Upload Input */}
-        {photos.length < 2 && (
-          <label className="flex items-center justify-center w-full border-2 border-dashed border-gray-300 rounded p-4 cursor-pointer hover:border-blue-400 bg-gray-50">
-            <div className="text-center">
-              <p className="text-sm text-gray-600">Click to upload photo</p>
-              <p className="text-xs text-gray-500">PNG, JPG up to {2 - photos.length} remaining</p>
+        return (
+          <form onSubmit={handleSubmit} className="mb-4 space-y-4 w-full max-w-2xl">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField label="Item Name" htmlFor="item-name" error={error}>
+                <input
+                  id="item-name"
+                  className="border p-2 rounded w-full"
+                  placeholder="Item Name"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  required
+                />
+              </FormField>
+              <FormField label="Type" htmlFor="item-type">
+                <select
+                  id="item-type"
+                  className="border p-2 rounded w-full"
+                  value={itemType}
+                  onChange={e => setItemType(e.target.value as ItemPayload["item_type"])}
+                >
+                  <option value="physical">Physical</option>
+                  <option value="service">Service</option>
+                </select>
+              </FormField>
+              <FormField label="Cost" htmlFor="item-cost">
+                <input
+                  id="item-cost"
+                  className="border p-2 rounded w-full"
+                  type="number"
+                  min="0"
+                  value={cost}
+                  onChange={e => setCost(Number(e.target.value))}
+                />
+              </FormField>
+              <FormField label="Selling Price" htmlFor="item-price">
+                <input
+                  id="item-price"
+                  className="border p-2 rounded w-full"
+                  type="number"
+                  min="0"
+                  value={price}
+                  onChange={e => setPrice(Number(e.target.value))}
+                  required
+                />
+              </FormField>
             </div>
-            <input
-              type="file"
-              multiple
-              accept="image/*"
-              onChange={handlePhotoSelect}
-              className="hidden"
-            />
-          </label>
-        )}
-      </div>
-
-      <button className="bg-blue-600 text-white px-4 py-2 rounded font-semibold hover:bg-blue-700 w-full md:w-auto" type="submit">
-        Add Item
-      </button>
-      {success && <div className="text-green-600 text-sm">{success}</div>}
-      {error && <div className="text-red-600 text-sm">{error}</div>}
-    </form>
-  );
-}
+            <div className="flex gap-4 items-center">
+              <Button type="submit" variant="primary" loading={false}>Add Item</Button>
+              <Feedback type="success" message={success || ""} />
+              <Feedback type="error" message={error || ""} />
+            </div>
+          </form>
+        );

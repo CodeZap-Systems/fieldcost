@@ -1,37 +1,39 @@
-"use client";
-import React from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { supabase } from "../../lib/supabaseClient";
-import { DEMO_ADMIN_USER_ID, DEMO_SUBCONTRACTOR_USER_ID, normalizeUserId } from "../../lib/userIdentity";
-import { persistActiveCompanyId, readActiveCompanyId } from "../../lib/companySwitcher";
-import { SelectableCompanySwitcher, type CompanyOption } from "./SelectableCompanySwitcher";
-import { EnvironmentBadge } from "./EnvironmentBadge";
-import { isDemoCompany } from "@/lib/demoConstants";
-import { useRouter } from "next/navigation";
-
-const MANAGEMENT_SECTIONS = [
-  {
-    label: "Projects",
-    links: [
-      { href: "/dashboard/projects", text: "View Projects" },
-      { href: "/dashboard/projects?page=add", text: "Add Project" },
-      { href: "/dashboard/projects?page=reports", text: "Project Reports" },
-    ],
-  },
-  {
-    label: "Customers",
-    links: [
-      { href: "/dashboard/customers", text: "View Customers" },
-      { href: "/dashboard/customers?page=add", text: "Add Customer" },
-      { href: "/dashboard/customers?page=reports", text: "Customer Reports" },
-    ],
-  },
-  {
-    label: "Vendors",
-    links: [
-      { href: "/dashboard/vendors", text: "View Vendors" },
-      { href: "/dashboard/vendors?page=add", text: "Add Vendor" },
+  return (
+    <nav className="w-64 bg-white border-r h-full flex flex-col" aria-label="Main navigation">
+      <div className="flex items-center gap-2 px-4 py-3 border-b">
+        <Link href="/" className="text-xl font-bold text-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500" tabIndex={0}>FieldCost</Link>
+        {activeCompanyId && showBadge && <EnvironmentBadge companyId={activeCompanyId} />}
+      </div>
+      <div className="flex-1 overflow-y-auto">
+        {sections.map(section => (
+          <div key={section.label} className="mb-4">
+            <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">{section.label}</div>
+            <ul>
+              {section.links.map(link => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className={`block px-4 py-2 rounded transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${pathname === link.href ? 'bg-blue-100 text-blue-700 font-semibold' : 'hover:bg-gray-100 text-gray-700'}`}
+                    aria-current={pathname === link.href ? 'page' : undefined}
+                    tabIndex={0}
+                  >
+                    {link.text}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+      <div className="px-4 py-3 border-t flex flex-col gap-2">
+        {authLinks.map(link => (
+          <Link key={link.href} href={link.href} className="text-blue-600 hover:underline text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500" tabIndex={0}>
+            {link.label}
+          </Link>
+        ))}
+      </div>
+    </nav>
+  );
     ],
   },
   {
@@ -248,6 +250,18 @@ export default function AppNav() {
               </div>
             </div>
           ))}
+          {/* Support and Suggestions section */}
+          <div className="workspace-nav-section">
+            <span>Support</span>
+            <div className="workspace-nav-links">
+              <Link href="/dashboard/support" aria-current={pathname === "/dashboard/support" ? "page" : undefined}>
+                Log a Support Ticket
+              </Link>
+              <Link href="/dashboard/suggestions" aria-current={pathname === "/dashboard/suggestions" ? "page" : undefined}>
+                Suggestions
+              </Link>
+            </div>
+          </div>
           {/* Company Settings - only show if authenticated */}
           {isAuthenticated && activeCompanyId && (
             <div className="workspace-nav-section">
@@ -255,6 +269,9 @@ export default function AppNav() {
               <div className="workspace-nav-links">
                 <Link href="/dashboard/company-settings" aria-current={pathname === "/dashboard/company-settings" ? "page" : undefined}>
                   Company Settings
+                </Link>
+                <Link href="/dashboard/admin" aria-current={pathname === "/dashboard/admin" ? "page" : undefined}>
+                  Admin
                 </Link>
               </div>
             </div>

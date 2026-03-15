@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import CustomerForm, { type CustomerFormState } from "./CustomerForm";
 import { BackButton } from "../../../app/components/BackButton";
+import { Button } from "../../../components/Button";
+import { ConfirmDialog } from "../../../components/ConfirmDialog";
 import { ensureClientUserId } from "../../../lib/clientUser";
 import { getDemoCustomers } from "../../../lib/demoMockData";
 import { canUseDemoFixtures } from "../../../lib/userIdentity";
@@ -12,6 +14,7 @@ import { readActiveCompanyId } from "../../../lib/companySwitcher";
 type CustomerRow = { id: number; name: string; email: string; demo?: boolean };
 
 export default function CustomersPage() {
+  const [confirmDelete, setConfirmDelete] = useState<{ open: boolean; id: number | null }>({ open: false, id: null });
   const [customers, setCustomers] = useState<CustomerRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -153,21 +156,26 @@ export default function CustomersPage() {
   }
 
   async function handleDelete(id: number) {
-    if (!userId) return;
+    setConfirmDelete({ open: true, id });
+  }
+
+  async function confirmDeleteCustomer() {
+    if (!userId || confirmDelete.id === null) return;
     setLoading(true);
     setError(null);
     try {
       const res = await fetch("/api/customers", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, user_id: userId }),
+        body: JSON.stringify({ id: confirmDelete.id, user_id: userId }),
       });
       if (!res.ok) throw new Error("Failed to delete customer");
-      setCustomers(prev => prev.filter(c => c.id !== id));
+      setCustomers(prev => prev.filter(c => c.id !== confirmDelete.id));
     } catch {
       setError("Failed to delete customer");
     } finally {
       setLoading(false);
+      setConfirmDelete({ open: false, id: null });
     }
   }
 
@@ -207,16 +215,25 @@ export default function CustomersPage() {
                   onChange={e => setEditData(ed => ({ ...ed, email: e.target.value }))}
                   required
                 />
-                <button className="bg-green-600 text-white px-2 py-1 rounded" type="submit">Save</button>
-                <button className="bg-gray-400 text-white px-2 py-1 rounded" type="button" onClick={() => setEditing(null)}>Cancel</button>
+                <Button variant="primary" className="px-2 py-1" type="submit">Save</Button>
+                <Button variant="secondary" className="px-2 py-1" type="button" onClick={() => setEditing(null)}>Cancel</Button>
               </form>
             ) : (
               <>
                 <span className="font-semibold">{c.name}</span> — {c.email}
                 {!c.demo ? (
                   <>
-                    <button className="bg-yellow-500 text-white px-2 py-1 rounded ml-2" onClick={() => handleEdit(c)}>Edit</button>
-                    <button className="bg-red-600 text-white px-2 py-1 rounded ml-2" onClick={() => handleDelete(c.id!)}>Delete</button>
+                    <Button variant="secondary" className="px-2 py-1 ml-2" onClick={() => handleEdit(c)}>Edit</Button>
+                    <Button variant="danger" className="px-2 py-1 ml-2" onClick={() => handleDelete(c.id!)}>Delete</Button>
+                        <ConfirmDialog
+                          open={confirmDelete.open}
+                          title="Delete Customer?"
+                          message="Are you sure you want to delete this customer? This cannot be undone."
+                          confirmLabel="Delete"
+                          cancelLabel="Cancel"
+                          onConfirm={confirmDeleteCustomer}
+                          onCancel={() => setConfirmDelete({ open: false, id: null })}
+                        />
                   </>
                 ) : (
                   <span className="ml-2 rounded-full border border-amber-200 px-2 py-0.5 text-xs uppercase tracking-wide text-amber-600">Demo</span>

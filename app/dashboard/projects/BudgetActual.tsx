@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { Button } from "../../../components/Button";
 
 type BudgetActualProps = {
   projectId: number;
@@ -41,8 +42,8 @@ export default function BudgetActual({ projectId, userId }: BudgetActualProps) {
       const res = await fetch("/api/budgets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ project_id: projectId, planned_amount: planned, actual_amount: actual, user_id: userId }),
-      });
+      {loading && <div className="text-blue-600" role="status" aria-live="polite">Loading...</div>}
+      {error && <div className="text-red-600" role="alert" aria-live="assertive">{error}</div>}
       if (!res.ok) throw new Error();
       await res.json();
       setLoading(false);
@@ -64,7 +65,7 @@ export default function BudgetActual({ projectId, userId }: BudgetActualProps) {
         </label>
         <label className="font-semibold">Actual Spend (R):
           <input className="border p-2 rounded w-full" type="number" min="0" value={actual} onChange={e => setActual(Number(e.target.value))} required />
-        </label>
+        <Button type="submit" variant="primary" className="mt-2 self-end">Save</Button>
         <button className="bg-blue-600 text-white px-4 py-2 rounded mt-2 self-end" type="submit">Save</button>
       </form>
       <div className="mt-2 text-sm text-gray-700">Difference: <span className={actual > planned ? 'text-red-600' : 'text-green-600'}>R{(planned - actual).toFixed(2)}</span></div>

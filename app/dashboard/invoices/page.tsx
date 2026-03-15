@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { Suspense, useCallback, useEffect, useState } from "react";
+import { Button } from "../../../components/Button";
+import { ConfirmDialog } from "../../../components/ConfirmDialog";
 import { useSearchParams } from "next/navigation";
 import InvoiceForm from "./InvoiceForm";
 import { generateInvoicesPdf } from "../../../lib/invoicePdfGenerator";
@@ -56,6 +58,7 @@ function InvoicesPageContent() {
   const [exporting, setExporting] = useState<"ledger" | "lines" | "pdf" | null>(null);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [pdfTemplate, setPdfTemplate] = useState<"standard" | "detailed">("standard");
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const allowDemoData = userId ? canUseDemoFixtures(userId) : false;
 
   useEffect(() => {
@@ -252,6 +255,7 @@ function InvoicesPageContent() {
       setError("Failed to delete invoice");
     } finally {
       setLoading(false);
+      setConfirmDeleteId(null);
     }
   }
 
@@ -274,30 +278,33 @@ function InvoicesPageContent() {
       if (payload.error) throw new Error(payload.error);
       if (payload.synced) {
         setSyncMessage(`Synced ${payload.synced} offline invoice${payload.synced === 1 ? "" : "s"}.`);
-      } else {
-        setSyncMessage("No offline invoices queued.");
-      }
-      await loadInvoices({ quiet: true });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to sync invoices";
-      setError(message);
-    } finally {
-      setSyncing(false);
-    }
-  }
-
-  async function handleExport(format: "ledger" | "lines" | "pdf") {
-    if (!userId) {
-      setError("Workspace context missing for export.");
-      return;
-    }
-    if (usingDemoData) {
-      setError("Demo invoices cannot be exported.");
-      return;
-    }
-
-    setExporting(format);
-    setError(null);
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => handleExport("pdf")}
+            loading={exporting === "pdf"}
+            disabled={usingDemoData || loading}
+          >
+            {selectedCount > 0 ? "Print selected (PDF)" : "Download PDF"}
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => handleExport("ledger")}
+            loading={exporting === "ledger"}
+            disabled={usingDemoData || loading}
+          >
+            Export ledger CSV
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => handleExport("lines")}
+            loading={exporting === "lines"}
+            disabled={usingDemoData || loading}
+          >
+            Export line items CSV
+          </Button>
     try {
       const params = new URLSearchParams({ format, user_id: userId });
       if (selectedIds.length) {
@@ -371,13 +378,14 @@ function InvoicesPageContent() {
             className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {exporting === "pdf" ? "Generating PDF…" : selectedCount > 0 ? "Print selected (PDF)" : "Download PDF"}
-          </button>
-          <button
-            type="button"
-            onClick={() => handleExport("ledger")}
-            disabled={Boolean(exporting) || usingDemoData || loading}
-            className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+          <Button
+            onClick={handleSyncOffline}
+            loading={syncing}
+            variant="secondary"
+            disabled={syncing}
           >
+            {syncing ? "Syncing…" : "Retry sync"}
+          </Button>
             {exporting === "ledger" ? "Exporting ledger…" : "Export ledger CSV"}
           </button>
           <button
@@ -418,14 +426,14 @@ function InvoicesPageContent() {
         <div>
           {selectedCount > 0 ? `${selectedCount} invoice${selectedCount === 1 ? "" : "s"} selected for print/export.` : "Select processed invoices below to print specific documents."}
         </div>
-        <button
+        <Button
           type="button"
+          variant="secondary"
           onClick={toggleSelectAll}
           disabled={usingDemoData || !selectableCount || loading}
-          className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {allSelected ? "Clear selection" : "Select all"}
-        </button>
+        </Button>
       </div>
       <InvoiceForm onAdd={handleAdd} preset={preset} companyId={companyId} />
       {loading && <div className="text-center py-8 text-blue-600 font-semibold">Loading invoices…</div>}
@@ -534,8 +542,9 @@ function InvoicesPageContent() {
                     </form>
                   ) : (
                     <div className="flex gap-2">
-                      <button
-                        className="flex-1 rounded border border-blue-300 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100 transition-colors"
+                      <Button
+                        className="flex-1"
+                        variant="secondary"
                         onClick={() => {
                           const invoiceData = {
                             id: inv.id,
@@ -565,21 +574,32 @@ function InvoicesPageContent() {
                         }}
                       >
                         🖨 Print PDF
-                      </button>
+                      </Button>
                       {!inv.demo && (
                         <>
-                          <button
-                            className="flex-1 rounded border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-700 hover:bg-amber-100 transition-colors"
+                          <Button
+                            className="flex-1"
+                            variant="secondary"
                             onClick={() => handleEdit(inv)}
                           >
                             ✎ Edit
-                          </button>
-                          <button
-                            className="flex-1 rounded border border-red-300 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-100 transition-colors"
-                            onClick={() => handleDelete(inv.id)}
+                          </Button>
+                          <Button
+                            className="flex-1"
+                            variant="danger"
+                            onClick={() => setConfirmDeleteId(inv.id)}
                           >
                             🗑 Delete
-                          </button>
+                          </Button>
+                              <ConfirmDialog
+                                open={confirmDeleteId !== null}
+                                title="Delete Invoice?"
+                                message="Are you sure you want to delete this invoice? This action cannot be undone."
+                                confirmLabel="Delete"
+                                cancelLabel="Cancel"
+                                onConfirm={() => confirmDeleteId !== null && handleDelete(confirmDeleteId)}
+                                onCancel={() => setConfirmDeleteId(null)}
+                              />
                         </>
                       )}
                     </div>

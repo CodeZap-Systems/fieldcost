@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { Feedback } from "../../../components/Feedback";
 
 interface ProjectFormProps {
   onAdd: (project: { name: string; description: string; planned_budget?: number; actual_budget?: number }) => Promise<boolean>;
@@ -71,9 +72,58 @@ export default function ProjectForm({ onAdd, disabled, limit = 3 }: ProjectFormP
         disabled={disabled}
       />
       <button className="bg-blue-600 text-white px-3 py-1 rounded" type="submit" disabled={disabled}>Add</button>
-      {success && <div className="text-green-600 text-sm mt-1">{success}</div>}
-      {error && <div className="text-red-600 text-sm mt-1">{error}</div>}
+      <Feedback type="success" message={success || ""} />
+      <Feedback type="error" message={error || ""} />
       {disabled && <div className="text-yellow-600 text-sm mt-1">Project limit reached ({limit})</div>}
     </form>
   );
 }
+              <FormField label="Project Name" htmlFor="project-name" error={error}>
+                <input
+                  id="project-name"
+                  className="border p-2 rounded w-full"
+                  placeholder="Project Name"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  required
+                  disabled={disabled}
+                />
+              </FormField>
+              <FormField label="Description" htmlFor="project-desc">
+                <input
+                  id="project-desc"
+                  className="border p-2 rounded w-full"
+                  placeholder="Description"
+                  value={description}
+                  onChange={e => setDescription(e.target.value)}
+                  disabled={disabled}
+                />
+              </FormField>
+              <FormField label="Planned Budget (R)" htmlFor="planned-budget">
+                <input
+                  id="planned-budget"
+                  className="border p-2 rounded w-full"
+                  type="number"
+                  min="0"
+                  placeholder="Planned Budget (R)"
+                  value={plannedBudget}
+                  onChange={e => setPlannedBudget(e.target.value === "" ? "" : Number(e.target.value))}
+                  disabled={disabled}
+                />
+              </FormField>
+              <FormField label="Actual Budget (R)" htmlFor="actual-budget">
+                <input
+                  id="actual-budget"
+                  className="border p-2 rounded w-full"
+                  type="number"
+                  min="0"
+                  placeholder="Actual Budget (R)"
+                  value={actualBudget}
+                  onChange={e => setActualBudget(e.target.value === "" ? "" : Number(e.target.value))}
+                  disabled={disabled}
+                />
+              </FormField>
+              <Button type="submit" variant="primary" disabled={disabled}>Add</Button>
+              {success && <div className="text-green-600 text-sm mt-1" role="status" aria-live="polite">{success}</div>}
+              {error && <div className="text-red-600 text-sm mt-1" role="alert" aria-live="assertive">{error}</div>}
+              {disabled && <div className="text-yellow-600 text-sm mt-1">Project limit reached ({limit})</div>}

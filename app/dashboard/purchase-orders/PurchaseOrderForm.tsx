@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Feedback } from "../../../components/Feedback";
 import { ensureClientUserId } from "../../../lib/clientUser";
 
 interface Supplier {
@@ -108,6 +109,7 @@ export function PurchaseOrderForm({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string>("");
+  const [success, setSuccess] = useState<string>("");
 
   // Fetch suppliers and projects
   useEffect(() => {
@@ -157,6 +159,7 @@ export function PurchaseOrderForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setSuccess("");
 
     if (!selectedSupplierId) {
       setError("Supplier is required");
@@ -204,9 +207,11 @@ export function PurchaseOrderForm({
         user_id: userId,
       } as unknown as POFormData;
 
-      const success = await onSubmit(payload);
-      if (!success) {
+      const ok = await onSubmit(payload);
+      if (!ok) {
         setError("Failed to save purchase order");
+      } else {
+        setSuccess("Purchase order saved successfully!");
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -221,11 +226,9 @@ export function PurchaseOrderForm({
         {existingPO ? "Edit Purchase Order" : "Create New Purchase Order"}
       </h2>
 
-      {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded">
-          {error}
-        </div>
-      )}
+
+      <Feedback type="error" message={error || ""} />
+      <Feedback type="success" message={success || ""} />
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Supplier and Project Selection */}

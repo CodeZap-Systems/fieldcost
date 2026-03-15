@@ -1,70 +1,87 @@
 "use client";
 import { useState, type ChangeEvent, type FormEvent } from "react";
 
-type Address = {
-  address: string;
-  code: string;
-};
+import { Button } from "../../../components/Button";
+import { FormField } from "../../../components/FormField";
+import { Feedback } from "../../../components/Feedback";
 
-export type CustomerFormState = {
-  name: string;
-  category: string;
-  active: boolean;
-  cashSale: boolean;
-  autoAllocate: boolean;
-  acceptsElectronic: boolean;
-  viewOnline: boolean;
-  creditLimit: string;
-  vatNumber: string;
-  salesRep: string;
-  openingBalance: string;
-  openingDate: string;
-  email: string;
-  contactName: string;
-  telephone: string;
-  mobile: string;
-  fax: string;
-  web: string;
-  postal: Address;
-  delivery: Address;
-  statementDistribution: string;
-  defaultDiscount: string;
-  defaultPriceList: string;
-  defaultVatType: string;
-};
+function createDefaultForm() {
+  return {
+    cashSale: false,
+    autoAllocate: false,
+    acceptsElectronic: false,
+    viewOnline: false,
+    creditLimit: "",
+    vatNumber: "",
+    salesRep: "",
+    openingBalance: "",
+    openingDate: "",
+    email: "",
+    contactName: "",
+    telephone: "",
+    mobile: "",
+    fax: "",
+    web: "",
+    postal: { address: "", code: "" },
+    delivery: { address: "", code: "" },
+    statementDistribution: "Email",
+    defaultDiscount: "0.00",
+    defaultPriceList: "Default Price List",
+    defaultVatType: "No Default",
+    name: "",
+    category: "",
+    active: true,
+  };
+}
 
-type CustomerFormProps = {
-  onAdd: (customer: CustomerFormState) => Promise<boolean>;
-};
-
-const createDefaultForm = (): CustomerFormState => ({
-  name: "",
-  category: "",
-  active: true,
-  cashSale: false,
-  autoAllocate: false,
-  acceptsElectronic: false,
-  viewOnline: false,
-  creditLimit: "",
-  vatNumber: "",
-  salesRep: "",
-  openingBalance: "",
-  openingDate: "",
-  email: "",
-  contactName: "",
-  telephone: "",
-  mobile: "",
-  fax: "",
-  web: "",
-  postal: { address: "", code: "" },
-  delivery: { address: "", code: "" },
-  statementDistribution: "Email",
-  defaultDiscount: "0.00",
-  defaultPriceList: "Default Price List",
-  defaultVatType: "No Default"
-});
-
-export default function CustomerForm({ onAdd }: CustomerFormProps) {
+  return (
+    <form onSubmit={handleSubmit} className="bg-gray-50 p-6 rounded shadow max-w-4xl mx-auto">
+      <div className="mb-4 flex gap-2 border-b">
+        {tabs.map(t => (
+          <Button
+            key={t}
+            type="button"
+            variant={tab === t ? "primary" : "secondary"}
+            className={`px-4 py-2 font-semibold border-b-2 ${tab === t ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600'}`}
+            onClick={() => setTab(t)}
+          >
+            {t}
+          </Button>
+        ))}
+      </div>
+      {tab === "Details" && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField label="Name" htmlFor="customer-name" error={error}>
+            <input
+              id="customer-name"
+              className="border p-2 rounded w-full"
+              placeholder="Name"
+              name="name"
+              value={form.name}
+              onChange={handleChange}
+              required
+            />
+          </FormField>
+          <FormField label="Email" htmlFor="customer-email">
+            <input
+              id="customer-email"
+              className="border p-2 rounded w-full"
+              placeholder="Email"
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+              required
+            />
+          </FormField>
+        </div>
+      )}
+      <div className="mt-4 flex gap-2 items-center">
+        <Button type="submit" variant="primary">Add</Button>
+        <Feedback type="success" message={success || ""} />
+        <Feedback type="error" message={error || ""} />
+      </div>
+    </form>
+  );
   const [tab, setTab] = useState("Details");
   const [form, setForm] = useState<CustomerFormState>(createDefaultForm());
   const [success, setSuccess] = useState("");
