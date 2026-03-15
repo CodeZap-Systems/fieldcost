@@ -162,19 +162,43 @@ alter table budgets enable row level security;
 -- Policy: users can access their own rows
 drop policy if exists "Users can access own projects" on projects;
 create policy "Users can access own projects" on projects
-  for all using (auth.uid() = user_id);
+  for all using (
+    exists (
+      select 1 from company_profiles 
+      where company_profiles.id = projects.company_id 
+      and company_profiles.user_id = auth.uid()
+    )
+  );
 
 drop policy if exists "Users can access own customers" on customers;
 create policy "Users can access own customers" on customers
-  for all using (auth.uid() = user_id);
+  for all using (
+    exists (
+      select 1 from company_profiles 
+      where company_profiles.id = customers.company_id 
+      and company_profiles.user_id = auth.uid()
+    )
+  );
 
 drop policy if exists "Users can access own items" on items;
 create policy "Users can access own items" on items
-  for all using (auth.uid() = user_id);
+  for all using (
+    exists (
+      select 1 from company_profiles 
+      where company_profiles.id = items.company_id 
+      and company_profiles.user_id = auth.uid()
+    )
+  );
 
 drop policy if exists "Users can access own crew" on crew_members;
 create policy "Users can access own crew" on crew_members
-  for all using (auth.uid() = user_id);
+  for all using (
+    exists (
+      select 1 from company_profiles 
+      where company_profiles.id = crew_members.company_id 
+      and company_profiles.user_id = auth.uid()
+    )
+  );
 
 -- TIER 2 FEATURE TABLES
 
@@ -289,15 +313,33 @@ create policy "Users can access own chain of custody" on photo_evidence_chain
 
 drop policy if exists "Users can access own tasks" on tasks;
 create policy "Users can access own tasks" on tasks
-  for all using (auth.uid() = user_id);
+  for all using (
+    exists (
+      select 1 from company_profiles 
+      where company_profiles.id = tasks.company_id 
+      and company_profiles.user_id = auth.uid()
+    )
+  );
 
 drop policy if exists "Users can access own invoices" on invoices;
 create policy "Users can access own invoices" on invoices
-  for all using (auth.uid() = user_id);
+  for all using (
+    exists (
+      select 1 from company_profiles 
+      where company_profiles.id = invoices.company_id 
+      and company_profiles.user_id = auth.uid()
+    )
+  );
 
 drop policy if exists "Users can access own invoice lines" on invoice_line_items;
 create policy "Users can access own invoice lines" on invoice_line_items
-  for all using (auth.uid() = user_id);
+  for all using (
+    exists (
+      select 1 from company_profiles 
+      where company_profiles.id = invoice_line_items.company_id 
+      and company_profiles.user_id = auth.uid()
+    )
+  );
 
 drop policy if exists "Users can access own company profile" on company_profiles;
 create policy "Users can access own company profile" on company_profiles
@@ -305,4 +347,10 @@ create policy "Users can access own company profile" on company_profiles
 
 drop policy if exists "Users can access own budgets" on budgets;
 create policy "Users can access own budgets" on budgets
-  for all using (auth.uid() = user_id);
+  for all using (
+    exists (
+      select 1 from company_profiles 
+      where company_profiles.id = budgets.company_id 
+      and company_profiles.user_id = auth.uid()
+    )
+  );

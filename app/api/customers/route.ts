@@ -1,99 +1,79 @@
 import { NextResponse } from 'next/server';
 import { supabaseServer } from '../../../lib/supabaseServer';
-import { resolveServerUserId } from '../../../lib/serverUser';
-import { ensureAuthUser, EnsureAuthUserError } from '../../../lib/demoAuth';
-import { DEMO_COMPANY_ID } from '../../../lib/demoConstants';
-import { isDemoUserId } from '../../../lib/userIdentity';
-import { getCompanyContext } from '../../../lib/companyContext';
 
-// Get authenticated user with fallback to demo user
-async function resolveUserContext(req: Request) {
+// Verify user has access to a specific company
+async function verifyCompanyAccess(req: Request, companyId: string | number) {
   const authHeader = req.headers.get('authorization');
-  if (authHeader?.startsWith('Bearer ')) {
-    try {
-      const token = authHeader.slice(7);
-      const { data } = await supabaseServer.auth.getUser(token);
-      if (data?.user?.id) {
-        return data.user.id;
-      }
-    } catch (err) {
-      console.warn('[resolveUserContext] Failed to get user from auth header:', err);
-    }
+  if (!authHeader?.startsWith('Bearer ')) {
+    return { userId: null, error: 'Missing authorization header' };
   }
-  const { searchParams } = new URL(req.url);
-  const fallback = searchParams.get('user_id');
-  const resolved = resolveServerUserId(fallback);
-  console.warn(`[resolveUserContext] Using fallback user: ${resolved}`);
-  return resolved;
+
+  try {
+    const token = authHeader.slice(7);
+    const { data } = await supabaseServer.auth.getUser(token);
+    if (!data?.user?.id) {
+      return { userId: null, error: 'Invalid token' };
+    }
+
+    const userId = data.user.id;
+
+    // Check if user owns this company (from company_profiles)
+    const { data: company, error: companyError } = await supabaseServer
+      .from('company_profiles')
+      .select('id, user_id, is_demo')
+      .eq('id', companyId)
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (companyError || !company) {
+      return { userId, error: 'User does not have access to this company' };
+    }
+
+    return { userId, company, error: null };
+  } catch (err) {
+    return { userId: null, error: `Auth error: ${err}` };
+  }
 }
 
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    
-    // Get authenticated user with fallback
-    const userId = await resolveUserContext(req);
     const companyIdParam = searchParams.get('company_id');
-    
-    // CRITICAL: Enforce company_id requirement for data isolation (GDPR/POPIA)
+
+    // CRITICAL: Enforce company_id requirement for data isolation
     if (!companyIdParam || !companyIdParam.trim()) {
-      console.warn(`[SECURITY] GET /api/customers: Missing company_id for user ${userId}`);
       return NextResponse.json(
-        { error: 'company_id parameter is required for data isolation' },
+        { error: 'company_id parameter is required' },
         { status: 400 }
       );
     }
 
-    // Convert company_id: try as integer first, fallback to string
     let companyId: string | number = companyIdParam.trim();
     const asInt = parseInt(companyId, 10);
     if (Number.isFinite(asInt)) {
       companyId = asInt;
     }
-    
-    // Check if this is a demo company
-    let isDemoCompany = false;
-    try {
-      const { data: company, error: companyError } = await supabaseServer
-        .from('company_profiles')
-        .select('is_demo')
-        .eq('id', companyId)
-        .maybeSingle();
 
-      if (!companyError && company) {
-        // Check both the is_demo flag AND the DEMO_COMPANY_ID constant
-        isDemoCompany = company.is_demo === true || companyId === DEMO_COMPANY_ID;
-      }
-    } catch (err) {
-      console.error(`[GET /api/customers] Company lookup error:`, err);
+    // Verify user has access to this company
+    const { userId, company, error: accessError } = await verifyCompanyAccess(req, companyId);
+    if (accessError || !company) {
+      console.warn(`[SECURITY] GET /api/customers: ${accessError} for company ${companyId}`);
+      return NextResponse.json([], { status: 200 }); // Return empty array, don't leak that company exists
     }
 
-    // For DEMO companies, only filter by company_id (skip user_id filter)
-    if (isDemoCompany) {
-      let query = supabaseServer
-        .from('customers')
-        .select('*')
-        .eq('company_id', companyId);
-      
-      const { data, error } = await query;
-      return NextResponse.json(!error && Array.isArray(data) ? data : []);
-    } else {
-      // Live company: require user_id match for security
-      if (userId && userId !== 'demo-user') {
-        let query = supabaseServer
-          .from('customers')
-          .select('*')
-          .eq('user_id', userId)
-          .eq('company_id', companyId);
-        
-        const { data, error } = await query;
-        
-        if (!error && Array.isArray(data)) {
-          return NextResponse.json(data);
-        }
-      }
+    // Fetch customers for this company only
+    const { data, error } = await supabaseServer
+      .from('customers')
+      .select('*')
+      .eq('company_id', companyId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('GET /api/customers error:', error);
       return NextResponse.json([]);
     }
+
+    return NextResponse.json(Array.isArray(data) ? data : []);
   } catch (e) {
     console.error('GET /api/customers error:', e);
     return NextResponse.json([]);
@@ -103,160 +83,159 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const companyId = body.company_id;
-    
-    // Get authenticated user with fallback
-    const userId = await resolveUserContext(req);
-    
-    if (!companyId) {
-      return NextResponse.json({ error: 'Company ID required for data isolation' }, { status: 400 });
+    const { name, email, company_id: companyId } = body;
+
+    if (!companyId || !name) {
+      return NextResponse.json(
+        { error: 'name and company_id are required' },
+        { status: 400 }
+      );
     }
 
-    try {
-      await ensureAuthUser(userId);
-    } catch (error) {
-      if (error instanceof EnsureAuthUserError) {
-        return NextResponse.json({ error: error.message }, { status: error.statusCode });
-      }
-      console.error('POST /api/customers ensureAuthUser error:', error);
-      return NextResponse.json({ error: 'Unable to prepare user context' }, { status: 500 });
+    // Verify user has access to this company
+    const { userId, company, error: accessError } = await verifyCompanyAccess(req, companyId);
+    if (accessError || !company) {
+      console.warn(`[SECURITY] POST /api/customers: ${accessError}`);
+      return NextResponse.json(
+        { error: 'Access denied' },
+        { status: 403 }
+      );
     }
 
-    // CRITICAL: Validate user owns this company and get correct ID
-    let validCompanyId: string;
-    try {
-      const context = await getCompanyContext(userId, companyId);
-      validCompanyId = context.companyId;
-      console.log(`[POST /api/customers] Validated company ${validCompanyId} for user ${userId}`);
-    } catch (contextError) {
-      console.error(`[POST /api/customers] Company validation failed:`, contextError);
-      return NextResponse.json({ error: 'Company validation failed - access denied' }, { status: 403 });
+    // Check for duplicate customer (same name, same company)
+    const { data: existingCustomer } = await supabaseServer
+      .from('customers')
+      .select('id')
+      .eq('company_id', companyId)
+      .ilike('name', name)
+      .maybeSingle();
+
+    if (existingCustomer) {
+      console.warn(`[POST /api/customers] Duplicate customer: "${name}" in company ${companyId}`);
+      return NextResponse.json(
+        { error: `A customer named "${name}" already exists. Please use a different name.` },
+        { status: 409 }
+      );
     }
-    
-    try {
-      // CRITICAL: Check for duplicate customer (same name, same company)
-      const { data: existingCustomer, error: checkError } = await supabaseServer
+
+    // Check for duplicate email if provided
+    if (email) {
+      const { data: existingEmail } = await supabaseServer
         .from('customers')
-        .select('id, name')
-        .eq('company_id', validCompanyId)
-        .ilike('name', body.name)
+        .select('id')
+        .eq('company_id', companyId)
+        .ilike('email', email)
         .maybeSingle();
-      
-      if (existingCustomer) {
-        console.warn(`[POST /api/customers] Duplicate customer detected: "${body.name}" already exists in company ${validCompanyId}`);
+
+      if (existingEmail) {
+        console.warn(`[POST /api/customers] Duplicate email: "${email}" in company ${companyId}`);
         return NextResponse.json(
-          { error: `A customer named "${body.name}" already exists. Please use a different name or update the existing customer.` },
+          { error: `A customer with email "${email}" already exists.` },
           { status: 409 }
         );
       }
-      
-      // Check for duplicate email if provided
-      if (body.email) {
-        const { data: existingEmail } = await supabaseServer
-          .from('customers')
-          .select('id, email')
-          .eq('company_id', validCompanyId)
-          .ilike('email', body.email)
-          .maybeSingle();
-        
-        if (existingEmail) {
-          console.warn(`[POST /api/customers] Duplicate email detected: "${body.email}" already exists in company ${validCompanyId}`);
-          return NextResponse.json(
-            { error: `A customer with email "${body.email}" already exists. Please use a different email or update the existing customer.` },
-            { status: 409 }
-          );
-        }
-      }
-      
-      // Always include company_id in insert
-      const payload = { 
-        name: body.name,
-        email: body.email ?? null,
-        user_id: userId,
-        company_id: validCompanyId  // CRITICAL: Always include
-      };
-      
-      const { data, error } = await supabaseServer
-        .from('customers')
-        .insert([payload])
-        .select();
-      
-      if (error) {
-        console.error('POST /api/customers insert error:', error.message);
-        return NextResponse.json({ error: error.message }, { status: 500 });
-      }
-      
-      return NextResponse.json(data[0]);
-    } catch (err) {
-      console.error('POST /api/customers exception:', err);
-      return NextResponse.json({ error: String(err) }, { status: 400 });
     }
-  } catch (err) {
-    console.error('POST /api/customers outer error:', err);
-    return NextResponse.json({ error: 'Request processing failed' }, { status: 500 });
+
+    // Insert customer
+    const { data, error } = await supabaseServer
+      .from('customers')
+      .insert([{
+        name,
+        email: email || null,
+        company_id: companyId,
+        user_id: userId
+      }])
+      .select();
+
+    if (error) {
+      console.error('POST /api/customers insert error:', error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json(data?.[0] || { success: true });
+  } catch (e) {
+    console.error('POST /api/customers error:', e);
+    return NextResponse.json({ error: String(e) }, { status: 500 });
   }
 }
 
 export async function PATCH(req: Request) {
   try {
     const body = await req.json();
-    const { id, company_id: incomingCompanyId, ...fields } = body;
-    
-    // Get authenticated user with fallback
-    const userId = await resolveUserContext(req);
-    const companyId = incomingCompanyId;
-    
-    if (!userId || !id) {
-      return NextResponse.json({ error: 'User ID and customer ID required' }, { status: 400 });
+    const { id, company_id: companyId, ...fields } = body;
+
+    if (!id || !companyId) {
+      return NextResponse.json(
+        { error: 'id and company_id are required' },
+        { status: 400 }
+      );
     }
 
-    try {
-      const { companyId: validCompanyId } = await getCompanyContext(userId, companyId);
-      
-      const { data, error } = await supabaseServer
-        .from('customers')
-        .update(fields)
-        .eq('id', id)
-        .eq('user_id', userId)
-        .eq('company_id', validCompanyId)
-        .select();
-      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-      return NextResponse.json(data[0]);
-    } catch (err) {
-      return NextResponse.json({ error: String(err) }, { status: 400 });
+    // Verify user has access to this company
+    const { userId, error: accessError } = await verifyCompanyAccess(req, companyId);
+    if (accessError) {
+      return NextResponse.json(
+        { error: 'Access denied' },
+        { status: 403 }
+      );
     }
-  } catch (err) {
-    return NextResponse.json({ error: 'Request processing failed' }, { status: 500 });
+
+    // Update customer
+    const { data, error } = await supabaseServer
+      .from('customers')
+      .update(fields)
+      .eq('id', id)
+      .eq('company_id', companyId)
+      .select();
+
+    if (error) {
+      console.error('PATCH /api/customers error:', error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json(data?.[0] || {});
+  } catch (e) {
+    console.error('PATCH /api/customers error:', e);
+    return NextResponse.json({ error: String(e) }, { status: 500 });
   }
 }
 
 export async function DELETE(req: Request) {
   try {
-    const { id, company_id: incomingCompanyId } = await req.json();
-    
-    // Get authenticated user with fallback
-    const userId = await resolveUserContext(req);
-    const companyId = incomingCompanyId;
-    
-    if (!userId || !id) {
-      return NextResponse.json({ error: 'User ID and customer ID required' }, { status: 400 });
+    const body = await req.json();
+    const { id, company_id: companyId } = body;
+
+    if (!id || !companyId) {
+      return NextResponse.json(
+        { error: 'id and company_id are required' },
+        { status: 400 }
+      );
     }
 
-    try {
-      const { companyId: validCompanyId } = await getCompanyContext(userId, companyId);
-      
-      const { error } = await supabaseServer
-        .from('customers')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', userId)
-        .eq('company_id', validCompanyId);
-      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-      return NextResponse.json({ success: true });
-    } catch (err) {
-      return NextResponse.json({ error: String(err) }, { status: 400 });
+    // Verify user has access to this company
+    const { error: accessError } = await verifyCompanyAccess(req, companyId);
+    if (accessError) {
+      return NextResponse.json(
+        { error: 'Access denied' },
+        { status: 403 }
+      );
     }
-  } catch (err) {
-    return NextResponse.json({ error: 'Request processing failed' }, { status: 500 });
+
+    // Delete customer
+    const { error } = await supabaseServer
+      .from('customers')
+      .delete()
+      .eq('id', id)
+      .eq('company_id', companyId);
+
+    if (error) {
+      console.error('DELETE /api/customers error:', error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (e) {
+    console.error('DELETE /api/customers error:', e);
+    return NextResponse.json({ error: String(e) }, { status: 500 });
   }
 }
