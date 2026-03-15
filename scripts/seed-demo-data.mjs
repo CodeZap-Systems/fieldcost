@@ -121,6 +121,28 @@ const items = [
   { name: 'Safety Equipment Bundle', description: 'PPE and safety gear', company_id: DEMO_COMPANY_ID },
 ];
 
+// Sample vendors
+const vendors = [
+  {
+    name: 'BuildCo Supplies',
+    email: 'sales@buildco.co.za',
+    phone: '+27 11 765 4321',
+    company_name: 'BuildCo Supplies (Pty) Ltd',
+    contact_person: 'John Mthembu',
+    company_id: DEMO_COMPANY_ID,
+    user_id: DEMO_USER_ID,
+  },
+  {
+    name: 'Premium Materials International',
+    email: 'orders@premiummat.co.za',
+    phone: '+27 21 555 8899',
+    company_name: 'Premium Materials International (Pty) Ltd',
+    contact_person: 'Sarah Nkomo',
+    company_id: DEMO_COMPANY_ID,
+    user_id: DEMO_USER_ID,
+  },
+];
+
 async function seedData() {
   console.log('🌱 FieldCost Demo Data Seeding');
   console.log('================================\n');
@@ -168,6 +190,20 @@ async function seedData() {
       console.log(`✅ Created ${itemData.length} items\n`);
     }
 
+    // 3b. Try to Insert Vendors
+    console.log('📌 Creating vendors...');
+    const { data: vendorData, error: vendorError } = await supabase
+      .from('vendors')
+      .insert(vendors)
+      .select()
+      .catch(e => ({ data: null, error: e }));
+
+    if (vendorError) {
+      console.error('⚠️  Vendor insert skipped (schema cache)');
+    } else if (vendorData?.length) {
+      console.log(`✅ Created ${vendorData.length} vendors\n`);
+    }
+
     // 4. Try to Insert Suppliers
     console.log('📌 Creating suppliers...');
     const { data: supplierData, error: supplierError } = await supabase
@@ -178,7 +214,7 @@ async function seedData() {
 
     let supplierIds = [];
     if (supplierError) {
-      console.error('⚠️  Supplier insert skipped (schema cache - but table exists!)');
+      console.error('⚠️  Supplier insert skipped (schema cache - but table exists)!');
       // Try to fetch existing suppliers to continue demo with mock IDs
       const { data: existingSuppliers } = await supabase
         .from('suppliers')

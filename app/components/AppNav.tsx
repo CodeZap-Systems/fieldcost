@@ -28,6 +28,13 @@ const MANAGEMENT_SECTIONS = [
     ],
   },
   {
+    label: "Vendors",
+    links: [
+      { href: "/dashboard/vendors", text: "View Vendors" },
+      { href: "/dashboard/vendors?page=add", text: "Add Vendor" },
+    ],
+  },
+  {
     label: "Items",
     links: [
       { href: "/dashboard/items", text: "View Items" },
