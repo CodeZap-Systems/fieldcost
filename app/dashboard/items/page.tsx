@@ -142,14 +142,11 @@ export default function ItemsPage() {
     if (target?.demo) {
       setError('Demo items are read-only.');
       return;
-    }
-    setLoading(true);
-    setError(null);
     try {
       const res = await fetch("/api/items", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: editing, ...editData, user_id: userId }),
+        body: JSON.stringify({ id: editing, ...editData, user_id: userId, company_id: companyId }),
       });
       if (!res.ok) throw new Error("Failed to update item");
       const updated = normalizeItem(await res.json());
@@ -158,7 +155,10 @@ export default function ItemsPage() {
       setEditData({ name: "", price: 0 });
     } catch {
       setError("Failed to update item");
+      return false;
     } finally {
+      setLoading(false);
+    }
       setLoading(false);
     }
   }
@@ -175,7 +175,7 @@ export default function ItemsPage() {
       const res = await fetch("/api/items", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: confirmDelete.id, user_id: userId }),
+        body: JSON.stringify({ id: confirmDelete.id, user_id: userId, company_id: companyId }),
       });
       if (!res.ok) throw new Error("Failed to delete item");
       setItems(prev => prev.filter(i => i.id !== confirmDelete.id));
@@ -211,7 +211,7 @@ export default function ItemsPage() {
       const res = await fetch('/api/items', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, ...update, user_id: userId }),
+        body: JSON.stringify({ id, ...update, user_id: userId, company_id: companyId }),
       });
       if (!res.ok) throw new Error('Failed to update stock');
       const updated = normalizeItem(await res.json());
