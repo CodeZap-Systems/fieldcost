@@ -4,12 +4,13 @@ import 'jspdf-autotable';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_KEY || ''
+  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 );
 
-export async function GET(request, { params }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> | { id: string } }) {
   try {
-    const { id } = params;
+    const resolvedParams = await Promise.resolve(params);
+    const { id } = resolvedParams;
     const { searchParams } = new URL(request.url);
     const company_id = searchParams.get('company_id');
 
@@ -127,7 +128,7 @@ export async function GET(request, { params }) {
       const total = quote.quote_line_items.reduce((sum, item) => sum + item.quantity * item.rate, 0);
       tableData.push(['', '', '', 'TOTAL:', `R${total.toFixed(2)}`]);
 
-      pdf.autoTable({
+      (pdf as any).autoTable({
         head: [['Description', 'Qty', 'Unit', 'Rate', 'Amount']],
         body: tableData,
         startY: yPosition,
@@ -147,7 +148,7 @@ export async function GET(request, { params }) {
         margin: 20,
       });
 
-      yPosition = pdf.lastAutoTable.finalY + 10;
+      yPosition = (pdf as any).lastAutoTable.finalY + 10;
     }
 
     // Footer

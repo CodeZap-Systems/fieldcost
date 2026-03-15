@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ensureClientUserId } from "../../../lib/clientUser";
 
-interface Supplier {
+export interface Supplier {
   id?: number;
   vendor_name: string;
   contact_name?: string;
@@ -21,10 +21,29 @@ interface Supplier {
   notes?: string;
 }
 
+export interface SupplierFormData {
+  vendor_name: string;
+  contact_name?: string;
+  email?: string;
+  phone?: string;
+  address_line1?: string;
+  address_line2?: string;
+  city?: string;
+  province?: string;
+  postal_code?: string;
+  country?: string;
+  payment_terms?: string;
+  tax_id?: string;
+  rating?: number;
+  notes?: string;
+  company_id: string;
+  user_id: string;
+}
+
 interface SupplierFormProps {
   existingSupplier?: Supplier;
   companyId?: string | null;
-  onSubmit: (data: any) => Promise<boolean>;
+  onSubmit: (data: SupplierFormData) => Promise<boolean>;
   onCancel?: () => void;
 }
 
@@ -83,7 +102,7 @@ export function SupplierForm({
         notes: notes || null,
         company_id: companyId,
         user_id: userId,
-      };
+      } as unknown as SupplierFormData;
 
       const success = await onSubmit(payload);
       if (!success) {

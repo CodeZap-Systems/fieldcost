@@ -106,7 +106,7 @@ export async function POST(req: Request) {
     }
 
     // CRITICAL: Validate user owns this company
-    let validCompanyId: number;
+    let validCompanyId: string;
     try {
       const context = await getCompanyContext(userId, companyId);
       validCompanyId = context.companyId;

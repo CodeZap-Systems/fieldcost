@@ -1,21 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { ensureClientUserId } from "../../../lib/clientUser";
-import { PurchaseOrderForm } from "./PurchaseOrderForm";
-import { PurchaseOrderList } from "./PurchaseOrderList";
+import { PurchaseOrderForm, type POFormData } from "./PurchaseOrderForm";
+import { PurchaseOrderList, type PurchaseOrder } from "./PurchaseOrderList";
 
-export default function PurchaseOrdersPage() {
+function PurchaseOrdersPageContent() {
   const userId = ensureClientUserId();
   const searchParams = useSearchParams();
   const companyId = searchParams.get("company_id") || "1";
 
   const [view, setView] = useState<"list" | "create" | "edit">("list");
-  const [selectedPO, setSelectedPO] = useState<any>(null);
+  const [selectedPO, setSelectedPO] = useState<PurchaseOrder | null>(null);
   const [successMessage, setSuccessMessage] = useState<string>("");
 
-  const handleCreatePO = async (data: any) => {
+  const handleCreatePO = async (data: POFormData): Promise<boolean> => {
     try {
       const res = await fetch("/api/purchase-orders", {
         method: "POST",
@@ -39,7 +39,7 @@ export default function PurchaseOrdersPage() {
     }
   };
 
-  const handleUpdatePO = async (data: any) => {
+  const handleUpdatePO = async (data: POFormData): Promise<boolean> => {
     if (!selectedPO) return false;
 
     try {
@@ -104,5 +104,13 @@ export default function PurchaseOrdersPage() {
         />
       )}
     </div>
+  );
+}
+
+export default function PurchaseOrdersPage() {
+  return (
+    <Suspense fallback={<div className="p-6 text-center">Loading...</div>}>
+      <PurchaseOrdersPageContent />
+    </Suspense>
   );
 }

@@ -210,7 +210,7 @@ export async function POST(req: Request) {
 
     if (allLineItems) {
       const allFullyReceived = allLineItems.every(
-        (item: any) => (item.quantity_received || 0) >= item.quantity_ordered
+        (item: { quantity_ordered: number, quantity_received?: number }) => (item.quantity_received || 0) >= item.quantity_ordered
       );
 
       if (allFullyReceived) {
@@ -275,7 +275,15 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: 'Unable to prepare user context' }, { status: 500 });
     }
 
-    const updatePayload: any = {
+    const updatePayload: { 
+      updated_at: string
+      quality_status?: string
+      quality_notes?: string
+      damage_notes?: string
+      rejection_reason?: string
+      follow_up_required?: boolean
+      follow_up_notes?: string
+    } = {
       updated_at: new Date().toISOString(),
     };
 

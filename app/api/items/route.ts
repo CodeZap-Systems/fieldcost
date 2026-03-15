@@ -142,7 +142,7 @@ export async function POST(req: Request) {
     }
 
     // CRITICAL: Validate user owns this company
-    let validCompanyId: number;
+    let validCompanyId: string;
     try {
       const context = await getCompanyContext(userId, companyId);
       validCompanyId = context.companyId;
@@ -153,6 +153,22 @@ export async function POST(req: Request) {
     }
     
     try {
+      // CRITICAL: Check for duplicate item (same name, same company)
+      const { data: existingItem, error: checkError } = await supabaseServer
+        .from('items')
+        .select('id, name')
+        .eq('company_id', validCompanyId)
+        .ilike('name', body.name)
+        .maybeSingle();
+      
+      if (existingItem) {
+        console.warn(`[POST /api/items] Duplicate item detected: "${body.name}" already exists in company ${validCompanyId}`);
+        return NextResponse.json(
+          { error: `An item named "${body.name}" already exists. Please use a different name or update the existing item.` },
+          { status: 409 }
+        );
+      }
+      
       const payload = {
         name: body.name,
         price: body.price ?? null,

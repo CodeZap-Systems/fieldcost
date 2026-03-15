@@ -64,12 +64,12 @@ async function attachInvoiceLines<T extends InvoiceRow>(rows: T[], userId?: stri
     console.warn('attachInvoiceLines skipped: supabaseServer.from unavailable');
     return rows;
   }
-  const client: any = fromFn.call(supabaseServer, 'invoice_line_items');
+  const client = fromFn.call(supabaseServer, 'invoice_line_items');
   if (!client || typeof client.select !== 'function') {
     console.warn('attachInvoiceLines skipped: select builder unavailable');
     return rows;
   }
-  let query: any;
+  let query: ReturnType<typeof client.select>;
   try {
     query = client.select('*').in('invoice_id', invoiceIds);
     if (userId && query && typeof query.eq === 'function') {
@@ -344,6 +344,25 @@ export async function POST(req: Request) {
       user_id: userId,
       ...(companyId !== undefined && { company_id: companyId })
     };
+    
+    // CRITICAL: Check for duplicate invoice number (same invoice_number, same company)
+    if (payload.invoice_number) {
+      const { data: existingInvoice } = await supabaseServer
+        .from('invoices')
+        .select('id, invoice_number')
+        .eq('company_id', companyId || 1)
+        .eq('invoice_number', payload.invoice_number)
+        .maybeSingle();
+      
+      if (existingInvoice) {
+        console.warn(`[POST /api/invoices] Duplicate invoice detected: Invoice #${payload.invoice_number} already exists in company ${companyId}`);
+        return NextResponse.json(
+          { error: `An invoice with number "${payload.invoice_number}" already exists. Please use a different invoice number.` },
+          { status: 409 }
+        );
+      }
+    }
+    
     const offlinePayload = {
       amount: payload.amount,
       description: payload.description,

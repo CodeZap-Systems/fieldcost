@@ -95,7 +95,8 @@ export async function POST(req: Request) {
       );
     }
 
-    let companyId = body.company_id;
+    // Get company_id from body OR query parameters
+    let companyId = body.company_id || searchParams.get('company_id');
     try {
       const { companyId: validCompanyId } = await getCompanyContext(userId, companyId);
       companyId = validCompanyId;
@@ -114,7 +115,7 @@ export async function POST(req: Request) {
 
     // Validate and calculate line totals
     let poTotal = 0;
-    const validatedLines = lines.map((line: any) => {
+    const validatedLines = lines.map((line: { quantity_ordered?: number; unit_rate?: number; item_id?: number | null; item_name?: string; name?: string; unit?: string; note?: string; description?: string }) => {
       const quantity = Number(line.quantity_ordered) || 1;
       const rate = Number(line.unit_rate) || 0;
       const total = quantity * rate;

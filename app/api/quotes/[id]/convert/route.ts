@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { supabaseServer } from '../../../../lib/supabaseServer';
-import { resolveServerUserId } from '../../../../lib/serverUser';
-import { ensureAuthUser, EnsureAuthUserError } from '../../../../lib/demoAuth';
+import { supabaseServer } from '../../../../../lib/supabaseServer';
+import { resolveServerUserId } from '../../../../../lib/serverUser';
+import { ensureAuthUser, EnsureAuthUserError } from '../../../../../lib/demoAuth';
 
 /**
  * POST /api/quotes/[id]/convert
@@ -77,7 +77,7 @@ export async function POST(
     }
 
     // Create invoice line items from quote line items
-    const invoiceLineItems = quote.line_items.map((line: any) => ({
+    const invoiceLineItems = quote.line_items.map((line: { item_id?: number; item_name: string; quantity: number; rate: number; note?: string }) => ({
       invoice_id: invoice.id,
       item_id: line.item_id,
       name: line.item_name,

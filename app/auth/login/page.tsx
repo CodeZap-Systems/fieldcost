@@ -61,7 +61,7 @@ export default function LoginPage() {
     checkExistingSession();
   }, [router]);
 
-  async function handleLogin(e) {
+  async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
     setSessionError("");

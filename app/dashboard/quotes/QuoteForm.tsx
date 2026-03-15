@@ -23,6 +23,23 @@ interface LineItem {
   note: string;
 }
 
+export interface QuoteFormData {
+  customer_id: number;
+  project_id: number | null;
+  reference?: string;
+  description: string;
+  valid_until: string | null;
+  lines: Array<{
+    item_name: string;
+    quantity: number;
+    unit: string;
+    rate: number;
+    note: string;
+  }>;
+  company_id: string;
+  user_id: string;
+}
+
 interface QuoteFormProps {
   customerId?: number;
   projectId?: number;
@@ -35,9 +52,9 @@ interface QuoteFormProps {
     description?: string;
     valid_until?: string | null;
     amount: number;
-    line_items?: any[];
+    line_items?: LineItem[];
   };
-  onSubmit: (data: any) => Promise<boolean>;
+  onSubmit: (data: QuoteFormData) => Promise<boolean>;
   onCancel?: () => void;
 }
 
@@ -78,7 +95,7 @@ export function QuoteForm({
   const [validUntil, setValidUntil] = useState(existingQuote?.valid_until || "");
   
   const [lineItems, setLineItems] = useState<LineItem[]>(
-    existingQuote?.line_items?.map((item: any, idx: number) => ({
+    existingQuote?.line_items?.map((item: LineItem, idx: number) => ({
       id: `line-${idx}`,
       item_name: item.item_name,
       quantity: item.quantity,
@@ -106,7 +123,7 @@ export function QuoteForm({
         if (projectsRes.ok) {
           setProjects(await projectsRes.json());
         }
-      } catch (err) {
+      } catch (err: unknown) {
         console.error("Failed to fetch dropdown data:", err);
       }
     };
@@ -128,7 +145,7 @@ export function QuoteForm({
     setLineItems(lineItems.filter((item) => item.id !== id));
   };
 
-  const handleLineItemChange = (id: string, field: keyof LineItem, value: any) => {
+  const handleLineItemChange = (id: string, field: keyof LineItem, value: string | number) => {
     setLineItems(
       lineItems.map((item) =>
         item.id === id ? { ...item, [field]: value } : item
@@ -184,7 +201,7 @@ export function QuoteForm({
         })),
         company_id: companyId,
         user_id: userId,
-      };
+      } as unknown as QuoteFormData;
 
       const success = await onSubmit(payload);
       if (!success) {

@@ -1,0 +1,98 @@
+{
+  "testUser": {
+    "email": "qa_test_user@fieldcost.com",
+    "password": "TestPassword123",
+    "name": "QA Test User",
+    "role": "admin"
+  },
+  "testCompany": {
+    "id": 8,
+    "name": "Demo Company",
+    "is_demo": true
+  },
+  "testCustomers": [
+    {
+      "id": 1,
+      "name": "Acme Construction",
+      "email": "contact@acme.com",
+      "phone": "+27123456789",
+      "city": "Cape Town"
+    },
+    {
+      "id": 2,
+      "name": "BuildRight Corp",
+      "email": "admin@buildright.com",
+      "phone": "+27987654321",
+      "city": "Johannesburg"
+    }
+  ],
+  "testProjects": [
+    {
+      "id": 1,
+      "name": "Office Renovation",
+      "status": "active",
+      "budget": 50000,
+      "location": "Cape Town CBD"
+    },
+    {
+      "id": 2,
+      "name": "Warehouse Upgrade",
+      "status": "active",
+      "budget": 150000,
+      "location": "Midrand"
+    }
+  ],
+  "testTasks": [
+    {
+      "name": "Install fixtures",
+      "project_id": 1,
+      "priority": "high"
+    },
+    {
+      "name": "Paint walls",
+      "project_id": 1,
+      "priority": "medium"
+    }
+  ],
+  "testItems": [
+    {
+      "name": "Concrete Mix",
+      "category": "Materials",
+      "unit": "bag",
+      "cost": 120.00
+    },
+    {
+      "name": "Steel Rebar",
+      "category": "Materials",
+      "unit": "m",
+      "cost": 45.00
+    }
+  ],
+  "testSuppliers": [
+    {
+      "vendor_name": "BuildMaterials SA",
+      "contact_name": "John Smith",
+      "email": "john@buildmaterials.com",
+      "payment_terms": "Net 30"
+    },
+    {
+      "vendor_name": "Industrial Supplies",
+      "contact_name": "Sarah Jones",
+      "email": "sarah@industrial.com",
+      "payment_terms": "Net 45"
+    }
+  ],
+  "statusCodes": {
+    "success": 200,
+    "created": 201,
+    "badRequest": 400,
+    "unauthorized": 401,
+    "forbidden": 403,
+    "notFound": 404,
+    "serverError": 500
+  },
+  "demoCredentials": {
+    "email": "qa_test_user@fieldcost.com",
+    "password": "TestPassword123"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "functions": {
+    "/api/admin/encryption-policies": {},
+    "/api/company/logo": {},
+    "/api/invoices/export": {},
+    "/api/settings": {},
+    "/api/settings/backup": {},
+    "/api/task-photos": {}
+  }
+}

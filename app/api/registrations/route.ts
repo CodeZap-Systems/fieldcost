@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { markRegistrationConfirmed, recordRegistration } from "../../../lib/registrationStore";
+import { applyRateLimit } from "../../../lib/rateLimit";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -22,6 +23,11 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
+    // Apply rate limiting: max 3 registration attempts per 15 minutes
+    const rateLimitCheck = applyRateLimit(req, { maxRequests: 3, windowMs: 15 * 60 * 1000 });
+    if (!rateLimitCheck.allowed) {
+      return rateLimitCheck.response;
+    }
     const body = await req.json();
     const email = sanitize(body?.email).toLowerCase();
     const password = sanitize(body?.password);

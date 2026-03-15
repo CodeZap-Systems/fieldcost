@@ -37,7 +37,7 @@ import { getTenant, isLiveTenant, logTenantAccess } from "@/lib/tenantGuard";
 
 interface WipInvoicePushRequest {
   erp: "sage" | "xero";
-  companyId: number;  // REQUIRED: which company is pushing
+  companyId: string;  // REQUIRED: which company is pushing
   wipAmount: number;
   retentionAmount: number;
   netClaimable: number;
@@ -103,14 +103,14 @@ export async function POST(request: NextRequest) {
       console.warn(`⚠️  WIP push blocked: ${reason}`);
 
       try {
-        await logTenantAccess(
-          tenant?.id || 'unknown',
+        await logTenantAccess({
+          tenantId: tenant?.tenantId || 'unknown',
           userId,
-          `${erp}_invoice_push_attempted`,
-          'blocked',
+          action: `${erp}_invoice_push_attempted`,
+          status: 'denied',
           reason,
-          { companyId, platform: erp }
-        );
+          timestamp: new Date(),
+        });
       } catch (err) {
         console.error('Tenant audit log error:', err);
       }
@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
     }
 
     // ✅ Tenant passed all checks - safe to proceed
-    console.log(`✅ Tenant verified: ${tenant.environment} environment, platform: ${tenant.platform}`);
+    console.log(`✅ Tenant verified: ${tenant.environment} environment, platform: ${platformId}`);
 
     // LEGACY: Also verify company ownership for backward compatibility
     const { data: company, error: companyError } = await supabaseServer
@@ -140,14 +140,14 @@ export async function POST(request: NextRequest) {
       console.warn(`⚠️  Company not found or unauthorized: ${companyId}`);
 
       try {
-        await logTenantAccess(
-          tenant.id,
+        await logTenantAccess({
+          tenantId: tenant.tenantId,
           userId,
-          `${erp}_invoice_push_attempted`,
-          'blocked',
-          'Company ownership verification failed',
-          { companyId }
-        );
+          action: `${erp}_invoice_push_attempted`,
+          status: 'denied',
+          reason: 'Company ownership verification failed',
+          timestamp: new Date(),
+        });
       } catch (err) {
         console.error('Tenant audit log error:', err);
       }
@@ -161,14 +161,14 @@ export async function POST(request: NextRequest) {
     console.log(`✅ Company verified: ${company.name} (${companyId})`);
 
     try {
-      await logTenantAccess(
-        tenant.id,
+      await logTenantAccess({
+        tenantId: tenant.tenantId,
         userId,
-        `${erp}_invoice_push_started`,
-        'allowed',
-        'Invoice push initiated for live environment',
-        { companyId, tenantId: tenant.id, environment: tenant.environment }
-      );
+        action: `${erp}_invoice_push_started`,
+        status: 'allowed',
+        reason: 'Invoice push initiated for live environment',
+        timestamp: new Date(),
+      });
     } catch (err) {
       console.error('Tenant audit log error (non-blocking):', err);
     }
@@ -216,7 +216,7 @@ export async function POST(request: NextRequest) {
 
       try {
         // Initialize Sage API client with credentials and API Key
-        sageClient = new SageOneApiClient(username || '', password || '', apiKey, apiUrl);
+        sageClient = new SageOneApiClient(apiKey);
         const authSuccess = await sageClient.authenticate();
         
         if (!authSuccess) {

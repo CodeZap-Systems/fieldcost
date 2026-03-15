@@ -129,7 +129,7 @@ export async function POST(req: Request) {
     }
 
     // CRITICAL: Validate user owns this company and get correct ID
-    let validCompanyId: number;
+    let validCompanyId: string;
     try {
       const context = await getCompanyContext(userId, companyId);
       validCompanyId = context.companyId;
@@ -149,6 +149,22 @@ export async function POST(req: Request) {
       
       if (!countError && count !== null && count >= PROJECT_LIMIT) {
         return NextResponse.json({ error: `Project limit reached (${PROJECT_LIMIT})` }, { status: 400 });
+      }
+      
+      // CRITICAL: Check for duplicate project (same name, same company)
+      const { data: existingProject, error: checkError } = await supabaseServer
+        .from('projects')
+        .select('id, name')
+        .eq('company_id', validCompanyId)
+        .ilike('name', body.name)
+        .maybeSingle();
+      
+      if (existingProject) {
+        console.warn(`[POST /api/projects] Duplicate project detected: "${body.name}" already exists in company ${validCompanyId}`);
+        return NextResponse.json(
+          { error: `A project named "${body.name}" already exists. Please use a different name or update the existing project.` },
+          { status: 409 }
+        );
       }
       
       // Always include company_id in insert

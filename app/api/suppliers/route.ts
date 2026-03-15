@@ -56,10 +56,22 @@ export async function GET(req: Request) {
  */
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
+    // Parse JSON with proper error handling
+    let body;
+    try {
+      body = await req.json();
+    } catch (e) {
+      console.warn('POST /api/suppliers: Invalid JSON in request body');
+      return NextResponse.json(
+        { error: 'Invalid JSON in request body' },
+        { status: 400 }
+      );
+    }
+
     const { searchParams } = new URL(req.url);
     const userId = resolveServerUserId(searchParams.get('user_id'));
 
+    // Validate authentication
     try {
       await ensureAuthUser(userId);
     } catch (error) {
@@ -69,6 +81,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unable to prepare user context' }, { status: 500 });
     }
 
+    // Validate required fields - return 400 for client errors
     if (!body.vendor_name) {
       return NextResponse.json(
         { error: 'vendor_name is required' },
@@ -76,7 +89,8 @@ export async function POST(req: Request) {
       );
     }
 
-    let companyId = body.company_id;
+    // Get company_id from body OR query parameters
+    let companyId = body.company_id || searchParams.get('company_id');
     try {
       const { companyId: validCompanyId } = await getCompanyContext(userId, companyId);
       companyId = validCompanyId;

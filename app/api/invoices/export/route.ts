@@ -3,6 +3,7 @@ import { supabaseServer } from "../../../../lib/supabaseServer";
 import { supabase } from "../../../../lib/supabaseClient";
 import { resolveServerUserId } from "../../../../lib/serverUser";
 import { generateInvoicesPdf, InvoiceData, CompanyProfile } from "../../../../lib/invoicePdfGenerator";
+import { encryptPDF, shouldEncryptPDF } from "../../../../lib/pdfEncryption";
 
 const INVOICE_SELECT = "*, customer:customers(id, name, email, user_id), line_items:invoice_line_items(*)";
 
@@ -41,6 +42,8 @@ type CompanyProfileRow = {
   default_currency?: string | null;
   logo_url?: string | null;
   logo_external_url?: string | null;
+  pdf_encryption_enabled?: boolean | null;
+  pdf_encryption_password?: string | null;
 };
 
 const formatDate = (value?: string | null) => {
@@ -223,7 +226,13 @@ export async function GET(req: Request) {
     }
 
     try {
-      const pdfBuffer = await buildPdf(invoiceRows, companyRow);
+      let pdfBuffer = await buildPdf(invoiceRows, companyRow);
+      
+      // Apply encryption if enabled in company settings
+      if (shouldEncryptPDF(companyRow?.pdf_encryption_enabled, companyRow?.pdf_encryption_password)) {
+        pdfBuffer = await encryptPDF(pdfBuffer, companyRow.pdf_encryption_password || '');
+      }
+      
       return new NextResponse(new Uint8Array(pdfBuffer), {
         headers: {
           "Content-Type": "application/pdf",

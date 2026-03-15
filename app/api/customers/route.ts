@@ -123,7 +123,7 @@ export async function POST(req: Request) {
     }
 
     // CRITICAL: Validate user owns this company and get correct ID
-    let validCompanyId: number;
+    let validCompanyId: string;
     try {
       const context = await getCompanyContext(userId, companyId);
       validCompanyId = context.companyId;
@@ -134,6 +134,40 @@ export async function POST(req: Request) {
     }
     
     try {
+      // CRITICAL: Check for duplicate customer (same name, same company)
+      const { data: existingCustomer, error: checkError } = await supabaseServer
+        .from('customers')
+        .select('id, name')
+        .eq('company_id', validCompanyId)
+        .ilike('name', body.name)
+        .maybeSingle();
+      
+      if (existingCustomer) {
+        console.warn(`[POST /api/customers] Duplicate customer detected: "${body.name}" already exists in company ${validCompanyId}`);
+        return NextResponse.json(
+          { error: `A customer named "${body.name}" already exists. Please use a different name or update the existing customer.` },
+          { status: 409 }
+        );
+      }
+      
+      // Check for duplicate email if provided
+      if (body.email) {
+        const { data: existingEmail } = await supabaseServer
+          .from('customers')
+          .select('id, email')
+          .eq('company_id', validCompanyId)
+          .ilike('email', body.email)
+          .maybeSingle();
+        
+        if (existingEmail) {
+          console.warn(`[POST /api/customers] Duplicate email detected: "${body.email}" already exists in company ${validCompanyId}`);
+          return NextResponse.json(
+            { error: `A customer with email "${body.email}" already exists. Please use a different email or update the existing customer.` },
+            { status: 409 }
+          );
+        }
+      }
+      
       // Always include company_id in insert
       const payload = { 
         name: body.name,

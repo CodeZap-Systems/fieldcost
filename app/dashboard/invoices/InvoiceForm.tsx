@@ -88,7 +88,7 @@ const formatDurationLabel = (hours: number) => {
   return `${mins}m`;
 };
 
-const normalizeTaskPayload = (payload: any): TaskSummary | null => {
+const normalizeTaskPayload = (payload: Record<string, unknown>): TaskSummary | null => {
   const id = Number(payload?.id);
   if (!Number.isFinite(id)) return null;
   const seconds = Number(payload?.seconds) || 0;
@@ -98,18 +98,25 @@ const normalizeTaskPayload = (payload: any): TaskSummary | null => {
   } else if (typeof payload?.project_id === "string") {
     const parsed = Number(payload.project_id);
     if (Number.isFinite(parsed)) projectIdCandidate = parsed;
-  } else if (typeof payload?.project?.id === "number" && Number.isFinite(payload.project.id)) {
-    projectIdCandidate = payload.project.id;
-  } else if (typeof payload?.project?.id === "string") {
-    const parsed = Number(payload.project.id);
-    if (Number.isFinite(parsed)) projectIdCandidate = parsed;
+  } else if (typeof payload?.project === "object" && payload.project !== null) {
+    const project = payload.project as Record<string, unknown>;
+    if (typeof project?.id === "number" && Number.isFinite(project.id)) {
+      projectIdCandidate = project.id;
+    } else if (typeof project?.id === "string") {
+      const parsed = Number(project.id);
+      if (Number.isFinite(parsed)) projectIdCandidate = parsed;
+    }
   }
-  const projectNameCandidate =
-    typeof payload?.project?.name === "string"
-      ? payload.project.name
-      : typeof payload?.project_name === "string"
-        ? payload.project_name
-        : null;
+  let projectNameCandidate: string | null = null;
+  if (typeof payload?.project === "object" && payload.project !== null) {
+    const project = payload.project as Record<string, unknown>;
+    if (typeof project?.name === "string") {
+      projectNameCandidate = project.name;
+    }
+  }
+  if (!projectNameCandidate && typeof payload?.project_name === "string") {
+    projectNameCandidate = payload.project_name;
+  }
   return {
     id,
     name: typeof payload?.name === "string" && payload.name.trim() ? payload.name : "Tracked task",

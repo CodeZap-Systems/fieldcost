@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import InvoiceForm from "./InvoiceForm";
-import { downloadInvoicePDF } from "../../../lib/invoicePDF";
+import { generateInvoicesPdf } from "../../../lib/invoicePdfGenerator";
 import { BackButton } from "../../../app/components/BackButton";
 import { ensureClientUserId } from "../../../lib/clientUser";
 import { getDemoInvoices } from "../../../lib/demoMockData";
@@ -538,15 +538,16 @@ function InvoicesPageContent() {
                         className="flex-1 rounded border border-blue-300 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100 transition-colors"
                         onClick={() => {
                           const invoiceData = {
+                            id: inv.id,
                             invoiceNumber: String(inv.id),
-                            date: new Date().toLocaleDateString(),
-                            dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+                            issuedOn: new Date().toLocaleDateString(),
+                            dueOn: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString(),
                             customerName: inv.customer?.name || inv.customer_name || "Customer",
                             amount: inv.amount || 0,
                             currency: "R",
                             lineItems: [
                               {
-                                description: inv.description || "Invoice Services",
+                                name: inv.description || "Invoice Services",
                                 quantity: 1,
                                 rate: inv.amount || 0,
                                 total: inv.amount || 0,
@@ -554,7 +555,13 @@ function InvoicesPageContent() {
                             ],
                             notes: inv.description ? `${inv.description}` : undefined,
                           };
-                          downloadInvoicePDF(invoiceData);
+                          generateInvoicesPdf([invoiceData], {
+                            name: "Your Company",
+                            email: "company@example.com",
+                            phone: "",
+                            address1: "",
+                            currency: "R",
+                          });
                         }}
                       >
                         🖨 Print PDF

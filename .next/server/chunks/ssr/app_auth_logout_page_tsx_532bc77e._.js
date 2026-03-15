@@ -1,0 +1,3 @@
+module.exports=[44052,a=>{"use strict";var b=a.i(87924),c=a.i(72131),d=a.i(7291),e=a.i(50944),f=a.i(54473);function g(){let a=(0,e.useRouter)();return(0,c.useEffect)(()=>{localStorage.removeItem("demoSession"),localStorage.removeItem("demoUserId"),localStorage.removeItem("fieldcostActiveCompanyId"),(0,f.persistActiveCompanyId)(null),d.supabase.auth.signOut().finally(()=>{a.push("/auth/login")})},[a]),(0,b.jsx)("main",{className:"flex flex-col items-center justify-center min-h-screen bg-gray-50",children:(0,b.jsx)("div",{className:"text-xl font-bold",children:"Logging out..."})})}a.s(["default",()=>g])}];
+
+//# sourceMappingURL=app_auth_logout_page_tsx_532bc77e._.js.map

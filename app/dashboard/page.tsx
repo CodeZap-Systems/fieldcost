@@ -1,6 +1,6 @@
 import React from "react";
 import { DashboardWithBanner } from "./dashboard-client";
-import { DashboardTierSwitcher } from "@/components/DashboardTierSwitcher";
+import { DashboardTierSwitcher } from "../components/DashboardTierSwitcher";
 
 export default function DashboardHome() {
   // Show data dashboard - tier selector can be accessed via "Features" button or URL params

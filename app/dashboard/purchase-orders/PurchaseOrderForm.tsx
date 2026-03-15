@@ -24,6 +24,23 @@ interface LineItem {
   note: string;
 }
 
+export interface POFormData {
+  supplier_id: number;
+  project_id: number | null;
+  po_reference?: string;
+  description: string;
+  required_by_date: string | null;
+  lines: Array<{
+    item_name: string;
+    quantity_ordered: number;
+    unit: string;
+    unit_rate: number;
+    note: string;
+  }>;
+  company_id: string;
+  user_id: string;
+}
+
 interface POFormProps {
   supplierId?: number;
   projectId?: number;
@@ -36,9 +53,9 @@ interface POFormProps {
     description?: string;
     required_by_date?: string | null;
     total_amount: number;
-    line_items?: any[];
+    line_items?: LineItem[];
   };
-  onSubmit: (data: any) => Promise<boolean>;
+  onSubmit: (data: POFormData) => Promise<boolean>;
   onCancel?: () => void;
 }
 
@@ -79,7 +96,7 @@ export function PurchaseOrderForm({
   const [requiredByDate, setRequiredByDate] = useState(existingPO?.required_by_date || "");
   
   const [lineItems, setLineItems] = useState<LineItem[]>(
-    existingPO?.line_items?.map((item: any, idx: number) => ({
+    existingPO?.line_items?.map((item: LineItem, idx: number) => ({
       id: `line-${idx}`,
       item_name: item.item_name,
       quantity_ordered: item.quantity_ordered,
@@ -107,7 +124,7 @@ export function PurchaseOrderForm({
         if (projectsRes.ok) {
           setProjects(await projectsRes.json());
         }
-      } catch (err) {
+      } catch (err: unknown) {
         console.error("Failed to fetch dropdown data:", err);
       }
     };
@@ -129,7 +146,7 @@ export function PurchaseOrderForm({
     setLineItems(lineItems.filter((item) => item.id !== id));
   };
 
-  const handleLineItemChange = (id: string, field: keyof LineItem, value: any) => {
+  const handleLineItemChange = (id: string, field: keyof LineItem, value: string | number) => {
     setLineItems(
       lineItems.map((item) =>
         item.id === id ? { ...item, [field]: value } : item
@@ -185,7 +202,7 @@ export function PurchaseOrderForm({
         })),
         company_id: companyId,
         user_id: userId,
-      };
+      } as unknown as POFormData;
 
       const success = await onSubmit(payload);
       if (!success) {

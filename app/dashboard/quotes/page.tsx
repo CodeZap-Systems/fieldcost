@@ -1,21 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { ensureClientUserId } from "../../../lib/clientUser";
-import { QuoteForm } from "./QuoteForm";
-import { QuoteList } from "./QuoteList";
+import { QuoteForm, type QuoteFormData } from "./QuoteForm";
+import { QuoteList, type Quote } from "./QuoteList";
 
-export default function QuotesPage() {
+function QuotesPageContent() {
   const userId = ensureClientUserId();
   const searchParams = useSearchParams();
   const companyId = searchParams.get("company_id") || "1";
 
   const [view, setView] = useState<"list" | "create" | "edit">("list");
-  const [selectedQuote, setSelectedQuote] = useState<any>(null);
+  const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
   const [successMessage, setSuccessMessage] = useState<string>("");
 
-  const handleCreateQuote = async (data: any) => {
+  const handleCreateQuote = async (data: QuoteFormData): Promise<boolean> => {
     try {
       const res = await fetch("/api/quotes", {
         method: "POST",
@@ -39,7 +39,7 @@ export default function QuotesPage() {
     }
   };
 
-  const handleUpdateQuote = async (data: any) => {
+  const handleUpdateQuote = async (data: QuoteFormData): Promise<boolean> => {
     if (!selectedQuote) return false;
 
     try {
@@ -104,5 +104,13 @@ export default function QuotesPage() {
         />
       )}
     </div>
+  );
+}
+
+export default function QuotesPage() {
+  return (
+    <Suspense fallback={<div className="p-6 text-center">Loading...</div>}>
+      <QuotesPageContent />
+    </Suspense>
   );
 }

@@ -62,8 +62,8 @@ export async function GET(req: Request) {
     const itemsTotal = itemsCount.count || 0;
 
     // Calculate simple totals
-    const totalInvoiceAmount = invoicesData.reduce((sum: number, inv: any) => sum + (inv.amount || 0), 0);
-    const totalInventoryValue = itemsData.reduce((sum: number, item: any) => sum + ((item.price || 0) * (item.stock_in || 0)), 0);
+    const totalInvoiceAmount = invoicesData.reduce((sum: number, inv: { amount?: number }) => sum + (inv.amount || 0), 0);
+    const totalInventoryValue = itemsData.reduce((sum: number, item: { price?: number, stock_in?: number }) => sum + ((item.price || 0) * (item.stock_in || 0)), 0);
 
     // Return simple report with counts and totals
     return NextResponse.json({
@@ -92,8 +92,9 @@ export async function GET(req: Request) {
         },
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Reports error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

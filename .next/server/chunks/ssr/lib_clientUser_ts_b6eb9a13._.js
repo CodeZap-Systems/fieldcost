@@ -1,0 +1,3 @@
+module.exports=[32361,a=>{"use strict";var b=a.i(7291),c=a.i(72016);async function d(){let a,d=a=>{};try{let{data:a,error:e}=await b.supabase.auth.getUser();if(!e){let b=a?.user?.user_metadata?.demoUserId||a?.user?.id,e=(0,c.normalizeUserId)(b,void 0);if(e)return d(e),e}}catch(a){console.warn("Unable to resolve Supabase user id",a)}return a||(d(c.DEFAULT_DEMO_USER_ID),c.DEFAULT_DEMO_USER_ID)}a.s(["ensureClientUserId",()=>d])}];
+
+//# sourceMappingURL=lib_clientUser_ts_b6eb9a13._.js.map

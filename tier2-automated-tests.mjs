@@ -9,7 +9,8 @@ import http from 'http';
 import https from 'https';
 import { URL } from 'url';
 
-const BASE_URL = 'https://fieldcost.vercel.app';
+// Use localhost for testing (or production if specified)
+const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 const API_BASE = `${BASE_URL}/api`;
 const TEST_TIMEOUT = 30000;
 
@@ -154,6 +155,7 @@ async function testQuotationCRUD() {
       quoteId = createRes.body?.id;
       addTest('Quotations', 'CREATE Quote with Line Items', 'PASS', { id: quoteId });
     } else {
+      console.log(`  [DEBUG] CREATE Quote failed: status=${createRes.status}`, createRes.body);
       addTest('Quotations', 'CREATE Quote with Line Items', 'FAIL', { status: createRes.status, body: createRes.body });
     }
   } catch (err) {
@@ -302,6 +304,7 @@ async function testSupplierCRUD() {
       supplierId = createRes.body?.id;
       addTest('Suppliers', 'CREATE Supplier', 'PASS', { id: supplierId });
     } else {
+      console.log(`  [DEBUG] CREATE Supplier failed: status=${createRes.status}`, createRes.body);
       addTest('Suppliers', 'CREATE Supplier', 'FAIL', { status: createRes.status, body: createRes.body });
     }
   } catch (err) {

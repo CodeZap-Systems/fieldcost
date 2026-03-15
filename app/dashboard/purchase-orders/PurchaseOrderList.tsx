@@ -3,16 +3,19 @@
 import { useState, useEffect } from "react";
 import { ensureClientUserId } from "../../../lib/clientUser";
 
-interface PurchaseOrder {
+export interface PurchaseOrder {
   id: number;
   po_reference: string;
+  supplier_id: number;
   supplier?: { id: number; vendor_name: string; email?: string };
+  project_id?: number | null;
   project?: { id: number; name: string };
+  description?: string;
+  required_by_date?: string | null;
   total_amount: number;
   status: string;
-  required_by_date?: string | null;
   created_at: string;
-  line_items?: any[];
+  line_items?: Array<{ id: string; item_name: string; quantity_ordered: number; unit: string; unit_rate: number; note: string }>;
 }
 
 interface POListProps {

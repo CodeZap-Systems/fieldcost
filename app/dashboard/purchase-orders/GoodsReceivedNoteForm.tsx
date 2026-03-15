@@ -3,11 +3,35 @@
 import { useState, useEffect } from "react";
 import { ensureClientUserId } from "../../../lib/clientUser";
 
+interface GRNLineItem {
+  id: number;
+  item_name: string;
+  quantity_ordered: number;
+  quantity_received?: number;
+  unit: string;
+}
+
+interface GRNFormData {
+  po_id: number;
+  po_line_item_id: number;
+  quantity_received: number;
+  unit: string;
+  quality_status: string;
+  quality_notes: string | null;
+  damage_notes: string | null;
+  received_by: string | null;
+  received_at_location: string | null;
+  follow_up_required: boolean;
+  follow_up_notes: string | null;
+  company_id: string;
+  user_id: string;
+}
+
 interface GRNFormProps {
   poId: number;
   poReference: string;
   companyId?: string | null;
-  onSubmit: (data: any) => Promise<boolean>;
+  onSubmit: (data: GRNFormData) => Promise<boolean>;
   onCancel?: () => void;
 }
 
@@ -20,7 +44,7 @@ export function GoodsReceivedNoteForm({
 }: GRNFormProps) {
   const userId = ensureClientUserId();
 
-  const [lineItems, setLineItems] = useState<any[]>([]);
+  const [lineItems, setLineItems] = useState<GRNLineItem[]>([]);
   const [selectedLineItemId, setSelectedLineItemId] = useState<number | "">(""); 
   const [quantityReceived, setQuantityReceived] = useState<number>(1);
   const [unit, setUnit] = useState("ea");
@@ -97,7 +121,7 @@ export function GoodsReceivedNoteForm({
         follow_up_notes: followUpNotes || null,
         company_id: companyId,
         user_id: userId,
-      };
+      } as unknown as GRNFormData;
 
       const success = await onSubmit(payload);
       if (!success) {

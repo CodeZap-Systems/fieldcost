@@ -3,16 +3,19 @@
 import { useState, useEffect } from "react";
 import { ensureClientUserId } from "../../../lib/clientUser";
 
-interface Quote {
+export interface Quote {
   id: number;
   reference: string;
+  customer_id: number;
   customer?: { id: number; name: string; email?: string };
+  project_id?: number | null;
   project?: { id: number; name: string };
+  description?: string;
   amount: number;
   status: string;
   valid_until?: string | null;
   created_at: string;
-  line_items?: any[];
+  line_items?: Array<{ id: string; item_name: string; quantity: number; unit: string; rate: number; note: string }>;
 }
 
 interface QuoteListProps {

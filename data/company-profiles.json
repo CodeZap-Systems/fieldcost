@@ -45,5 +45,50 @@
       }
     ],
     "activeCompanyId": "8"
+  },
+  "e66081a8-af72-5722-8cce-e3a996196ad2": {
+    "profiles": [
+      {
+        "id": "5",
+        "user_id": "e66081a8-af72-5722-8cce-e3a996196ad2",
+        "name": "e66081a8-af72-5722-8cce-e3a996196ad2's Company",
+        "email": null,
+        "phone": null,
+        "address_line1": null,
+        "address_line2": null,
+        "city": null,
+        "province": null,
+        "postal_code": null,
+        "country": null,
+        "logo_url": null,
+        "logo_external_url": null,
+        "invoice_template": "standard",
+        "default_currency": "ZAR",
+        "erp_targets": [],
+        "updated_at": "2026-03-12T03:08:48.345032+00:00",
+        "is_demo": false
+      },
+      {
+        "id": "8",
+        "user_id": "e66081a8-af72-5722-8cce-e3a996196ad2",
+        "name": "Demo Company",
+        "email": null,
+        "phone": null,
+        "address_line1": null,
+        "address_line2": null,
+        "city": null,
+        "province": null,
+        "postal_code": null,
+        "country": null,
+        "logo_url": null,
+        "logo_external_url": null,
+        "invoice_template": "standard",
+        "default_currency": "ZAR",
+        "erp_targets": [],
+        "updated_at": "2026-03-12T17:43:01.701079+00:00",
+        "is_demo": true
+      }
+    ],
+    "activeCompanyId": "8"
   }
 }

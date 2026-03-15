@@ -51,9 +51,9 @@ export default function TaskForm({ onAdd, crew = [], projects = [], userId, comp
     }
   }
 
-  const handleAddProject = async (data: { name: string; description: string }) => {
+  const handleAddProject = async (data: { name: string; description: string }): Promise<void> => {
     if (!userId || !companyId) {
-      return false;
+      return;
     }
 
     try {
@@ -67,16 +67,15 @@ export default function TaskForm({ onAdd, crew = [], projects = [], userId, comp
         }),
       });
 
-      if (!res.ok) return false;
+      if (!res.ok) return;
 
       const newProject = await res.json();
       const projectWithId = { id: newProject.id, name: newProject.name };
       setProjectsList((prev) => [...prev, projectWithId]);
       setProjectId(String(newProject.id));
       if (onProjectAdded) onProjectAdded(projectWithId);
-      return true;
     } catch {
-      return false;
+      return;
     }
   };
 

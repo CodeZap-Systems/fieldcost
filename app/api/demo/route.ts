@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseServer } from '../../../lib/supabaseServer';
 import { ensureAuthUser, EnsureAuthUserError } from '../../../lib/demoAuth';
+import { applyRateLimit } from '../../../lib/rateLimit';
 
 function sanitizeCompanyName(company?: string) {
   const trimmed = company?.trim();
@@ -11,6 +12,11 @@ function sanitizeCompanyName(company?: string) {
 
 export async function POST(req: Request) {
   try {
+    // Apply rate limiting: max 10 demo logins per 15 minutes per IP
+    const rateLimitCheck = applyRateLimit(req, { maxRequests: 10, windowMs: 15 * 60 * 1000 });
+    if (!rateLimitCheck.allowed) {
+      return rateLimitCheck.response;
+    }
     const body = await req.json();
     const sanitized = sanitizeCompanyName(body?.company);
     if (!sanitized) {

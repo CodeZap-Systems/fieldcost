@@ -143,7 +143,7 @@ export default function AppNav() {
             ? [payload.company]
             : [];
         const normalized = list
-          .map((entry: any) => ({
+          .map((entry: { id?: string | number; name?: string; is_demo?: boolean }) => ({
             id: entry?.id ? String(entry.id) : "",
             name: entry?.name || "Untitled company",
             is_demo: entry?.is_demo === true,
