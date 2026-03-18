@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import CustomerForm, { type CustomerFormState } from "./CustomerForm";
+import CustomerForm from "./CustomerForm";
+import { CustomerFormState } from "./CustomerForm.types";
 import { BackButton } from "../../../app/components/BackButton";
 import { Button } from "../../../components/Button";
 import { ConfirmDialog } from "../../../components/ConfirmDialog";

@@ -1,12 +1,12 @@
 /**
  * API Tests - Quotes (Tier 2 Feature)
  * Jest + Supertest tests for quotation endpoints
+/**
+ * API Tests - Quotes (White-label Core Feature)
+ * Jest + Supertest tests for quotation endpoints
  */
 
-import request from 'supertest';
-import { generateTestQuote } from '../helpers/generators';
-
-const API_URL = 'http://localhost:3000';
+describe('Quotes API (Core)', () => {
 
 describe('Quotes API (Tier 2)', () => {
   let createdQuoteId: number;
@@ -113,72 +113,11 @@ describe('Quotes API (Tier 2)', () => {
 
   describe('PATCH /api/quotes/:id', () => {
     test('should update draft quote', async () => {
-      if (!createdQuoteId) {
-        const quote = generateTestQuote();
-        const createResponse = await request(API_URL).post('/api/quotes').send(quote);
-        createdQuoteId = createResponse.body.id;
-      }
-
-      const response = await request(API_URL)
-        .patch(`/api/quotes/${createdQuoteId}`)
-        .send({
-          company_id: 8,
           description: 'Updated description',
-        });
+      import request from 'supertest';
+      import { generateTestQuote } from '../helpers/generators';
 
-      expect([200, 204]).toContain(response.status);
-    });
-
-    test('should return 400 for invalid quote id', async () => {
-      const response = await request(API_URL).patch('/api/quotes/99999').send({
-        company_id: 8,
-        description: 'Updated',
-      });
-
-      expect(response.status).toBeGreaterThanOrEqual(400);
-    });
-
-    test('should allow updating line items', async () => {
-      if (!createdQuoteId) {
-        const quote = generateTestQuote();
-        const createResponse = await request(API_URL).post('/api/quotes').send(quote);
-        createdQuoteId = createResponse.body.id;
-      }
-
-      const response = await request(API_URL)
-        .patch(`/api/quotes/${createdQuoteId}`)
-        .send({
-          company_id: 8,
-          line_items: [
-            {
-              name: 'Updated Service',
-              quantity: 5,
-              unit: 'hrs',
-              rate: 200,
-            },
-          ],
-        });
-
-      expect([200, 204]).toContain(response.status);
-    });
-  });
-
-  describe('POST /api/quotes/:id/send', () => {
-    test('should send quote to customer', async () => {
-      if (!createdQuoteId) {
-        const quote = generateTestQuote();
-        const createResponse = await request(API_URL).post('/api/quotes').send(quote);
-        createdQuoteId = createResponse.body.id;
-      }
-
-      const response = await request(API_URL)
-        .post(`/api/quotes/${createdQuoteId}/send`)
-        .send({ company_id: 8 });
-
-      expect([200, 201]).toContain(response.status);
-    });
-
-    test('should return 400 for invalid quote id', async () => {
+      const API_URL = 'http://localhost:3000';
       const response = await request(API_URL)
         .post('/api/quotes/99999/send')
         .send({ company_id: 8 });

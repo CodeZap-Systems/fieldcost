@@ -1,4 +1,4 @@
-# Complete Feature Testing Guide - FieldCost Tier 2 + Billing
+# Complete Feature Testing Guide - FieldCost White-Label + Billing
 
 ## Overview
 This guide covers testing all new FieldCost features with integrated Paystack & PayFast billing, including demo data, test scenarios, and verification steps.

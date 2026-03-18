@@ -42,7 +42,7 @@
     "jspdf": "^4.2.0",
     "jspdf-autotable": "^5.0.7",
     "lucide-react": "^0.575.0",
-    "next": "^16.1.6",
+    "next": "^16.1.7",
     "nodemailer": "^8.0.2",
     "pdf-lib": "^1.17.1",
     "pdfkit": "^0.15.0",
@@ -50,6 +50,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.71.2",
+    "uuid": "^13.0.0",
     "zustand": "^5.0.11"
   },
   "devDependencies": {

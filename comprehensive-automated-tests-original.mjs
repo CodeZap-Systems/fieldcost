@@ -86,7 +86,7 @@ function httpRequest(method, path, body = null) {
   });
 }
 
-// ============================================================================
+// Removed duplicate or incomplete function block
 // TEST RUNNER
 // ============================================================================
 
@@ -644,35 +644,7 @@ async function testAuthAndPermissions() {
   }
 }
 
-async function testMultiTierSupport() {
-  console.log('\n' + '='.repeat(70));
-  console.log('🏗️ MULTI-TIER & FEATURE SUPPORT');
-  console.log('='.repeat(70));
-
-  // Tier 1 (Demo) features
-  try {
-    const tier1Res = await httpRequest('GET', `projects?user_id=${DEMO_USER}`);
-    if (tier1Res.status === 200 && Array.isArray(tier1Res.body)) {
-      addTest('Features', 'Tier 1 (Demo) - Projects', 'PASS', { count: tier1Res.body.length });
-    } else {
-      addTest('Features', 'Tier 1 (Demo) - Projects', 'FAIL', { status: tier1Res.status });
-    }
-  } catch (err) {
-    addTest('Features', 'Tier 1 (Demo) - Projects', 'FAIL', { error: err.message });
-  }
-
-  // Tier 2 (Live Company) features
-  try {
-    const tier2Res = await httpRequest('GET', `projects?user_id=${LIVE_USER}`);
-    if (tier2Res.status === 200 && Array.isArray(tier2Res.body)) {
-      addTest('Features', 'Tier 2 (Live) - Projects', 'PASS', { count: tier2Res.body.length });
-    } else {
-      addTest('Features', 'Tier 2 (Live) - Projects', 'FAIL', { status: tier2Res.status });
-    }
-  } catch (err) {
-    addTest('Features', 'Tier 2 (Live) - Projects', 'FAIL', { error: err.message });
-  }
-
+// Removed: Multi-tier support test (now white-label/bespoke only)
   // Company isolation verification
   try {
     const demoInvoicesRes = await httpRequest('GET', `invoices?user_id=${DEMO_USER}`);

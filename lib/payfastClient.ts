@@ -73,7 +73,7 @@ export class PayFastClient {
       return_url: params.return_url,
       cancel_url: params.cancel_url,
       notify_url: params.notify_url,
-      name_first: 'FieldCost',
+      name_first: 'YourBrand',
       name_last: 'User',
       email_address: params.email_address,
       item_name: params.item_name,

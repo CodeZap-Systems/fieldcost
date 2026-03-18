@@ -80,7 +80,7 @@ export default function ProjectReportsPage() {
       </div>
       {tab === "Summary" && (
         <div className="p-4 text-gray-700 space-y-2">
-          <p>Staging-ready Tier 2 reporting surfaces are enabled on this page.</p>
+          <p>Staging-ready reporting surfaces are enabled on this page.</p>
           <p>Use WIP, approvals, gantt, and geolocation tabs to validate each feature before production release.</p>
         </div>
       )}

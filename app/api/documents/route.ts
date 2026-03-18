@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabaseServer';
 import { resolveServerUserId } from '@/lib/serverUser';
-import { ensureAuthUser, EnsureAuthUserError } from '@/lib/ensureAuthUser';
+import { ensureAuthUser, EnsureAuthUserError } from '../../../lib/ensureAuthUser';
 
 export async function POST(req: NextRequest) {
   try {

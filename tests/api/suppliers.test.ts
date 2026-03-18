@@ -1,12 +1,15 @@
 /**
- * API Tests - Suppliers (Tier 2 Feature)
+ * API Tests - Suppliers (White-label Core Feature)
  * Jest + Supertest tests for supplier endpoints
  */
+
 
 import request from 'supertest';
 import { generateTestSupplier } from '../helpers/generators';
 
 const API_URL = 'http://localhost:3000';
+
+describe('Suppliers API (Core)', () => {
 
 describe('Suppliers API (Tier 2)', () => {
   let createdSupplierId: number;

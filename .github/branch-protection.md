@@ -22,22 +22,22 @@
 
 ### 🟡 `staging` - STAGING ENVIRONMENT
 **Environment**: Staging Vercel deployment (if set up) or local testing  
-**Purpose**: Integration testing for Tier 2 features  
+**Purpose**: Integration testing for bespoke/white-label features  
 **Rules**:
-- Merge feature branches here FIRST
-- Test thoroughly before promoting to main
-- Use staging Supabase database (not production!)
-- Environment variables should use `STAGING_` prefix
+   - Merge feature branches here FIRST
+   - Test thoroughly before promoting to main
+   - Use staging Supabase database (not production!)
+   - Environment variables should use `STAGING_` prefix
 
 **Protection Settings** (Set in GitHub):
-- Require pull request reviews before merging (optional but recommended)
-- Require status checks to pass before merging
+   - Require pull request reviews before merging (optional but recommended)
+   - Require status checks to pass before merging
 
 ---
 
 ### 🟢 `feature/*` - FEATURE BRANCHES
 **Environment**: Local development  
-**Purpose**: Individual Tier 2 feature development  
+**Purpose**: Individual bespoke/white-label feature development  
 **Naming Convention**: `feature/[short-description]`
 
 **Examples**:

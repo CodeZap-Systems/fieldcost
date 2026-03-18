@@ -283,12 +283,7 @@ SHARED OPERATIONS:
 ## Summary
 
 **QUOTES = To CUSTOMERS (What We Sell)**
-- Module 1 of Tier 2
-- Weeks 1-3
-- Difficulty: Medium (60/100)
-
 **PURCHASE ORDERS = From SUPPLIERS (What We Buy)**
-- Module 2 of Tier 2
 - Weeks 4-6
 - Difficulty: Medium-Hard (65/100)
 

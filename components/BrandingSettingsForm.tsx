@@ -30,7 +30,7 @@ export default function BrandingSettingsForm({
   const [colorPalette, setColorPalette] = useState(initial?.colorPalette || defaultColors);
   const [fontFamily, setFontFamily] = useState(initial?.fontFamily || "Inter, sans-serif");
   const [terminology, setTerminology] = useState(initial?.terminology || { project: "Project", crew: "Crew" });
-  const [appName, setAppName] = useState(initial?.appName || "FieldCost");
+  const [appName, setAppName] = useState(initial?.appName || "YourBrand");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -53,7 +53,7 @@ export default function BrandingSettingsForm({
       setColorPalette(defaultColors);
       setFontFamily("Inter, sans-serif");
       setTerminology({ project: "Project", crew: "Crew" });
-      setAppName("FieldCost");
+      setAppName("YourBrand");
       onSave?.({
         companyId,
         logoUrl: "",
@@ -61,7 +61,7 @@ export default function BrandingSettingsForm({
         colorPalette: defaultColors,
         fontFamily: "Inter, sans-serif",
         terminology: { project: "Project", crew: "Crew" },
-        appName: "FieldCost",
+        appName: "YourBrand",
         emailTemplates: { header: "", footer: "", login: "" },
       });
     } catch (err: any) {

@@ -88,7 +88,7 @@ export function DashboardLayoutWithDemoMode() {
         <aside className="w-64 bg-white border-r border-gray-200">
           <div className="p-4 border-b border-gray-200">
             <div className="flex items-center justify-between mb-4">
-              <h1 className="text-xl font-bold">FieldCost</h1>
+              <h1 className="text-xl font-bold">YourBrand</h1>
               {isActiveDemoCompany && (
                 <EnvironmentBadge companyId={activeCompanyId} className="text-xs" />
               )}

@@ -1,12 +1,12 @@
 /**
  * Suppliers E2E Tests (Tier 2 Feature)
  * Tests for managing supplier database
+/**
+ * Suppliers E2E Tests (White-label Core Feature)
+ * Tests for managing supplier database
  */
-
-import { test, expect } from '@playwright/test';
-import { loginUser } from '../helpers/auth';
 import { generateTestSupplier } from '../helpers/generators';
-
+test.describe('Supplier Management (Core)', () => {
 test.describe('Supplier Management (Tier 2)', () => {
   test.beforeEach(async ({ page }) => {
     await loginUser(page);

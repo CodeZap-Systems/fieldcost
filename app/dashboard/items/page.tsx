@@ -97,7 +97,7 @@ export default function ItemsPage() {
     };
   }, [userId, companyId]);
 
-  async function handleAdd(item: { name: string; price: number; item_type: string }) {
+  async function handleAdd(item: { name: string; price: number; cost: number; itemType: string }) {
     if (!userId || !companyId) {
       setError('User or company context not available');
       return false;
@@ -108,7 +108,14 @@ export default function ItemsPage() {
       const res = await fetch("/api/items", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...item, user_id: userId, company_id: companyId }),
+        body: JSON.stringify({
+          name: item.name,
+          price: item.price,
+          cost: item.cost,
+          item_type: item.itemType,
+          user_id: userId,
+          company_id: companyId
+        }),
       });
       if (!res.ok) throw new Error("Failed to add item");
       const newItem = normalizeItem(await res.json());

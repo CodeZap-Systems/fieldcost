@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { WorkflowDefinition, WorkflowStep } from "@/lib/WorkflowDefinition";
 import { v4 as uuidv4 } from "uuid";
-import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautiful-dnd";
+import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { Button } from "./Button";
 import { FormField } from "./FormField";
 import { ConfirmDialog } from "./ConfirmDialog";

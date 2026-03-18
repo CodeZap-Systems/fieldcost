@@ -19,7 +19,7 @@ export function Card({ children, className = "", ...props }: React.HTMLAttribute
   );
 }
 
-import React, { useEffect, useRef } from "react";
+
 
 export function Modal({ open, onClose, children }: { open: boolean; onClose: () => void; children: React.ReactNode }) {
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -66,3 +66,5 @@ export function Modal({ open, onClose, children }: { open: boolean; onClose: () 
     </div>
   );
 }
+
+import { useEffect, useRef } from "react";

@@ -46,7 +46,7 @@ export function OnboardingModal({
             id="onboarding-title"
             className="text-2xl font-bold mb-2"
           >
-            Welcome to FieldCost!
+            Welcome to YourBrand!
           </h2>
           <p className="text-blue-100">
             Your workspace is ready. Let's explore how it works.

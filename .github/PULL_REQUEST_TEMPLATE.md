@@ -1,5 +1,5 @@
 ## What does this PR do?
-[Describe what Tier 2 feature this adds]
+
 
 ## Type of Change
 - [ ] New feature (Tier 2)

@@ -1,12 +1,12 @@
 /**
  * API Tests - Purchase Orders (Tier 2 Feature)
  * Jest + Supertest tests for purchase order endpoints
+/**
+ * API Tests - Purchase Orders (White-label Core Feature)
+ * Jest + Supertest tests for purchase order endpoints
  */
 
-import request from 'supertest';
-import { generateTestPurchaseOrder, generateTestGoodsReceivedNote } from '../helpers/generators';
-
-const API_URL = 'http://localhost:3000';
+describe('Purchase Orders API (Core)', () => {
 
 describe('Purchase Orders API (Tier 2)', () => {
   let createdPOId: number;

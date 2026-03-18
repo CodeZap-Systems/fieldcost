@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Feedback } from "../../../components/Feedback";
-import { ensureClientUserId } from "../../../lib/clientUser";
 
 export interface Supplier {
   id?: number;
@@ -22,24 +21,6 @@ export interface Supplier {
   notes?: string;
 }
 
-export interface SupplierFormData {
-  vendor_name: string;
-  contact_name?: string;
-  email?: string;
-  phone?: string;
-  address_line1?: string;
-  address_line2?: string;
-  city?: string;
-  province?: string;
-  postal_code?: string;
-  country?: string;
-  payment_terms?: string;
-  tax_id?: string;
-  rating?: number;
-  notes?: string;
-  company_id: string;
-  user_id: string;
-}
 
 interface SupplierFormProps {
   existingSupplier?: Supplier;
@@ -48,284 +29,113 @@ interface SupplierFormProps {
   onCancel?: () => void;
 }
 
-export function SupplierForm({
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+export function SupplierForm({ onSubmit, onCancel }: SupplierFormProps) {
+  const [form, setForm] = useState<SupplierFormData>({ vendor_name: "", contact_name: "", email: "", phone: "" });
+  const [success, setSuccess] = useState("");
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const { name, value } = e.target;
+    setForm(f => ({ ...f, [name]: value }));
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSuccess("");
+    setError("");
+    setIsSubmitting(true);
+    const ok = await onSubmit(form);
+    if (ok) {
+      setSuccess("Supplier saved!");
+      setForm({ vendor_name: "", contact_name: "", email: "", phone: "" });
+    } else {
+      setError("Failed to save supplier");
+    }
+    setIsSubmitting(false);
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded shadow max-w-2xl mx-auto">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormField label="Vendor Name" htmlFor="vendor-name" error={error}>
+        <div>
+          <label className="block font-semibold mb-1">Vendor Name *</label>
           <input
-            id="vendor-name"
+            name="vendor_name"
+            value={form.vendor_name}
+            onChange={handleChange}
             className="border p-2 rounded w-full"
-            value={vendorName}
-            onChange={e => setVendorName(e.target.value)}
             required
+            placeholder="e.g., BuildSupplies Inc"
           />
-        </FormField>
-        <FormField label="Contact Name" htmlFor="contact-name">
+        </div>
+        <div>
+          <label className="block font-semibold mb-1">Contact Name</label>
           <input
-            id="contact-name"
+            name="contact_name"
+            value={form.contact_name}
+            onChange={handleChange}
             className="border p-2 rounded w-full"
-            value={contactName}
-            onChange={e => setContactName(e.target.value)}
+            placeholder="e.g., John Smith"
           />
-        </FormField>
-        <FormField label="Email" htmlFor="email">
+        </div>
+        <div>
+          <label className="block font-semibold mb-1">Email</label>
           <input
-            id="email"
-            className="border p-2 rounded w-full"
+            name="email"
             type="email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-          />
-        </FormField>
-        <FormField label="Phone" htmlFor="phone">
-          <input
-            id="phone"
+            value={form.email}
+            onChange={handleChange}
             className="border p-2 rounded w-full"
-            value={phone}
-            onChange={e => setPhone(e.target.value)}
+            placeholder="supplier@example.com"
           />
-        </FormField>
+        </div>
+        <div>
+          <label className="block font-semibold mb-1">Phone</label>
+          <input
+            name="phone"
+            value={form.phone}
+            onChange={handleChange}
+            className="border p-2 rounded w-full"
+            placeholder="+27 11 123 4567"
+          />
+        </div>
       </div>
       <div className="flex gap-4 items-center mt-4">
-        <Button type="submit" variant="primary" loading={isSubmitting}>Save</Button>
+        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded" disabled={isSubmitting}>
+          {isSubmitting ? "Saving..." : "Save"}
+        </button>
+        {onCancel && (
+          <button type="button" onClick={onCancel} className="bg-gray-200 text-gray-800 px-4 py-2 rounded">Cancel</button>
+        )}
         <Feedback type="error" message={error || ""} />
         <Feedback type="success" message={success || ""} />
       </div>
     </form>
   );
-        province: province || null,
-        postal_code: postalCode || null,
-        country: country || null,
-        payment_terms: paymentTerms,
-        tax_id: taxId || null,
-        rating: Number(rating) || 0,
-        notes: notes || null,
-        company_id: companyId,
-        user_id: userId,
-      } as unknown as SupplierFormData;
-
-      const success = await onSubmit(payload);
-      if (!success) {
-        setError("Failed to save supplier");
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  return (
-    <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow">
-      <h2 className="text-2xl font-bold mb-6">
-        {existingSupplier ? "Edit Supplier" : "Add New Supplier/Vendor"}
-      </h2>
-
-      {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded">
-          {error}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Vendor Name and Contact */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">Vendor/Company Name *</label>
-            <input
-              type="text"
-              value={vendorName}
-              onChange={(e) => setVendorName(e.target.value)}
-              placeholder="e.g., BuildSupplies Inc"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2">Contact Person</label>
-            <input
-              type="text"
-              value={contactName}
-              onChange={(e) => setContactName(e.target.value)}
-              placeholder="e.g., John Smith"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-            />
-          </div>
-        </div>
-
-        {/* Email and Phone */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="supplier@example.com"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2">Phone</label>
-            <input
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="+27 11 123 4567"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-            />
-          </div>
-        </div>
-
-        {/* Address */}
-        <div>
-          <label className="block text-sm font-medium mb-2">Address Line 1</label>
-          <input
-            type="text"
-            value={addressLine1}
-            onChange={(e) => setAddressLine1(e.target.value)}
-            placeholder="Street address"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-2">Address Line 2</label>
-          <input
-            type="text"
-            value={addressLine2}
-            onChange={(e) => setAddressLine2(e.target.value)}
-            placeholder="Suite, apartment, etc."
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-          />
-        </div>
-
-        {/* City, Province, Postal, Country */}
-        <div className="grid grid-cols-4 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">City</label>
-            <input
-              type="text"
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              placeholder="Johannesburg"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2">Province</label>
-            <input
-              type="text"
-              value={province}
-              onChange={(e) => setProvince(e.target.value)}
-              placeholder="Gauteng"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2">Postal Code</label>
-            <input
-              type="text"
-              value={postalCode}
-              onChange={(e) => setPostalCode(e.target.value)}
-              placeholder="2000"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2">Country</label>
-            <input
-              type="text"
-              value={country}
-              onChange={(e) => setCountry(e.target.value)}
-              placeholder="South Africa"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-            />
-          </div>
-        </div>
-
-        {/* Payment Terms and Tax ID */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">Payment Terms</label>
-            <select
-              value={paymentTerms}
-              onChange={(e) => setPaymentTerms(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-            >
-              <option value="Net 30">Net 30</option>
-              <option value="Net 60">Net 60</option>
-              <option value="COD">Cash on Delivery</option>
-              <option value="Prepayment">Prepayment</option>
-              <option value="Net 15">Net 15</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2">Tax ID / VAT Number</label>
-            <input
-              type="text"
-              value={taxId}
-              onChange={(e) => setTaxId(e.target.value)}
-              placeholder="12345678901"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-            />
-          </div>
-        </div>
-
-        {/* Rating and Notes */}
-        <div>
-          <label className="block text-sm font-medium mb-2">Rating (0-5)</label>
-          <input
-            type="number"
-            min="0"
-            max="5"
-            step="0.5"
-            value={rating}
-            onChange={(e) => setRating(Number(e.target.value))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-          />
-          <p className="text-sm text-gray-500 mt-1">Based on delivery performance and quality</p>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-2">Notes</label>
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Special notes about this supplier (e.g., lead time, quality issues, etc.)"
-            rows={4}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-          />
-        </div>
-
-        {/* Submit Buttons */}
-        <div className="flex gap-4">
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-          >
-            {isSubmitting ? "Saving..." : existingSupplier ? "Update Supplier" : "Add Supplier"}
-          </button>
-
-          {onCancel && (
-            <button
-              type="button"
-              onClick={onCancel}
-              className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
-            >
-              Cancel
-            </button>
-          )}
-        </div>
-      </form>
-    </div>
-  );
 }
+export type SupplierFormData = {
+  vendor_name: string;
+  contact_name?: string;
+  email?: string;
+  phone?: string;
+};

@@ -5,10 +5,4 @@
 
 'use client';
 
-export function DashboardTierSwitcher() {
-  return (
-    <div className="hidden">
-      {/* Tier switcher functionality to be implemented */}
-    </div>
-  );
-}
+// (Removed: Tier switcher is no longer needed for bespoke/white-label strategy)

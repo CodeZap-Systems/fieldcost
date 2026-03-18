@@ -390,7 +390,7 @@ All components include:
 5. **Bulk Actions**: Multi-select companies for team onboarding
 6. **Custom Demo Scenarios**: Let companies create their own demo data
 7. **Audit Logs**: Track all demo/live switches for compliance
-8. **Demo Limitations**: Progressive feature unlock based on company tier
+8. **Demo Limitations**: Progressive feature unlock based on company configuration
 
 ## Performance
 

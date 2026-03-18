@@ -1,9 +1,24 @@
 "use client";
+
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { supabase } from "../../../lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { persistActiveCompanyId } from "../../../lib/companySwitcher";
+
+// Microsoft SSO handler
+async function handleMicrosoftSSO(router: any, setError: (msg: string) => void) {
+  try {
+    const { error } = await supabase.auth.signInWithOAuth({ provider: "azure" });
+    if (error) {
+      setError("Microsoft SSO failed: " + error.message);
+    }
+    // On success, Supabase will redirect automatically
+  } catch (err: any) {
+    setError("Microsoft SSO failed. Please try again.");
+    console.error("Microsoft SSO error:", err);
+  }
+}
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -167,10 +182,25 @@ export default function LoginPage() {
         <form onSubmit={handleLogin} className="bg-white rounded-lg shadow-xl p-8 mb-4">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Sign In</h2>
 
+          {/* Microsoft SSO Button */}
+          <div className="mb-6">
+            <button
+              type="button"
+              className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors mb-4"
+              onClick={() => handleMicrosoftSSO(router, setError)}
+              disabled={loading}
+            >
+              <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="22" height="22" x="2" y="2" fill="#F35325"/><rect width="22" height="22" x="24" y="2" fill="#81BC06"/><rect width="22" height="22" x="2" y="24" fill="#05A6F0"/><rect width="22" height="22" x="24" y="24" fill="#FFBA08"/></svg>
+              Sign in with Microsoft
+            </button>
+            <div className="text-center text-xs text-gray-500 mb-2">or use your email and password</div>
+          </div>
+
           {/* Email Input */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
             <input
+              name="email"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent placeholder-gray-400"
               type="email"
               placeholder="you@company.com"

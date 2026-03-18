@@ -1,7 +1,3 @@
-"use client";
-import { useState, type ChangeEvent, type FormEvent } from "react";
-import { Feedback } from "../../../components/Feedback";
-
 export type VendorFormState = {
   name: string;
   email: string;
@@ -10,147 +6,12 @@ export type VendorFormState = {
   contact_person: string;
 };
 
-type VendorFormProps = {
-  onAdd: (vendor: VendorFormState) => Promise<boolean>;
-};
-
-const createDefaultForm = (): VendorFormState => ({
-  name: "",
-  email: "",
-  phone: "",
-  company_name: "",
-  contact_person: "",
-});
-
-export default function VendorForm({ onAdd }: VendorFormProps) {
-  const [form, setForm] = useState<VendorFormState>(createDefaultForm());
-  const [success, setSuccess] = useState("");
-  const [error, setError] = useState("");
-
-  function handleChange(e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
-    const { name, value } = e.target;
-    setForm(f => ({ ...f, [name]: value }));
-  }
-
-  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setSuccess("");
-    setError("");
-    if (!form.name) {
-      setError("Please enter vendor name.");
-      return;
-    }
-    const ok = await onAdd(form);
-    if (ok) {
-      setSuccess("Vendor added!");
-      setForm(createDefaultForm());
-    } else {
-      setError("Failed to add vendor.");
-    }
-  }
-
+export default function VendorForm({ onAdd }: { onAdd?: (vendor: VendorFormState) => Promise<boolean> }) {
   return (
-    <form onSubmit={handleSubmit} className="bg-gray-50 p-6 rounded shadow max-w-2xl mx-auto">
-      <h2 className="text-xl font-bold mb-4">Add New Vendor</h2>
-      
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        <div>
-          <label className="block font-semibold mb-1">Vendor Name *</label>
-          <input 
-            name="name" 
-            value={form.name} 
-            onChange={handleChange} 
-            className="border p-2 rounded w-full" 
-            required 
-            placeholder="e.g., BuildCo Supply"
-          />
-        </div>
-        <div>
-          <label className="block font-semibold mb-1">Email</label>
-          <input 
-            name="email" 
-            type="email"
-            value={form.email} 
-            onChange={handleChange} 
-            className="border p-2 rounded w-full" 
-            placeholder="vendor@example.com"
-          />
-        </div>
-        <div>
-          <label className="block font-semibold mb-1">Phone</label>
-          <input 
-            name="phone" 
-            value={form.phone} 
-            onChange={handleChange} 
-            className="border p-2 rounded w-full" 
-            placeholder="+27 11 765 4321"
-          />
-        </div>
-        <div>
-          <label className="block font-semibold mb-1">Company Name</label>
-          <input 
-            name="company_name" 
-            return (
-              <form onSubmit={handleSubmit} className="bg-gray-50 p-6 rounded shadow max-w-2xl mx-auto">
-                <h2 className="text-xl font-bold mb-4">Add New Vendor</h2>
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <label className="block font-semibold mb-1">Vendor Name *</label>
-                    <input 
-                      name="name" 
-                      value={form.name} 
-                      onChange={handleChange} 
-                      className="border p-2 rounded w-full" 
-                      required 
-                      placeholder="e.g., BuildCo Supply"
-                    />
-                  </div>
-                  <div>
-                    <label className="block font-semibold mb-1">Email</label>
-                    <input 
-                      name="email" 
-                      type="email"
-                      value={form.email} 
-                      onChange={handleChange} 
-                      className="border p-2 rounded w-full" 
-                      placeholder="vendor@example.com"
-                    />
-                  </div>
-                  <div>
-                    <label className="block font-semibold mb-1">Phone</label>
-                    <input 
-                      name="phone" 
-                      value={form.phone} 
-                      onChange={handleChange} 
-                      className="border p-2 rounded w-full" 
-                      placeholder="+27 11 765 4321"
-                    />
-                  </div>
-                  <div>
-                    <label className="block font-semibold mb-1">Company Name</label>
-                    <input 
-                      name="company_name" 
-                      value={form.company_name} 
-                      onChange={handleChange} 
-                      className="border p-2 rounded w-full" 
-                      placeholder="Legal company name"
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <label className="block font-semibold mb-1">Contact Person</label>
-                    <input 
-                      name="contact_person" 
-                      value={form.contact_person} 
-                      onChange={handleChange} 
-                      className="border p-2 rounded w-full" 
-                      placeholder="Full name"
-                    />
-                  </div>
-                </div>
-                <div className="flex gap-4 items-center">
-                  <button className="bg-blue-600 text-white px-4 py-2 rounded" type="submit">Add Vendor</button>
-                  <Feedback type="success" message={success || ""} />
-                  <Feedback type="error" message={error || ""} />
-                </div>
-              </form>
-            );
+    <form className="max-w-md mx-auto p-4 bg-white rounded shadow">
+      <h2 className="text-lg font-bold mb-4">Add Vendor</h2>
+      {/* Add form fields here */}
+      <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">Add</button>
+    </form>
+  );
+}

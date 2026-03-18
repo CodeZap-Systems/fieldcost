@@ -1,12 +1,12 @@
 /**
  * Quotes E2E Tests (Tier 2 Feature)
  * Tests for creating, sending, and converting quotations
+/**
+ * Quotes E2E Tests (White-label Core Feature)
+ * Tests for creating, sending, and converting quotations
  */
-
-import { test, expect } from '@playwright/test';
-import { loginUser } from '../helpers/auth';
 import { generateTestQuote } from '../helpers/generators';
-
+test.describe('Quotations (Core)', () => {
 test.describe('Quotations (Tier 2)', () => {
   test.beforeEach(async ({ page }) => {
     await loginUser(page);

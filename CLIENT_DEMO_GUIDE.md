@@ -1,4 +1,4 @@
-# FieldCost Tier 2 Demo Checklist
+# FieldCost Demo Checklist
 
 ## Pre-Demo Setup (5 minutes)
 
@@ -21,6 +21,7 @@ This creates:
 npm run dev
 ```
 
+
 Then navigate to: **http://localhost:3000**
 
 ---
@@ -32,9 +33,9 @@ Then navigate to: **http://localhost:3000**
 **URL:** `http://localhost:3000/auth/demo-login`
 
 **Demo Points:**
-- Show demo login feature
-- Explain role-based access control (Admin, User, Subcontractor)
-- Navigate to Tier 2 Dashboard
+   - Show demo login feature
+   - Explain role-based access control (Admin, User, Subcontractor)
+   - Navigate to the main Dashboard
 
 ---
 
@@ -193,14 +194,14 @@ Then navigate to: **http://localhost:3000**
 
 ## Key Features to Highlight
 
-### ✨ **New Tier 2 Capabilities:**
+### ✨ **New Capabilities:**
 
 1. **Document Management**
    - Quote workflow: Draft → Sent → Accepted
    - PO workflow: Draft → Sent → Confirmed → Received → Invoiced
    - Complete audit trails with timestamps
 
-2. **Multi-tier Approval**
+2. **Approval Workflows**
    - Quotes require customer acceptance
    - Purchase orders track supplier confirmation
    - GRNs verify actual receipt
@@ -283,7 +284,7 @@ If something doesn't load:
 ## Post-Demo
 
 ### What to Mention:
-- "This is version 1.0 of Tier 2 - more features coming"
+- "This is version 1.0 of our bespoke/white-label platform - more features coming"
 - "Data is secured with role-based access control"
 - "Mobile apps are in development"
 - "API available for ERP integrations"
@@ -291,6 +292,6 @@ If something doesn't load:
 
 ### Next Steps:
 - Collect feedback on feature gaps
-- Discuss pricing tiers
+- Discuss pricing and customization options
 - Explain training and onboarding process
 - Set up production environment timeline
