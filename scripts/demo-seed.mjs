@@ -7,7 +7,7 @@ loadEnv({ path: '.env.local', override: true });
 
 const DEFAULT_ADMIN_UUID = '11111111-1111-1111-1111-111111111111';
 const DEFAULT_SUBCONTRACTOR_UUID = '22222222-2222-2222-2222-222222222222';
-const DEFAULT_SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://mukaeylwmzztycajibhy.supabase.co';
+const DEFAULT_SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const sanitize = value => (value && value.trim()) || undefined;

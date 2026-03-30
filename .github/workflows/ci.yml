@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, master]
+  push:
+    branches: [main, master]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-typecheck-build:
+    name: Lint, Typecheck & Build
+    runs-on: ubuntu-latest
+
+    env:
+      # Provide stub values so the app doesn't throw on missing env vars during
+      # build/lint/typecheck. These are NOT real secrets.
+      NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_placeholder
+      SUPABASE_SERVICE_ROLE_KEY: sb_secret_placeholder
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      # Disable Sentry source map upload during CI builds
+      SENTRY_ORG: ""
+      SENTRY_PROJECT: ""
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint (source files)
+        # Lint app/, lib/, components/, and middleware — excludes pre-existing
+        # issues in tests/ and scripts/ that are not part of the production build.
+        run: npx eslint app/ lib/ middleware.ts components/ --ext .ts,.tsx
+
+      - name: Typecheck
+        run: npx tsc --noEmit
