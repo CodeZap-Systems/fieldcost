@@ -14,6 +14,8 @@ jobs:
   lint-typecheck-build:
     name: Lint, Typecheck & Build
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     env:
       # Provide stub values so the app doesn't throw on missing env vars during
