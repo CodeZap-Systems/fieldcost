@@ -93,7 +93,7 @@ export async function PATCH(request: Request) {
     }
 
     // Prepare update object with provided fields only
-    const updateData: Record<string, any> = {
+    const updateData: Record<string, unknown> = {
       updated_at: new Date().toISOString(),
     };
 

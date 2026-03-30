@@ -91,7 +91,7 @@ function normalizeProfile(payload: ProfileInput, userId: string): StoredCompanyP
     default_currency: payload?.default_currency ?? "ZAR",
     erp_targets: Array.isArray(payload?.erp_targets) ? payload.erp_targets : [],
     updated_at: payload?.updated_at ?? new Date().toISOString(),
-    is_demo: (payload as any)?.is_demo === true,
+    is_demo: (payload as { is_demo?: unknown })?.is_demo === true,
   };
 }
 

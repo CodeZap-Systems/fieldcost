@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
  * Create a notification
  */
 async function createNotification(
-  body: any,
+  body: Record<string, unknown>,
   userId: string
 ) {
   try {
@@ -164,7 +164,7 @@ async function getNotifications({
     return NextResponse.json({
       success: true,
       notifications: data || [],
-      unreadCount: (data || []).filter((n: any) => !n.is_read).length,
+      unreadCount: (data || []).filter((n) => !n.is_read).length,
     });
   } catch (error) {
     console.error('Get notifications error:', error);
@@ -206,7 +206,7 @@ async function markAsRead({
 /**
  * Update notification preferences
  */
-async function updatePreferences(body: any, userId: string) {
+async function updatePreferences(body: Record<string, unknown>, userId: string) {
   try {
     const {
       companyId,
@@ -284,7 +284,7 @@ async function getPreferences({
 /**
  * Send task assignment notification
  */
-async function sendTaskNotification(body: any, userId: string) {
+async function sendTaskNotification(body: Record<string, unknown>, userId: string) {
   try {
     const {
       taskId,
@@ -342,7 +342,7 @@ async function sendTaskNotification(body: any, userId: string) {
 /**
  * Check for past-due invoices and send notifications
  */
-async function checkPastDueInvoices(body: any) {
+async function checkPastDueInvoices(body: Record<string, unknown>) {
   try {
     const { companyId } = body;
     const now = new Date();
@@ -360,7 +360,7 @@ async function checkPastDueInvoices(body: any) {
     }
 
     // Create notifications for each past-due invoice
-    const notificationsToCreate = (pastDueInvoices || []).map((invoice: any) => ({
+    const notificationsToCreate = (pastDueInvoices || []).map((invoice) => ({
       recipient_id: invoice.user_id,
       type: 'invoice_overdue',
       title: 'Invoice Past Due',

@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Create invoice line items from quote line items
-    const invoiceLineItems = lineItems.map((line: any) => ({
+    const invoiceLineItems = lineItems.map((line) => ({
       invoice_id: invoice.id,
       item_id: line.item_id,
       item_name: line.item_name,

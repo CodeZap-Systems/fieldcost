@@ -571,7 +571,21 @@ export async function PATCH(req: Request) {
 }
 
 async function patchOfflineInvoice(options: {
-  body: any;
+  body: {
+    customer_id?: unknown;
+    customerId?: unknown;
+    customer?: string | null;
+    customer_name?: unknown;
+    description?: unknown;
+    reference?: unknown;
+    invoice_number?: unknown;
+    currency?: unknown;
+    status?: unknown;
+    issued_on?: unknown;
+    due_on?: unknown;
+    amount?: unknown;
+    lines?: unknown;
+  };
   userId: string;
   invoiceId: number;
   wantsCustomerChange: boolean;

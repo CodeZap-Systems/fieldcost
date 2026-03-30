@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
@@ -128,7 +128,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       const total = quote.quote_line_items.reduce((sum, item) => sum + item.quantity * item.rate, 0);
       tableData.push(['', '', '', 'TOTAL:', `R${total.toFixed(2)}`]);
 
-      (pdf as any).autoTable({
+      autoTable(pdf, {
         head: [['Description', 'Qty', 'Unit', 'Rate', 'Amount']],
         body: tableData,
         startY: yPosition,
@@ -148,7 +148,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         margin: 20,
       });
 
-      yPosition = (pdf as any).lastAutoTable.finalY + 10;
+      yPosition = (pdf as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
     }
 
     // Footer

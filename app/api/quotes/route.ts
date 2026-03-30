@@ -135,7 +135,7 @@ export async function POST(req: Request) {
 
     // Validate and calculate line totals
     let quoteTotal = 0;
-    const validatedLines = lines.map((line: any) => {
+    const validatedLines = lines.map((line) => {
       const quantity = Number(line.quantity) || 1;
       const rate = Number(line.rate) || 0;
       const total = quantity * rate;
@@ -191,7 +191,7 @@ export async function POST(req: Request) {
     }
 
     // Insert line items
-    const lineItemPayloads = validatedLines.map((line: any) => ({
+    const lineItemPayloads = validatedLines.map((line) => ({
       quote_id: quoteData.id,
       item_id: line.item_id,
       item_name: line.item_name,
@@ -289,7 +289,7 @@ export async function PATCH(req: Request) {
     }
 
     // Prepare update payload (only allow certain fields to be updated)
-    const updatePayload: any = {
+    const updatePayload: Record<string, unknown> = {
       updated_at: new Date().toISOString(),
     };
 

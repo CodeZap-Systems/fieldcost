@@ -142,18 +142,20 @@ async function verifyPayment({
     const paymentProvider = provider || primaryProvider.name;
 
     let verified = false;
-    let paymentData: any = null;
+    let planId = 'professional';
 
     if (paymentProvider === 'paystack' && reference) {
       const response = await paystackClient.verifyPayment(reference);
       verified = response.status === true;
-      paymentData = response.data;
+      const data = response.data as unknown as Record<string, unknown>;
+      if (typeof data?.plan_id === 'string') planId = data.plan_id;
     } else if (paymentProvider === 'payfast' && paymentId) {
       const response = await payfastClient.verifyPayment({
         pf_payment_id: paymentId,
       });
       verified = response.verified;
-      paymentData = response;
+      const data = response as unknown as Record<string, unknown>;
+      if (typeof data?.plan_id === 'string') planId = data.plan_id;
     }
 
     if (!verified) {
@@ -168,7 +170,7 @@ async function verifyPayment({
       .from('subscriptions')
       .upsert({
         user_id: userId,
-        plan_id: paymentData?.plan_id || 'professional',
+        plan_id: planId,
         status: 'active',
         trial_until: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
         current_period_start: new Date(),

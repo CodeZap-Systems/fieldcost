@@ -168,7 +168,7 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: 'Unable to prepare user context' }, { status: 500 });
     }
 
-    const updatePayload: any = {
+    const updatePayload: Record<string, unknown> = {
       updated_at: new Date().toISOString(),
     };
 
