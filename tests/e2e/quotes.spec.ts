@@ -1,13 +1,10 @@
 /**
- * Quotes E2E Tests (Tier 2 Feature)
- * Tests for creating, sending, and converting quotations
-/**
- * Quotes E2E Tests (White-label Core Feature)
+ * Quotes E2E Tests (Core Feature)
  * Tests for creating, sending, and converting quotations
  */
 import { generateTestQuote } from '../helpers/generators';
-test.describe('Quotations (Core)', () => {
-test.describe('Quotations (Tier 2)', () => {
+import { loginUser } from '../helpers/auth';
+test.describe('Quotations', () => {
   test.beforeEach(async ({ page }) => {
     await loginUser(page);
     await page.goto('http://localhost:3000/dashboard/quotes?company_id=8');

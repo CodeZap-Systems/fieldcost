@@ -128,7 +128,7 @@ export async function getDocumentExportHistory(
   userId: string,
   companyId: string,
   limit = 50
-): Promise<any[]> {
+): Promise<Record<string, unknown>[]> {
   try {
     const { data } = await supabaseServer
       .from('document_export_logs')

@@ -1,15 +1,20 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { readActiveCompanyId, persistActiveCompanyId } from "@/lib/companySwitcher";
-import { isDemoCompany, DEMO_COMPANY_ID } from "@/lib/demoConstants";
+import { isDemoCompany } from "@/lib/demoConstants";
 import { DemoModeBanner } from "@/app/components/DemoModeBanner";
-import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
 interface DashboardWithBannerProps {
   children: ReactNode;
+}
+
+interface ClientState {
+  mounted: boolean;
+  activeCompanyId: string | null;
+  isAuthenticated: boolean;
 }
 
 /**
@@ -21,19 +26,21 @@ interface DashboardWithBannerProps {
  */
 export function DashboardWithBanner({ children }: DashboardWithBannerProps) {
   const router = useRouter();
-  const [activeCompanyId, setActiveCompanyId] = useState<string | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const [clientState, setClientState] = useState<ClientState>({
+    mounted: false,
+    activeCompanyId: null,
+    isAuthenticated: false,
+  });
 
   useEffect(() => {
-    // Check if user is authenticated
-    supabase.auth.getUser().then(({ data }) => {
-      setIsAuthenticated(!!data?.user);
-    });
-    
-    setMounted(true);
     const companyId = readActiveCompanyId();
-    setActiveCompanyId(companyId);
+    supabase.auth.getUser().then(({ data }) => {
+      setClientState({
+        mounted: true,
+        activeCompanyId: companyId,
+        isAuthenticated: !!data?.user,
+      });
+    });
   }, []);
 
   const handleGotoLiveWorkspace = () => {
@@ -43,19 +50,19 @@ export function DashboardWithBanner({ children }: DashboardWithBannerProps) {
   };
 
   // Prevent hydration mismatch
-  if (!mounted) {
+  if (!clientState.mounted) {
     return <>{children}</>;
   }
 
   // For authenticated users, never show DemoModeBanner even if they somehow access demo company
   // The company API should prevent this, but this is a safety net
-  const shouldShowDemoBanner = !isAuthenticated && isDemoCompany(activeCompanyId);
+  const shouldShowDemoBanner = !clientState.isAuthenticated && isDemoCompany(clientState.activeCompanyId);
 
   return (
     <>
       {shouldShowDemoBanner && (
         <DemoModeBanner
-          companyId={activeCompanyId}
+          companyId={clientState.activeCompanyId}
           onGotoLiveWorkspace={handleGotoLiveWorkspace}
         />
       )}

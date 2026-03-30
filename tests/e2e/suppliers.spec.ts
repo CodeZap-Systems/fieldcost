@@ -1,13 +1,10 @@
 /**
- * Suppliers E2E Tests (Tier 2 Feature)
- * Tests for managing supplier database
-/**
- * Suppliers E2E Tests (White-label Core Feature)
+ * Suppliers E2E Tests (Core Feature)
  * Tests for managing supplier database
  */
 import { generateTestSupplier } from '../helpers/generators';
-test.describe('Supplier Management (Core)', () => {
-test.describe('Supplier Management (Tier 2)', () => {
+import { loginUser } from '../helpers/auth';
+test.describe('Supplier Management', () => {
   test.beforeEach(async ({ page }) => {
     await loginUser(page);
     await page.goto('http://localhost:3000/dashboard/suppliers?company_id=8');

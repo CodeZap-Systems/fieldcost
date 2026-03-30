@@ -1,14 +1,14 @@
 /**
- * API Tests - Quotes (Tier 2 Feature)
- * Jest + Supertest tests for quotation endpoints
-/**
- * API Tests - Quotes (White-label Core Feature)
+ * API Tests - Quotes (Core Feature)
  * Jest + Supertest tests for quotation endpoints
  */
 
-describe('Quotes API (Core)', () => {
+import request from 'supertest';
+import { generateTestQuote } from '../helpers/generators';
 
-describe('Quotes API (Tier 2)', () => {
+const API_URL = 'http://localhost:3000';
+
+describe('Quotes API', () => {
   let createdQuoteId: number;
 
   describe('POST /api/quotes', () => {
@@ -113,11 +113,25 @@ describe('Quotes API (Tier 2)', () => {
 
   describe('PATCH /api/quotes/:id', () => {
     test('should update draft quote', async () => {
-          description: 'Updated description',
-      import request from 'supertest';
-      import { generateTestQuote } from '../helpers/generators';
+      if (!createdQuoteId) {
+        const quote = generateTestQuote();
+        const createResponse = await request(API_URL).post('/api/quotes').send(quote);
+        createdQuoteId = createResponse.body.id;
+      }
 
-      const API_URL = 'http://localhost:3000';
+      const response = await request(API_URL)
+        .patch(`/api/quotes/${createdQuoteId}`)
+        .send({
+          company_id: 8,
+          description: 'Updated description',
+        });
+
+      expect([200, 204]).toContain(response.status);
+    });
+  });
+
+  describe('POST /api/quotes/:id/send', () => {
+    test('should return 400 for non-existent quote', async () => {
       const response = await request(API_URL)
         .post('/api/quotes/99999/send')
         .send({ company_id: 8 });

@@ -64,8 +64,8 @@ export default function BrandingSettingsForm({
         appName: "YourBrand",
         emailTemplates: { header: "", footer: "", login: "" },
       });
-    } catch (err: any) {
-      setError(err.message || "Unknown error");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setSaving(false);
       setConfirmOpen(false);
@@ -104,8 +104,8 @@ export default function BrandingSettingsForm({
       });
       if (!res.ok) throw new Error("Failed to save");
       onSave?.(settings);
-    } catch (err: any) {
-      setError(err.message || "Unknown error");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setSaving(false);
     }

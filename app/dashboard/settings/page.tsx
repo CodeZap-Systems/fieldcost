@@ -141,7 +141,7 @@ export default function SettingsPage() {
     setSuccess(null);
 
     try {
-      const updatePayload: Record<string, any> = {
+      const updatePayload: Record<string, unknown> = {
         name: companyName,
         email: companyEmail,
         phone: companyPhone,

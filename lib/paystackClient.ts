@@ -9,7 +9,7 @@ export interface PaystackInitializePaymentParams {
   email: string;
   amount: number; // in kobo (multiply by 100)
   reference?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface PaystackVerifyPaymentResponse {

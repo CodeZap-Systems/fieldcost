@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Link from "next/link";
 
 interface OnboardingModalProps {
@@ -21,14 +21,7 @@ export function OnboardingModal({
   onStayInWorkspace,
   isLoading = false,
 }: OnboardingModalProps) {
-  const [mounted, setMounted] = useState(false);
-
-  // Prevent hydration mismatch
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted || !isOpen) {
+  if (!isOpen) {
     return null;
   }
 
@@ -49,7 +42,7 @@ export function OnboardingModal({
             Welcome to YourBrand!
           </h2>
           <p className="text-blue-100">
-            Your workspace is ready. Let's explore how it works.
+            Your workspace is ready. Let&apos;s explore how it works.
           </p>
         </div>
 

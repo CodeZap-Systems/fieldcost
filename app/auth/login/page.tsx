@@ -7,14 +7,14 @@ import { useRouter } from "next/navigation";
 import { persistActiveCompanyId } from "../../../lib/companySwitcher";
 
 // Microsoft SSO handler
-async function handleMicrosoftSSO(router: any, setError: (msg: string) => void) {
+async function handleMicrosoftSSO(router: ReturnType<typeof import('next/navigation').useRouter>, setError: (msg: string) => void) {
   try {
     const { error } = await supabase.auth.signInWithOAuth({ provider: "azure" });
     if (error) {
       setError("Microsoft SSO failed: " + error.message);
     }
     // On success, Supabase will redirect automatically
-  } catch (err: any) {
+  } catch (err: unknown) {
     setError("Microsoft SSO failed. Please try again.");
     console.error("Microsoft SSO error:", err);
   }
@@ -288,7 +288,7 @@ export default function LoginPage() {
         {/* Sign Up */}
         <div className="text-center">
           <p className="text-indigo-100 text-sm">
-            Don't have an account?{" "}
+            Don&apos;t have an account?{" "}
             <Link href="/auth/register" className="text-white font-bold hover:underline">
               Create one
             </Link>

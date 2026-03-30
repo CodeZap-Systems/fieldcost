@@ -8,7 +8,7 @@ const groupId = process.env.PBI_GROUP_ID!; // Power BI workspace ID
 type PushRowsParams = {
   datasetId: string;
   tableName: string;
-  rows: any[];
+  rows: Record<string, unknown>[];
 };
 
 async function getPowerBIAccessToken() {

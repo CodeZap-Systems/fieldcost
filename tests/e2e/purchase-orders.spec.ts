@@ -1,13 +1,10 @@
 /**
- * Purchase Orders E2E Tests (Tier 2 Feature)
- * Tests for managing supplier purchase orders and goods received notes
-/**
- * Purchase Orders E2E Tests (White-label Core Feature)
+ * Purchase Orders E2E Tests (Core Feature)
  * Tests for managing supplier purchase orders and goods received notes
  */
 import { generateTestPurchaseOrder, generateTestGoodsReceivedNote } from '../helpers/generators';
-test.describe('Purchase Orders & GRN (Core)', () => {
-test.describe('Purchase Orders & GRN (Tier 2)', () => {
+import { loginUser } from '../helpers/auth';
+test.describe('Purchase Orders & GRN', () => {
   test.beforeEach(async ({ page }) => {
     await loginUser(page);
     await page.goto('http://localhost:3000/dashboard/purchase-orders?company_id=8');

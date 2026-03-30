@@ -34,7 +34,7 @@ export function DemoModeBanner({
           {/* Message */}
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-gray-900">
-              You're exploring the Demo Workspace.
+              You&apos;re exploring the Demo Workspace.
             </p>
             <p className="text-xs text-gray-600 mt-0.5">
               This is sample data to help you explore the product. No real companies are affected.

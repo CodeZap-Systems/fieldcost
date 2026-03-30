@@ -1,11 +1,20 @@
 // components/VerticalsAdmin.tsx
 import React, { useEffect, useState } from 'react';
 
+interface Vertical {
+  id: string;
+  name: string;
+  description: string;
+  customFields?: Record<string, unknown>;
+  terminology?: Record<string, string>;
+  [key: string]: unknown;
+}
+
 export default function VerticalsAdmin({ companyId }: { companyId: string }) {
-  const [verticals, setVerticals] = useState<any[]>([]);
+  const [verticals, setVerticals] = useState<Vertical[]>([]);
   const [active, setActive] = useState<string[]>([]);
   const [editing, setEditing] = useState<string | null>(null);
-  const [editConfig, setEditConfig] = useState<any | null>(null);
+  const [editConfig, setEditConfig] = useState<Vertical | null>(null);
   const [mergeMsg, setMergeMsg] = useState<string | null>(null);
 
   useEffect(() => {
@@ -35,7 +44,7 @@ export default function VerticalsAdmin({ companyId }: { companyId: string }) {
     setMergeMsg(null);
   };
 
-  const handleConfigChange = (key: string, value: any) => {
+  const handleConfigChange = (key: string, value: unknown) => {
     if (!editConfig) return;
     setEditConfig({ ...editConfig, [key]: value });
   };
@@ -50,7 +59,7 @@ export default function VerticalsAdmin({ companyId }: { companyId: string }) {
     <div>
       <h2>Industry Verticals</h2>
       <ul>
-        {verticals.map((v: any) => (
+        {verticals.map((v) => (
           <li key={v.id} className="mb-2">
             <label>
               <input type="checkbox" checked={active.includes(v.id)} onChange={() => toggleVertical(v.id)} />
