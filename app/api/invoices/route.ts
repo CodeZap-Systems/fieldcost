@@ -570,22 +570,25 @@ export async function PATCH(req: Request) {
   }
 }
 
+/** Fields accepted by the offline PATCH invoice handler */
+interface InvoicePatchBody {
+  customer_id?: string | number | null;
+  customerId?: string | number | null;
+  customer?: string | null;
+  customer_name?: string | null;
+  description?: string | null;
+  reference?: string | null;
+  invoice_number?: string | null;
+  currency?: string | null;
+  status?: string | null;
+  issued_on?: string | null;
+  due_on?: string | null;
+  amount?: number | null;
+  lines?: unknown;
+}
+
 async function patchOfflineInvoice(options: {
-  body: {
-    customer_id?: unknown;
-    customerId?: unknown;
-    customer?: string | null;
-    customer_name?: unknown;
-    description?: unknown;
-    reference?: unknown;
-    invoice_number?: unknown;
-    currency?: unknown;
-    status?: unknown;
-    issued_on?: unknown;
-    due_on?: unknown;
-    amount?: unknown;
-    lines?: unknown;
-  };
+  body: InvoicePatchBody;
   userId: string;
   invoiceId: number;
   wantsCustomerChange: boolean;

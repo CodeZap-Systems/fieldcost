@@ -6,6 +6,9 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
+/** jsPDF extended by jspdf-autotable – tracks the last rendered table position */
+type JsPDFWithAutoTable = jsPDF & { lastAutoTable: { finalY: number } };
+
 export interface InvoiceLineItem {
   id?: number;
   name: string;
@@ -169,7 +172,7 @@ export async function generateInvoicesPdf(
         },
       });
 
-      yPosition = (pdf as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
+      yPosition = (pdf as JsPDFWithAutoTable).lastAutoTable.finalY + 10;
     }
 
     if (invoice.description) {

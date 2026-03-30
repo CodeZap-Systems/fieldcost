@@ -2,6 +2,9 @@ import { createClient } from '@supabase/supabase-js';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
+/** jsPDF extended by jspdf-autotable – tracks the last rendered table position */
+type JsPDFWithAutoTable = jsPDF & { lastAutoTable: { finalY: number } };
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
   process.env.SUPABASE_SERVICE_ROLE_KEY || ''
@@ -148,7 +151,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         margin: 20,
       });
 
-      yPosition = (pdf as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
+      yPosition = (pdf as JsPDFWithAutoTable).lastAutoTable.finalY + 10;
     }
 
     // Footer

@@ -74,7 +74,7 @@ export default function WorkflowBuilder({ companyId = "demo-company" }: { compan
     setSelected({ ...selected, steps: [...selected.steps, step] });
   };
 
-  const handleStepChange = (idx: number, key: keyof WorkflowStep, value: any) => {
+  const handleStepChange = (idx: number, key: keyof WorkflowStep, value: WorkflowStep[keyof WorkflowStep]) => {
     if (!selected) return;
     const steps = [...selected.steps];
     steps[idx] = { ...steps[idx], [key]: value };

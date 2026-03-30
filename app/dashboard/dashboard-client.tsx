@@ -8,7 +8,7 @@ import { DemoModeBanner } from "@/app/components/DemoModeBanner";
 import { supabase } from "@/lib/supabaseClient";
 
 interface DashboardWithBannerProps {
-  children: ReactNode;
+  children?: ReactNode;
 }
 
 interface ClientState {
