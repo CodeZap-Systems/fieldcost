@@ -75,12 +75,12 @@ export function useCompanySwitcher(options?: UseCompanySwitcherOptions) {
         // For real users: show real companies, but allow adding demo as sandbox option
         // For demo users: show everything including demo
         const normalized = companyList
-          .map((entry: any) => ({
+          .map((entry: { id?: unknown; name?: string }) => ({
             id: entry?.id ? String(entry.id) : "",
             name: entry?.name || "Untitled company",
-            isDemoCompany: entry?.id === DEMO_COMPANY_ID,
+            isDemoCompany: String(entry?.id) === DEMO_COMPANY_ID,
           }))
-          .filter((entry: any) => entry.id);
+          .filter((entry: { id: string }) => entry.id);
 
         setCompanies(normalized);
 

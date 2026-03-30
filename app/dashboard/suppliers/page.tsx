@@ -39,7 +39,7 @@ function SuppliersPageContent() {
     }
   };
 
-  const handleUpdateSupplier = async (data: any) => {
+  const handleUpdateSupplier = async (data: SupplierFormData) => {
     if (!selectedSupplier) return false;
 
     try {

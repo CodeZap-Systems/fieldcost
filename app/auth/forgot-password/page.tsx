@@ -90,7 +90,7 @@ export default function ForgotPasswordPage() {
         <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-xl p-8 mb-4">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Forgot Your Password?</h2>
           <p className="text-gray-600 text-sm mb-6">
-            Enter the email address associated with your FieldCost account. We'll send you a secure link to reset your password.
+            Enter the email address associated with your FieldCost account. We&apos;ll send you a secure link to reset your password.
           </p>
           
           <div className="mb-4">

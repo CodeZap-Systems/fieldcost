@@ -28,8 +28,8 @@ export default function WorkflowBuilder({ companyId = "demo-company" }: { compan
         if (!res.ok) throw new Error("Failed to delete workflow");
         setWorkflows(ws => ws.filter(w => w.id !== selected.id));
         setSelected(null);
-      } catch (err: any) {
-        setError(err.message || "Unknown error");
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Unknown error");
       } finally {
         setSaving(false);
         setConfirmOpen(false);
@@ -74,7 +74,7 @@ export default function WorkflowBuilder({ companyId = "demo-company" }: { compan
     setSelected({ ...selected, steps: [...selected.steps, step] });
   };
 
-  const handleStepChange = (idx: number, key: keyof WorkflowStep, value: any) => {
+  const handleStepChange = (idx: number, key: keyof WorkflowStep, value: WorkflowStep[keyof WorkflowStep]) => {
     if (!selected) return;
     const steps = [...selected.steps];
     steps[idx] = { ...steps[idx], [key]: value };
@@ -106,8 +106,8 @@ export default function WorkflowBuilder({ companyId = "demo-company" }: { compan
         body: JSON.stringify(selected),
       });
       setWorkflows(ws => ws.map(w => (w.id === selected.id ? selected : w)));
-    } catch (err: any) {
-      setError(err.message || "Unknown error");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setSaving(false);
     }

@@ -4,7 +4,10 @@
  */
 
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
+
+/** jsPDF extended by jspdf-autotable – tracks the last rendered table position */
+type JsPDFWithAutoTable = jsPDF & { lastAutoTable: { finalY: number } };
 
 export interface InvoiceLineItem {
   id?: number;
@@ -149,7 +152,7 @@ export async function generateInvoicesPdf(
       // Add total row
       tableData.push(['', '', '', invoice.amount.toFixed(2), '']);
 
-      (pdf as any).autoTable({
+      autoTable(pdf, {
         head: [['Description', 'Qty', 'Rate', 'Amount', 'Project']],
         body: tableData,
         startY: yPosition,
@@ -169,7 +172,7 @@ export async function generateInvoicesPdf(
         },
       });
 
-      yPosition = (pdf as any).lastAutoTable.finalY + 10;
+      yPosition = (pdf as JsPDFWithAutoTable).lastAutoTable.finalY + 10;
     }
 
     if (invoice.description) {

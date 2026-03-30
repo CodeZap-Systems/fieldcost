@@ -132,7 +132,7 @@ export default function DemoLoginPage() {
           <div className="space-y-6">
             {/* What's Included */}
             <div className="bg-white rounded-lg shadow-xl p-8">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">📦 What's Included</h3>
+              <h3 className="text-lg font-bold text-gray-900 mb-4">📦 What&apos;s Included</h3>
               <ul className="space-y-3 text-sm text-gray-700">
                 <li className="flex gap-3">
                   <span>✓</span>

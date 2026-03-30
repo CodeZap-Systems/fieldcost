@@ -132,7 +132,7 @@ export async function PATCH(
     }
 
     // Handle line items update
-    let updatePayload: any = {
+    const updatePayload: Record<string, unknown> = {
       ...body,
       updated_at: new Date().toISOString(),
     };
@@ -176,7 +176,7 @@ export async function PATCH(
 
       // Insert new line items
       if (lines.length > 0) {
-        const linePayloads = lines.map((line: any) => ({
+        const linePayloads = lines.map((line) => ({
           quote_id: parseInt(quoteId, 10),
           item_id: line.item_id || null,
           item_name: line.item_name,

@@ -31,8 +31,9 @@ export async function GET(req: NextRequest) {
       emailTemplates: data.email_templates || { header: '', footer: '', login: '' },
     };
     return NextResponse.json(branding);
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Failed to fetch branding' }, { status: 500 });
+  } catch (err: unknown) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: errMsg || 'Failed to fetch branding' }, { status: 500 });
   }
 }
 
@@ -59,8 +60,9 @@ export async function POST(req: NextRequest) {
       .eq('id', companyId);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ success: true });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Failed to save branding' }, { status: 500 });
+  } catch (err: unknown) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: errMsg || 'Failed to save branding' }, { status: 500 });
   }
 }
 
@@ -71,7 +73,7 @@ export async function PATCH(req: NextRequest) {
   if (!companyId || !userId) return NextResponse.json({ error: 'Missing companyId or userId' }, { status: 400 });
   try {
     await getCompanyContext(userId, companyId);
-    const updateFields: Record<string, any> = { updated_at: new Date().toISOString() };
+    const updateFields: Record<string, unknown> = { updated_at: new Date().toISOString() };
     if (fields.logoUrl !== undefined) updateFields.logo_url = fields.logoUrl;
     if (fields.faviconUrl !== undefined) updateFields.favicon_url = fields.faviconUrl;
     if (fields.colorPalette !== undefined) updateFields.color_palette = fields.colorPalette;
@@ -86,8 +88,9 @@ export async function PATCH(req: NextRequest) {
       .eq('id', companyId);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ success: true });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Failed to update branding' }, { status: 500 });
+  } catch (err: unknown) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: errMsg || 'Failed to update branding' }, { status: 500 });
   }
 }
 
@@ -114,7 +117,8 @@ export async function DELETE(req: NextRequest) {
       .eq('id', companyId);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ success: true });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Failed to clear branding' }, { status: 500 });
+  } catch (err: unknown) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: errMsg || 'Failed to clear branding' }, { status: 500 });
   }
 }

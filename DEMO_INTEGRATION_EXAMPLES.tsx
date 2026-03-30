@@ -132,7 +132,7 @@ export function DashboardLayoutWithDemoMode() {
               <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">
                 <p className="text-sm text-orange-800">
                   💡 <strong>Tip:</strong> This demo includes realistic sample data 
-                  (projects, tasks, invoices). Feel free to make changes—they won't 
+                  (projects, tasks, invoices). Feel free to make changes—they won&apos;t 
                   affect real workspaces.
                 </p>
               </div>

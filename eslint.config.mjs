@@ -13,6 +13,14 @@ const typescriptScoped = nextTypescript.map(entry => {
 });
 
 const config = [
+  {
+    ignores: [
+      '*.mjs',
+      '*.js',
+      'scripts/**',
+      'tests/load/**',
+    ],
+  },
   ...nextCoreWebVitals,
   ...typescriptScoped,
   {

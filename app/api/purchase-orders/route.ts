@@ -173,7 +173,7 @@ export async function POST(req: Request) {
     }
 
     // Insert line items
-    const lineItemPayloads = validatedLines.map((line: any) => ({
+    const lineItemPayloads = validatedLines.map((line) => ({
       po_id: poData.id,
       item_id: line.item_id,
       item_name: line.item_name,
@@ -266,7 +266,7 @@ export async function PATCH(req: Request) {
     }
 
     // Prepare update
-    const updatePayload: any = {
+    const updatePayload: Record<string, unknown> = {
       updated_at: new Date().toISOString(),
     };
 

@@ -72,7 +72,7 @@ export async function GET(req: Request) {
 
     // For DEMO companies, only filter by company_id (skip user_id filter)
     if (isDemoCompany) {
-      let query = supabaseServer
+      const query = supabaseServer
         .from('projects')
         .select('*')
         .eq('company_id', companyId);
@@ -83,7 +83,7 @@ export async function GET(req: Request) {
       // Live company: require user_id match for security
       if (userId && userId !== 'demo-user') {
         // For authenticated real users: strict user+company validation
-        let query = supabaseServer
+        const query = supabaseServer
           .from('projects')
           .select('*')
           .eq('user_id', userId)

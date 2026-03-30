@@ -5,16 +5,23 @@ import { useState, useEffect } from "react";
 import { supabase } from "../../../lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { persistActiveCompanyId } from "../../../lib/companySwitcher";
+import { getMicrosoftSSOOptions } from "../../../lib/microsoftAuth";
 
-// Microsoft SSO handler
-async function handleMicrosoftSSO(router: any, setError: (msg: string) => void) {
+type AppRouter = ReturnType<typeof useRouter>;
+
+// Microsoft SSO handler – scoped to the CodeZap Directory (codezap.co.za)
+async function handleMicrosoftSSO(router: AppRouter, setError: (msg: string) => void) {
   try {
-    const { error } = await supabase.auth.signInWithOAuth({ provider: "azure" });
+    const redirectTo = `${window.location.origin}/auth/callback`;
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "azure",
+      options: getMicrosoftSSOOptions(redirectTo),
+    });
     if (error) {
       setError("Microsoft SSO failed: " + error.message);
     }
-    // On success, Supabase will redirect automatically
-  } catch (err: any) {
+    // On success, Supabase redirects to /auth/callback automatically
+  } catch (err: unknown) {
     setError("Microsoft SSO failed. Please try again.");
     console.error("Microsoft SSO error:", err);
   }
@@ -288,7 +295,7 @@ export default function LoginPage() {
         {/* Sign Up */}
         <div className="text-center">
           <p className="text-indigo-100 text-sm">
-            Don't have an account?{" "}
+            Don&apos;t have an account?{" "}
             <Link href="/auth/register" className="text-white font-bold hover:underline">
               Create one
             </Link>

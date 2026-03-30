@@ -91,7 +91,7 @@ function normalizeProfile(payload: ProfileInput, userId: string): StoredCompanyP
     default_currency: payload?.default_currency ?? "ZAR",
     erp_targets: Array.isArray(payload?.erp_targets) ? payload.erp_targets : [],
     updated_at: payload?.updated_at ?? new Date().toISOString(),
-    is_demo: (payload as any)?.is_demo === true,
+    is_demo: (payload as { is_demo?: unknown })?.is_demo === true,
   };
 }
 
@@ -115,7 +115,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    let list = Array.isArray(data) ? data : data ? [data] : [];
+    const list = Array.isArray(data) ? data : data ? [data] : [];
     
     // CRITICAL: Only fetch demo companies for demo users (not authenticated users)
     let demoCompaniesData = [];

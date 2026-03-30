@@ -154,7 +154,7 @@ export async function GET(req: Request) {
     // Convert company_id: try as integer first, fallback to string (for demo IDs like "demo-company-id")
     const trimmed = companyIdParam.trim();
     const asInt = parseInt(trimmed, 10);
-    let companyId: string | number = Number.isFinite(asInt) ? asInt : trimmed;
+    const companyId: string | number = Number.isFinite(asInt) ? asInt : trimmed;
     
     // Fall back to demo user for testing if no userId provided
     if (!userId) {
@@ -570,8 +570,25 @@ export async function PATCH(req: Request) {
   }
 }
 
+/** Fields accepted by the offline PATCH invoice handler */
+interface InvoicePatchBody {
+  customer_id?: string | number | null;
+  customerId?: string | number | null;
+  customer?: string | null;
+  customer_name?: string | null;
+  description?: string | null;
+  reference?: string | null;
+  invoice_number?: string | null;
+  currency?: string | null;
+  status?: string | null;
+  issued_on?: string | null;
+  due_on?: string | null;
+  amount?: number | null;
+  lines?: unknown;
+}
+
 async function patchOfflineInvoice(options: {
-  body: any;
+  body: InvoicePatchBody;
   userId: string;
   invoiceId: number;
   wantsCustomerChange: boolean;

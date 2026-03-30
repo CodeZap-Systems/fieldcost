@@ -21,8 +21,8 @@ export const BrandingProvider = ({ companyId, children }: { companyId: string, c
         if (!res.ok) throw new Error('Failed to load branding');
         const data = await res.json();
         setBranding(data);
-      } catch (err: any) {
-        setError(err.message || 'Unknown error');
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : 'Unknown error');
         setBranding(null);
       } finally {
         setLoading(false);

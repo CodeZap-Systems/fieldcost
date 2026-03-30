@@ -1,21 +1,20 @@
 "use client";
 import ItemForm from "../ItemForm";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { BackButton } from "../../../../app/components/BackButton";
 
 export default function AddItemPage() {
   const [tab, setTab] = useState("Details");
-  const [userId, setUserId] = useState<string | null>(null);
-  const [companyId, setCompanyId] = useState<number | null>(null);
+  const [userId] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem("demoUserId");
+  });
+  const [companyId] = useState<number | null>(() => {
+    if (typeof window === 'undefined') return null;
+    const stored = localStorage.getItem("fieldcostActiveCompanyId");
+    return stored ? Number(stored) : null;
+  });
   const tabs = ["Details", "Stock", "Pricing", "Notes"];
-
-  // Load userId and companyId from localStorage
-  useEffect(() => {
-    const storedUserId = localStorage.getItem("demoUserId");
-    const storedCompanyId = localStorage.getItem("fieldcostActiveCompanyId");
-    if (storedUserId) setUserId(storedUserId);
-    if (storedCompanyId) setCompanyId(Number(storedCompanyId));
-  }, []);
 
   return (
     <main className="p-6 max-w-3xl mx-auto">

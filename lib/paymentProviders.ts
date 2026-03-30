@@ -27,7 +27,7 @@ export interface PaymentSession {
   email: string;
   userId: string;
   planId: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
 }
 
 // Paystack Configuration

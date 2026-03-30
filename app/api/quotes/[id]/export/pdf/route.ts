@@ -1,6 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
+
+/** jsPDF extended by jspdf-autotable – tracks the last rendered table position */
+type JsPDFWithAutoTable = jsPDF & { lastAutoTable: { finalY: number } };
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
@@ -128,7 +131,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       const total = quote.quote_line_items.reduce((sum, item) => sum + item.quantity * item.rate, 0);
       tableData.push(['', '', '', 'TOTAL:', `R${total.toFixed(2)}`]);
 
-      (pdf as any).autoTable({
+      autoTable(pdf, {
         head: [['Description', 'Qty', 'Unit', 'Rate', 'Amount']],
         body: tableData,
         startY: yPosition,
@@ -148,7 +151,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         margin: 20,
       });
 
-      yPosition = (pdf as any).lastAutoTable.finalY + 10;
+      yPosition = (pdf as JsPDFWithAutoTable).lastAutoTable.finalY + 10;
     }
 
     // Footer
