@@ -34,18 +34,26 @@ export default function LoginPage() {
   useEffect(() => {
     const checkExistingSession = async () => {
       try {
-        // First, clear any stale token data
-        const storedToken = localStorage.getItem('sb-mukaeylwmzztycajibhy-auth-token');
-        if (storedToken) {
-          try {
-            const tokenData = JSON.parse(storedToken);
-            // If token exists but no refresh token, it's stale
-            if (!tokenData?.refresh_token) {
-              localStorage.removeItem('sb-mukaeylwmzztycajibhy-auth-token');
+        // Clear any stale Supabase auth token from localStorage.
+        // The storage key is based on the project URL (computed at runtime).
+        const projectRef = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "")
+          .replace(/^https?:\/\//, "")
+          .split(".")[0];
+        const storageKey = projectRef ? `sb-${projectRef}-auth-token` : null;
+
+        if (storageKey) {
+          const storedToken = localStorage.getItem(storageKey);
+          if (storedToken) {
+            try {
+              const tokenData = JSON.parse(storedToken);
+              // If token exists but no refresh token, it's stale
+              if (!tokenData?.refresh_token) {
+                localStorage.removeItem(storageKey);
+              }
+            } catch (e) {
+              // Invalid token data, clear it
+              localStorage.removeItem(storageKey);
             }
-          } catch (e) {
-            // Invalid token data, clear it
-            localStorage.removeItem('sb-mukaeylwmzztycajibhy-auth-token');
           }
         }
 
@@ -55,7 +63,7 @@ export default function LoginPage() {
           const errorMsg = sessionError.message?.toLowerCase() || '';
           if (errorMsg.includes('refresh token') || errorMsg.includes('invalid')) {
             // Refresh token is invalid, clear all auth data
-            localStorage.removeItem('sb-mukaeylwmzztycajibhy-auth-token');
+            if (storageKey) localStorage.removeItem(storageKey);
             sessionStorage.clear();
             setSessionError(null);
           } else {

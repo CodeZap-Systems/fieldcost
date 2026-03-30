@@ -2,14 +2,39 @@
 /**
  * Demo Data Seeding Script for FieldCost
  * Creates realistic sample data for client presentations
- * 
- * Run: node scripts/seed-demo-data.mjs
+ *
+ * SAFETY GUARDRAILS:
+ *   - Requires DEMO_MODE=true
+ *   - Requires ENVIRONMENT=staging (refuses to run against production)
+ *   - Reads credentials exclusively from environment variables
+ *
+ * Run: DEMO_MODE=true ENVIRONMENT=staging node scripts/seed-demo-data.mjs
  */
 
 import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = 'https://mukaeylwmzztycajibhy.supabase.co';
-const SUPABASE_SERVICE_ROLE_KEY = 'sb_secret_K3tnv11vpqVXSd3aW93BZg_dodeN0dI';
+// --- Guardrails ---
+if (process.env.DEMO_MODE !== 'true') {
+  console.error('❌ Refused: DEMO_MODE must be set to "true" to run this script.');
+  process.exit(1);
+}
+if (process.env.ENVIRONMENT !== 'staging') {
+  console.error('❌ Refused: ENVIRONMENT must be set to "staging" to run this script.');
+  console.error('   This script must never run against production.');
+  process.exit(1);
+}
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!SUPABASE_URL) {
+  console.error('❌ Missing required environment variable: NEXT_PUBLIC_SUPABASE_URL');
+  process.exit(1);
+}
+if (!SUPABASE_SERVICE_ROLE_KEY) {
+  console.error('❌ Missing required environment variable: SUPABASE_SERVICE_ROLE_KEY');
+  process.exit(1);
+}
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
