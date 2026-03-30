@@ -154,7 +154,7 @@ export async function GET(req: Request) {
     // Convert company_id: try as integer first, fallback to string (for demo IDs like "demo-company-id")
     const trimmed = companyIdParam.trim();
     const asInt = parseInt(trimmed, 10);
-    let companyId: string | number = Number.isFinite(asInt) ? asInt : trimmed;
+    const companyId: string | number = Number.isFinite(asInt) ? asInt : trimmed;
     
     // Fall back to demo user for testing if no userId provided
     if (!userId) {

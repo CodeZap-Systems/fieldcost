@@ -115,7 +115,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    let list = Array.isArray(data) ? data : data ? [data] : [];
+    const list = Array.isArray(data) ? data : data ? [data] : [];
     
     // CRITICAL: Only fetch demo companies for demo users (not authenticated users)
     let demoCompaniesData = [];

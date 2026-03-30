@@ -54,7 +54,7 @@ export async function GET(req: Request) {
   // Otherwise keep as string (for demo company IDs)
 
   try {
-    let query = supabaseServer
+    const query = supabaseServer
       .from('budgets')
       .select('*')
       .eq('project_id', projectId)

@@ -292,14 +292,14 @@ export default function InvoiceForm({ onAdd, preset, companyId }: InvoiceFormPro
 
   useEffect(() => {
     if (preset?.customerId) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- keep form selection aligned when launching from task context
+       
       setSelectedCustomer(preset.customerId);
     }
   }, [preset?.customerId]);
 
   useEffect(() => {
     if (!preset?.taskId || !trackedHours) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- inject timer-sourced line items based on external task data
+     
     setLineItems(prev => {
       const hasTimerLine = prev.some(line => line.source === "timer" && line.taskRef === preset.taskId);
       if (hasTimerLine) return prev;
@@ -336,7 +336,7 @@ export default function InvoiceForm({ onAdd, preset, companyId }: InvoiceFormPro
 
   useEffect(() => {
     if (!items.length) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- attach default item to auto-generated timer rows
+     
     setLineItems(prev =>
       prev.map(line => {
         if (line.source === "timer" && !line.itemId) {

@@ -132,7 +132,7 @@ export async function PATCH(
     }
 
     // Handle line items update
-    let updatePayload: any = {
+    const updatePayload: any = {
       ...body,
       updated_at: new Date().toISOString(),
     };
