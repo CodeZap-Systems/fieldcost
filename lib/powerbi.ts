@@ -1,5 +1,3 @@
-import axios from "axios";
-
 // Set these with your actual Azure/Power BI values
 const tenantId = process.env.PBI_TENANT_ID!;
 const clientId = process.env.PBI_CLIENT_ID!;
@@ -19,16 +17,28 @@ async function getPowerBIAccessToken() {
     client_secret: clientSecret,
     scope: "https://analysis.windows.net/powerbi/api/.default",
   });
-  const res = await axios.post(url, params);
-  return res.data.access_token;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: params.toString(),
+  });
+  if (!res.ok) throw new Error(`Failed to get Power BI token: ${res.statusText}`);
+  const data = await res.json();
+  return data.access_token;
 }
 
 export async function pushRowsToPowerBI({ datasetId, tableName, rows }: PushRowsParams) {
   const token = await getPowerBIAccessToken();
   const url = `https://api.powerbi.com/v1.0/myorg/groups/${groupId}/datasets/${datasetId}/tables/${tableName}/rows`;
-  await axios.post(
-    url,
-    { rows },
-    { headers: { Authorization: `Bearer ${token}` } }
-  );
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ rows }),
+  });
+  if (!res.ok) throw new Error(`Failed to push rows to Power BI: ${res.statusText}`);
 }
