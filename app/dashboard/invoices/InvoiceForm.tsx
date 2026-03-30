@@ -1,15 +1,3 @@
-// Minimal InvoiceForm component to resolve build error
-const InvoiceForm = ({ onAdd }: InvoiceFormProps) => {
-  return (
-    <form className="max-w-md mx-auto p-4 bg-white rounded shadow">
-      <h2 className="text-lg font-bold mb-4">Add Invoice</h2>
-      {/* Add form fields here */}
-      <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">Add</button>
-    </form>
-  );
-};
-
-export default InvoiceForm;
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "../../../components/Button";
